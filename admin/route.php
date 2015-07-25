@@ -45,12 +45,12 @@ $helperType = false;
 
 if (is_subclass_of($helper, 'AdminHelper\AdminEditHelper')) {
     $helperType = 'edit';
-    /** @var AdminBaseHelper $adminHelper */
+    /** @var AdminEditHelper $adminHelper */
     $adminHelper = new $helper($fields, $tabs);
 
 } else if (is_subclass_of($helper, 'AdminHelper\AdminListHelper')) {
     $helperType = 'list';
-    /** @var AdminBaseHelper $adminHelper */
+    /** @var AdminListHelper $adminHelper */
     $adminHelper = new $helper($fields, $isPopup);
     $adminHelper->getData(array($by => $order));
 
