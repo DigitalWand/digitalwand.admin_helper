@@ -8,7 +8,6 @@ use Bitrix\Highloadblock as HL;
 
 /**
  * Class AdminBaseHelper
- *
  * Данный модуль реализует подход MVC для создания административного интерфейса.
  *
  * Возможность построения административного интерфейса появляется благодаря наличию единого API для CRUD-операциями над
@@ -46,6 +45,7 @@ use Bitrix\Highloadblock as HL;
  * в ряде проектов.
  *
  * @see AdminBaseHelper::setInterfaceSettings()
+ * @package AdminHelper
  * @FIXME: Упростить обработку сообщений об ошибках: слишком запутанно.
  */
 abstract class AdminBaseHelper
@@ -99,9 +99,8 @@ abstract class AdminBaseHelper
      * @var array
      * Хранит список отображаемых полей и настройки их отображения
      * @see AdminBaseHelper::setInterfaceSettings()
-     * @internal
      */
-    protected $fields;
+    protected $fields = array();
 
     /**
      * @var CMain
@@ -167,8 +166,6 @@ abstract class AdminBaseHelper
      * @param array $fields список используемых полей и виджетов для них
      * @param array $tabs список вкладок для детальной страницы
      * @param string $module название модуля
-     *
-     * @internal
      */
     public function __construct(array $fields, array $tabs = array(), $module = "")
     {
@@ -307,7 +304,7 @@ abstract class AdminBaseHelper
     }
 
     /**
-     * @return string
+     * @return string | DataManager
      * Возвращает имя класса используемой модели
      * @api
      */
@@ -360,7 +357,7 @@ abstract class AdminBaseHelper
      * Возвращает первичный ключ таблицы используемой модели
      * Для HL-инфоблоков битрикс - всегда ID. Но может поменяться для какой-либо другой сущности.
      * @return string
-     * @internal
+     * @api
      */
     public function pk()
     {
@@ -449,7 +446,6 @@ abstract class AdminBaseHelper
 
     /**
      * @param $e
-     * @internal
      */
     protected function setAppException($e)
     {

@@ -7,20 +7,62 @@ use Bitrix\Main\Entity\DataManager;
 
 IncludeModuleLangFile(__FILE__);
 
+/**
+ * Class AdminEditHelper
+ *
+ * Базовый класс для реализации детальной страницы админки.
+ * При создании своего класса необходимо переопределить следующие переменные:
+ * * Static protected $model
+ * * Static public $module
+ * * Static protected $listViewName
+ * * Static protected $viewName
+ *
+ * Этого будет дастаточно дла получения минимальной функциональности
+ *
+ * @see AdminBaseHelper::$model
+ * @see AdminBaseHelper::$module
+ * @see AdminBaseHelper::$listViewName
+ * @see AdminBaseHelper::$viewName
+ * @package AdminHelper
+ */
 abstract class AdminEditHelper extends AdminBaseHelper
 {
-    /** @var array */
+    /**
+     * @var array
+     * Данные сущности, редактируемой в данный момент.
+     * Ключи ассива - названия полей в БД.
+     * @api
+     */
     protected $data;
 
+    /**
+     * @var array
+     * Вкладки страницы редактирования
+     */
     protected $tabs = array();
+
+    /**
+     * @var array
+     * Элементы верхнего меню страницы
+     * @see AdminEditHelper::fillMenu()
+     */
     protected $menu = array();
+
+    /**
+     * @var \CAdminForm
+     */
     protected $tabControl;
 
 
     /**
      * Производится инициализация переменных, обработка запросов на редактирование
+     *
+     * @param array $fields
+     * @param array $tabs
+     *
+     * @see AdminBaseHelper::setInterfaceSettings()
      */
-    public function __construct($fields, $tabs = array())
+    public function __construct(array $fields, array $tabs = array())
     {
         $this->tabs = $tabs;
         if (empty($this->tabs)) {
@@ -56,13 +98,12 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
         parent::__construct($fields, $tabs);
 
-        $this->tabControl = new \CAdminForm(str_replace("\\", "",
-            get_called_class()), $this->tabs);
+        $this->tabControl = new \CAdminForm(str_replace("\\", "", get_called_class()), $this->tabs);
 
         if (isset($_REQUEST['apply']) OR isset($_REQUEST['save'])) {
             $this->data = $_REQUEST['FIELDS'];
-            foreach($fields as $name => $settings){
-                if(is_a($settings['WIDGET'], 'AdminHelper\Widget\HLIBlockFieldWidget')){
+            foreach ($fields as $name => $settings) {
+                if (is_a($settings['WIDGET'], 'AdminHelper\Widget\HLIBlockFieldWidget')) {
                     $this->data = array_merge($this->data, $_REQUEST);
                     break;
                 }
@@ -71,7 +112,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
             if ($this->editAction()) {
                 if (isset($_REQUEST['apply'])) {
                     $id = $this->data[$this->pk()];
-                    $url = $this->app->GetCurPageParam($this->pk().'='.$id.'&form_key='.$this->getFormKey());
+                    $url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
+
                 } else {
                     if (isset($_REQUEST['save'])) {
                         $url = $this->getListPageURL(array_merge($this->additionalUrlParams,
@@ -84,7 +126,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
             } else {
                 if (isset($this->data[$this->pk()])) {
                     $id = $this->data[$this->pk()];
-                    $url = $this->app->GetCurPageParam($this->pk().'='.$id.'&form_key='.$this->getFormKey());
+                    $url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
                 } else {
                     unset($this->data);
                     $this->data = $_REQUEST['FIELDS']; //Заполняем, чтобы в случае ошибки сохранения поля не были пустыми
@@ -97,11 +139,14 @@ abstract class AdminEditHelper extends AdminBaseHelper
             }
 
         } else {
-            $select = array_keys($this->fields);
+            $helperFields = $this->getFields();
+            $select = array_keys($helperFields);
+
             foreach ($select as $key => $field) {
-                if (isset($this->fields[$field]['VIRTUAL'])
-                    AND $this->fields[$field]['VIRTUAL'] == true
-                    AND (!isset($this->fields[$field]['FORCE_SELECT']) OR $this->fields[$field]['FORCE_SELECT'] = false)
+
+                if (isset($helperFields[$field]['VIRTUAL'])
+                    AND $helperFields[$field]['VIRTUAL'] == true
+                    AND (!isset($helperFields[$field]['FORCE_SELECT']) OR $helperFields[$field]['FORCE_SELECT'] = false)
                 ) {
                     unset($select[$key]);
                 }
@@ -122,23 +167,20 @@ abstract class AdminEditHelper extends AdminBaseHelper
     }
 
     /**
-     * @param array $select
+     * Заполняет верхнее меню страницы
+     * По-умолчанию добавляет две кнопки:
+     * * Возврат в список
+     * * Удаление элемента
      *
-     * @return bool
+     * Добавляя новые кнопки, нужно указывать параметр URl "action", который будет обрабатываться в
+     * AdminEditHelper::customActions()
+     *
+     * @param bool $showDeleteButton управляет видимостью кнопки удаления элемента
+     * @see AdminEditHelper::$menu
+     * @see AdminEditHelper::customActions()
+     * @api
      */
-    protected function loadElement($select = array())
-    {
-        if (isset($_REQUEST[$this->pk()])) {
-            $className = static::$model;
-            $result = $className::getById($_REQUEST[$this->pk()]);
-
-            return $result->fetch();
-        }
-
-        return false;
-    }
-
-    protected function addMenu($showDeleteButton = true)
+    protected function fillMenu($showDeleteButton = true)
     {
         $returnToList = array(
             "TEXT" => GetMessage('RETURN_TO_LIST'),
@@ -173,10 +215,11 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
     /**
      * Выводит детальную страницу
+     * @internal
      */
     public function show()
     {
-        $this->addMenu();
+        $this->fillMenu();
         $context = new \CAdminContextMenu($this->menu);
         $context->Show();
 
@@ -186,7 +229,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
         $this->tabControl->EndPrologContent();
 
         $this->tabControl->BeginEpilogContent();
-
         $this->showEpilog();
         $this->tabControl->EndEpilogContent();
 
@@ -217,13 +259,19 @@ abstract class AdminEditHelper extends AdminBaseHelper
         $this->tabControl->Show();
     }
 
+    /**
+     * Отрисовка верхней части страницы.
+     * @api
+     */
     protected function showProlog()
     {
 
     }
 
     /**
+     * Отрисовка нижней части страницы.
      * По-умолчанию рисует все поля, которые не попали в вывод, как input hidden
+     * @api
      */
     protected function showEpilog()
     {
@@ -234,15 +282,22 @@ abstract class AdminEditHelper extends AdminBaseHelper
                 $settings['FORCE_SELECT'] == true
             ) {
 
-                print '<input type="hidden" name="FIELDS['.$code.']" value="'.$this->data[$code].'" />';
+                print '<input type="hidden" name="FIELDS[' . $code . ']" value="' . $this->data[$code] . '" />';
             }
         }
     }
 
+    /**
+     * Отрисовывает вкладку со всеми привязанными к ней полями.
+     *
+     * @param $tabSettings
+     * @see AdminEditHelper::showField()
+     * @internal
+     */
     private function showTabElements($tabSettings)
     {
         $this->tabControl->BeginNextFormTab();
-        foreach ($this->fields as $code => $fieldSettings) {
+        foreach ($this->getFields() as $code => $fieldSettings) {
             $fieldOnCurrentTab = ((isset($fieldSettings['TAB']) AND $fieldSettings['TAB'] == $tabSettings['DIV']) OR $tabSettings['DIV'] == 'DEFAULT_TAB');
 
             if (!$fieldOnCurrentTab) {
@@ -255,34 +310,46 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
             $pkField = $code == $this->pk();
             if (isset($fieldSettings['USE_BX_API']) AND $fieldSettings['USE_BX_API'] == true) {
-                $this->showField($code, $fieldSettings, $pkField);
+                $this->showField($code, $pkField);
 
             } else {
-                $this->tabControl->BeginCustomField($code,
-                    $fieldSettings['TITLE']);
-                $this->showField($code, $fieldSettings, $pkField);
+                $this->tabControl->BeginCustomField($code, $fieldSettings['TITLE']);
+                $this->showField($code, $pkField);
                 $this->tabControl->EndCustomField($code);
             }
         }
     }
 
     /**
-     * Отрисовывает поле для редактирования.
-     * Используюся либо виджеты, либо HTML, генерируемый в переопределенных функциях.
+     * Отрисовывает поле для редактирования, используя для этого виджет, указанный в настройках
      *
-     * @param string $code
-     * @param array  $settings
-     * @param        $isPKField
+     * @param string $code код поля (название колонки в БД)
+     * @param bool $isPKField является ли поле первичным ключом
+     * @internal
      */
-    protected function showField($code, $settings, $isPKField)
+    protected function showField($code, $isPKField)
     {
         $widget = $this->createWidgetForField($code, $this->data);
         if ($widget) {
             $widget->genBasicEditField($isPKField);
-
         }
     }
 
+    /**
+     * Обработка запроса редактирования страницы
+     * Этапы:
+     * * Проверка прав пользователя
+     * * Создание виджетов для каждого поля
+     * * Изменение данных модели каждым виджетом (исходя из его внутренней логики)
+     * * Валидация значений каждого поля соответствующим виджетом
+     * * Проверка на ошибики валидации
+     * * В случае неудачи - выход из функции
+     * * В случае успеха - обновление или добавление элемента в БД
+     * * Постобработка данных модели каждым виджетом
+     *
+     * @return bool
+     * @internal
+     */
     protected function editAction()
     {
         if (!$this->hasRights()) {
@@ -291,15 +358,12 @@ abstract class AdminEditHelper extends AdminBaseHelper
             return false;
         }
         $allWidgets = array();
-        foreach ($this->fields as $code => $settings) {
+        foreach ($this->getFields() as $code => $settings) {
             $widget = $this->createWidgetForField($code, $this->data);
             if ($widget) {
                 $widget->processEditAction();
-                $this->validationErrors = array_merge($this->validationErrors,
-                    $widget->getValidationErrors());
+                $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
                 $allWidgets[] = $widget;
-
-
             }
         }
 
@@ -333,20 +397,45 @@ abstract class AdminEditHelper extends AdminBaseHelper
                 $widget->processAfterSaveAction();
             }
 
-            if (isset($_SESSION[$this->getFormKey()."_values"])) {
-                unset($_SESSION[$this->getFormKey()."_values"]);
-            }
-
             return true;
         }
 
         return false;
     }
 
+    /**
+     * Функция загрузки элемента из БД.
+     * Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
+     *
+     * @param array $select
+     *
+     * @return bool
+     * @api
+     */
+    protected function loadElement($select = array())
+    {
+        if (isset($_REQUEST[$this->pk()])) {
+            $className = static::getModel();
+            $result = $className::getById($_REQUEST[$this->pk()]);
+
+            return $result->fetch();
+        }
+
+        return false;
+    }
+
+    /**
+     * Сохранение элемента.
+     * Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
+     *
+     * @param bool $id
+     * @return \Bitrix\Main\Entity\AddResult|\Bitrix\Main\Entity\UpdateResult
+     * @throws \Exception
+     * @api
+     */
     protected function saveElement($id = false)
     {
-        /** @var DataManager $className */
-        $className = static::$model;
+        $className = static::getModel();
 
         if ($id) {
             $result = $className::update($id, $this->data);
@@ -357,12 +446,36 @@ abstract class AdminEditHelper extends AdminBaseHelper
         return $result;
     }
 
+    /**
+     * Удаление элемента.
+     * Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
+     *
+     * @param $id
+     * @return \Bitrix\Main\Entity\DeleteResult
+     * @throws \Exception
+     * @api
+     */
+    protected function deleteElement($id)
+    {
+        $className = static::getModel();
+        $result = $className::delete($id);
+
+        return $result;
+    }
+
+    /**
+     * Выполнение кастомных операций над объектом в процессе редактирования
+     *
+     * @param string $action название операции
+     * @param int|null $id ID элемента
+     * @see AdminEditHelper::fillMenu()
+     * @api
+     */
     protected function customActions($action, $id)
     {
-        if ($action == 'delete') {
-            /**@var DataManager $className */
-            $className = static::$model;
-            $className::delete($id);
+        if ($action == 'delete' AND !is_null($id)) {
+            $this->deleteElement($id);
+
             LocalRedirect($this->getListPageURL(array_merge($this->additionalUrlParams,
                 array(
                     'restore_query' => 'Y'
@@ -371,13 +484,21 @@ abstract class AdminEditHelper extends AdminBaseHelper
     }
 
     /**
-     * Устанавливает заголовок исходя из содержимого текущего елемента
+     * Устанавливает заголовок исходя из данных текущего элемента
      *
-     * @see $element
+     * @see $data
+     * @see AdminBaseHelper::setTitle()
+     * @api
      */
     protected function setElementTitle()
     {
-        return;
+        if (!empty($this->data)) {
+            $title = $this->data[$this->pk()];
+        } else {
+            $title = "New element"; //FIXME: обернуть в ланги
+        }
+
+        $this->setTitle($title);
     }
 
     /**
@@ -388,32 +509,5 @@ abstract class AdminEditHelper extends AdminBaseHelper
         return $this->tabControl;
     }
 
-    private $currentFormKey = null;
-
-    private function getFormKey()
-    {
-        $key = null;
-        if (isset($_REQUEST['form_key'])) {
-            $key = $_REQUEST['form_key'];
-        } else {
-            if (isset($this->currentFormKey)) {
-                $key = $this->currentFormKey;
-            } else {
-                $key = $this->tabControl->unique_name."_";
-                $suffix = 0;
-
-                while (isset($_SESSION[md5($key.$suffix)])) {
-                    ++$suffix;
-                }
-
-                $key = md5($key.$suffix);
-            }
-        }
-
-        $_SESSION[$key] = $key;
-        $this->currentFormKey = $key;
-
-        return $key;
-    }
 }
 
