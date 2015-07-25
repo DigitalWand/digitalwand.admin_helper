@@ -12,12 +12,12 @@ IncludeModuleLangFile(__FILE__);
  *
  * Базовый класс для реализации детальной страницы админки.
  * При создании своего класса необходимо переопределить следующие переменные:
- * * Static protected $model
- * * Static public $module
- * * Static protected $listViewName
- * * Static protected $viewName
+ * * static protected $model
+ * * static public $module
+ * * static protected $listViewName
+ * * static protected $viewName
  *
- * Этого будет дастаточно дла получения минимальной функциональности
+ * Этого будет дастаточно для получения минимальной функциональности
  *
  * @see AdminBaseHelper::$model
  * @see AdminBaseHelper::$module
@@ -348,6 +348,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
      * * Постобработка данных модели каждым виджетом
      *
      * @return bool
+     * @see HelperWidget::processEditAction();
+     * @see HelperWidget::processAfterSaveAction();
      * @internal
      */
     protected function editAction()

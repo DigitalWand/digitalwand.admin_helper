@@ -5,68 +5,144 @@ namespace AdminHelper;
 IncludeModuleLangFile(__FILE__);
 
 
-use AdminHelper\AdminBaseHelper;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
 
-
+/**
+ * Class AdminListHelper
+ *
+ * Базовый класс для реализации страницы списка админки.
+ * При создании своего класса необходимо переопределить следующие переменные:
+ * * static protected $model
+ * * static public $module
+ * * static protected $editViewName
+ * * static protected $viewName
+ *
+ * Этого будет дастаточно для получения минимальной функциональности
+ * Также данный класс может использоваться для отображения всплывающих окон с возможностью выбора элемента из списка
+ *
+ * @see AdminBaseHelper::$model
+ * @see AdminBaseHelper::$module
+ * @see AdminBaseHelper::$editViewName
+ * @see AdminBaseHelper::$viewName
+ * @package AdminHelper
+ */
 abstract class AdminListHelper extends AdminBaseHelper
 {
     /**
-     * @var bool Если это всплывающее окно, то не должно быть операций удаления/перехода к редактированию.
+     * @var bool
+     * Является ли список всплывающим окном для выбора элементов из списка.
+     * В этой версии не должно быть операций удаления/перехода к редактированию.
      */
     protected $isPopup = false;
+
+    /**
+     * @var string
+     * Название функции, вызываемой при даблклике на строке списка, в случае, если список выводится в режиме
+     *     всплывающего окна
+     */
     protected $popupClickFunctionName = 'selectRow';
+
+    /**
+     * @var string
+     * Код функции, вызываемой при клике на строке списка
+     * @see AdminListHelper::genPipupActionJS()
+     */
     protected $popupClickFunctionCode;
 
+    /**
+     * @var array
+     * Массив с заголовками таблицы
+     * @see \CAdminList::AddHeaders()
+     */
     protected $arHeader = array();
+
+    /**
+     * @var array
+     * параметры фильтрации списка в классическим битриксовом формате
+     */
     protected $arFilter = array();
+
+    /**
+     * @var array
+     * Массив, хранящий тип фильтра для данного поля. Позволяет избежать лишнего парсинга строк.
+     */
     protected $filterTypes = array();
+
+    /**
+     * @var array
+     * Поля, предназначенные для фильтрации
+     * @see \CAdminList::InitFilter();
+     */
     protected $arFilterFields = array();
+
+    /**
+     * @var array
+     * @FIXME: убей-не помню, нафига оно надо!
+     * @see \CAdminFilter::__construct();
+     */
     protected $arFilterOpts = array();
-    protected $navParams = false;
 
+    /**
+     * @var \CAdminList
+     */
     protected $list;
-    protected $totalRowsCount;
 
-    static protected $sectionFilter;
-    static protected $sectionViewName;
-
-    static protected $isPlainList = false;
-
+    /**
+     * @var string
+     * Префикс таблицы. Нужен, чтобы обеспечить уникальность относительно других админ. интерфейсов.
+     * Без его добавления к конструктору таблицы повычается вероятность, что возникнет конфликт с таблицей из другого
+     * административного интерфейса, в результате чего неправильно будет работать паджинация, фильтрация. Вероятны
+     * ошибки запросов к БД.
+     */
     static protected $tablePrefix = "digitalwand.admin_helper_";
 
     /**
-     * @var array Массив с настройками контекстного меню.
-     * Пример:
-     * <code>
-     * $this->contextMenu = array(
-     *   array(
-     *       "TEXT" => GetMessage("BCL_BACKUP_DO_BACKUP"),
-     *       "LINK" => "/bitrix/admin/dump.php?lang=".LANGUAGE_ID."&from=bitrixcloud",
-     *       "TITLE" => "",
-     *       "ICON" => "btn_new",
-     *       ),
-     *   );
-     * </code>
+     * @var array
+     * Массив с настройками контекстного меню.
      */
     protected $contextMenu = array();
 
     /**
      * @var array массив со списком групповых действий над таблицей.
      * Ключ - код действия. Знаение - перевод.
+     * @see \CAdminList::AddGroupActionTable()
      */
     protected $groupActionsList = array();
+
+    /**
+     * @var array
+     * @see \CAdminList::AddGroupActionTable()
+     */
     protected $groupActionsParams = array();
 
+    /**
+     * @var array
+     * @see \CAdminList::AddFooter();
+     */
     protected $footer = array();
 
+    /**
+     * @var string
+     * HTML верхней части таблицы
+     * @api
+     */
     public $prologHtml;
+
+    /**
+     * @var string
+     * HTML нижней части таблицы
+     * @api
+     */
     public $epilogHtml;
 
 
     /**
      * Производится инициализация переменных, обработка запросов на редактирование
+     *
+     * @param array $fields
+     * @param bool $isPopup
+     * @throws \Bitrix\Main\ArgumentException
      */
     public function __construct($fields, $isPopup = false)
     {
@@ -83,12 +159,9 @@ abstract class AdminListHelper extends AdminBaseHelper
             $this->customActions($_REQUEST['action'], $id);
         }
 
-        /**@var DataManager $className */
-        $className = static::$model;
-        $oSort = new \CAdminSorting(static::$tablePrefix . $this->table(),
-          static::pk(), "asc");
-        $this->list = new \CAdminList(static::$tablePrefix . $this->table(),
-          $oSort);
+        $className = static::getModel();
+        $oSort = new \CAdminSorting(static::$tablePrefix . $this->table(), static::pk(), "asc");
+        $this->list = new \CAdminList(static::$tablePrefix . $this->table(), $oSort);
         $this->list->InitFilter($this->arFilterFields);
 
         if ($this->list->EditAction() AND $this->hasRights()) {
@@ -111,21 +184,21 @@ abstract class AdminListHelper extends AdminBaseHelper
                 //Текущий фильтр должен быть модифицирован виждтами
                 //для соответствия результатов фильтрации тому, что видит пользователь в интерфейсе.
                 $raw = array(
-                  'SELECT' => $this->pk(),
-                  'FILTER' => $this->arFilter,
-                  'SORT' => array()
+                    'SELECT' => $this->pk(),
+                    'FILTER' => $this->arFilter,
+                    'SORT' => array()
                 );
                 foreach ($this->fields as $code => $settings) {
                     $widget = $this->createWidgetForField($code);
                     if ($widget) {
                         $widget->changeGetListOptions($this->arFilter,
-                          $raw['SELECT'], $raw['SORT'], $raw);
+                            $raw['SELECT'], $raw['SORT'], $raw);
                     }
                 }
 
                 $res = $className::getList(array(
-                  'filter' => $this->arFilter,
-                  'select' => array($this->pk()),
+                    'filter' => $this->arFilter,
+                    'select' => array($this->pk()),
                 ));
                 while ($el = $res->Fetch()) {
                     $IDs[] = $el[$this->pk()];
@@ -145,21 +218,13 @@ abstract class AdminListHelper extends AdminBaseHelper
             $this->groupActions($IDs, $_REQUEST['action']);
         }
 
-        $navUniqSettings = array(
-          'sNavID' => static::$tablePrefix . $this->table(),
-        );;
-        $this->navParams = array(
-          'nPageSize' => \CAdminResult::GetNavSize($navUniqSettings),
-          'navParams' => \CAdminResult::GetNavParams($navUniqSettings),
-        );
-
         if ($this->isPopup()) {
             $this->genPopupActionJS();
         }
     }
 
     /**
-     * Подготавливает переменные, используемые для инициализации списка
+     * Подготавливает переменные, используемые для инициализации списка.
      */
     protected function prepareAdminVariables()
     {
@@ -183,8 +248,8 @@ abstract class AdminListHelper extends AdminBaseHelper
                     $filterType = $settings['FILTER'];
                 }
                 if (isset($_REQUEST[$filterVarName])
-                  AND !isset($_REQUEST['del_filter'])
-                  AND $_REQUEST['del_filter'] != 'Y'
+                    AND !isset($_REQUEST['del_filter'])
+                    AND $_REQUEST['del_filter'] != 'Y'
                 ) {
                     $arFilter[$filterType . $code] = $_REQUEST[$filterVarName];
                     $this->filterTypes[$code] = $filterType;
@@ -194,10 +259,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 
             if (!isset($settings['HEADER']) OR $settings['HEADER'] != false) {
                 $this->arHeader[] = array(
-                  "id" => $code,
-                  "content" => $settings['TITLE'],
-                  "sort" => $code,
-                  "default" => true
+                    "id" => $code,
+                    "content" => $settings['TITLE'],
+                    "sort" => $code,
+                    "default" => true
                 );
             }
         }
@@ -205,40 +270,31 @@ abstract class AdminListHelper extends AdminBaseHelper
         if ($this->checkFilter($arFilter)) {
             $this->arFilter = $arFilter;
         }
-
-        $this->isPlainList = isset($_REQUEST['plain_list']) ? $_REQUEST['plain_list'] == "Y" : false;
-        if (!$this->isPlainList) {
-            if (isset(static::$sectionFilter) && (empty($_REQUEST[static::$sectionFilter]) || $_REQUEST[static::$sectionFilter] == 0) && !empty($this->arFilter)) {
-                $this->isPlainList = true;
-            } else {
-                if (isset(static::$sectionFilter) && !isset($_REQUEST[static::$sectionFilter]) && !empty($this->arFilter)) {
-                    $this->isPlainList = true;
-                }
-            }
-        }
     }
 
     /**
      * Подготавливает массив с настройками футера таблицы Bitrix
-     * @param CDatabase $res - результат выборки данных
+     * @param \CAdminResult $res - результат выборки данных
      */
     protected function addFooter($res)
     {
         $this->footer = array(
-          array(
-            "title" => GetMessage("MAIN_ADMIN_LIST_SELECTED"),
-            "value" => $res->SelectedRowsCount(),
-          ),
-          array(
-            "counter" => true,
-            "title" => GetMessage("MAIN_ADMIN_LIST_CHECKED"),
-            "value" => "0",
-          ),
+            array(
+                "title" => GetMessage("MAIN_ADMIN_LIST_SELECTED"),
+                "value" => $res->SelectedRowsCount(),
+            ),
+            array(
+                "counter" => true,
+                "title" => GetMessage("MAIN_ADMIN_LIST_CHECKED"),
+                "value" => "0",
+            ),
         );
     }
 
     /**
      * Подготавливает массив с настройками контекстного меню.
+     * По-умолчанию добавлена кнопка "создать элемент".
+     * @api
      * @see $contextMenu
      */
     protected function addContextMenu()
@@ -247,17 +303,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         if (!$this->isPopup() && $this->hasRights()) {
             $this->contextMenu[] = array(
-              'TEXT' => GetMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
-              'LINK' => static::getEditPageURL($this->additionalUrlParams),
-              'TITLE' => GetMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
-              'ICON' => 'btn_new'
+                'TEXT' => GetMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
+                'LINK' => static::getEditPageURL($this->additionalUrlParams),
+                'TITLE' => GetMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
+                'ICON' => 'btn_new'
             );
         }
     }
 
     /**
      * Подготавливает массив с настройками групповых действий над списком
-     * @see groupActionsList
+     * @see $groupActionsList
+     * @api
      */
     protected function addGroupActions()
     {
@@ -267,14 +324,19 @@ abstract class AdminListHelper extends AdminBaseHelper
     }
 
     /**
+     * Обработчик групповых операций.
+     * По-умолчанию прописаны операции активации/деактивации и удаления.
+     *
+     * @FIXME: Активация-деактивация строго завязаны на поле ACTIVE с вариантами Y|N. нужно сделать как-то гибче...
+     *
+     * @api
      * @param array $IDs
      * @param string $action
      */
     protected function groupActions($IDs, $action)
     {
         if (!isset($_REQUEST['model'])) {
-            /** @var DataManager $className */
-            $className = static::$model;
+            $className = static::getModel();
         } else {
             $className = $_REQUEST['model'];
         }
@@ -286,9 +348,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         } else {
             if (in_array($action, array(
-                'activate',
-                'deactivate'
-              )) AND isset($this->fields['ACTIVE'])
+                    'activate',
+                    'deactivate'
+                )) AND isset($this->fields['ACTIVE'])
             ) {
                 $active = false;
                 if ($action == 'activate') {
@@ -300,10 +362,8 @@ abstract class AdminListHelper extends AdminBaseHelper
                 }
 
                 if ($active !== false) {
-                    //FIXME: переписать
                     foreach ($IDs as $id) {
-                        $className::update($id,
-                          array('ACTIVE' => ($active ? 'Y' : 'N')));
+                        $className::update($id, array('ACTIVE' => ($active ? 'Y' : 'N')));
                     }
                 }
             }
@@ -311,22 +371,35 @@ abstract class AdminListHelper extends AdminBaseHelper
     }
 
     /**
-     * Выполняет сбор данных, формирует по ним таблицу и поля.
+     * Основной цикл отображения списка. Этапы:
+     * * Вывод заголовков страницы
+     * * Определение списка видимых колонок и колонок, участвующих в выборке.
+     * * Создание виджета для каждого поля выборки
+     * * Модификация параметров запроса каждым из виджетов
+     * * Выборка данных
+     * * Вывод строк таблицы. Во время итерации по строкам возможна модификация данных строки.
+     * * Отрисовка футера таблиы, добавление контекстного меню
+     *
      * @param array $sort Настройки сортировки.
+     *
+     * @see AdminListHelper::getList();
+     * @see AdminListHelper::modifyRowData();
+     * @see AdminListHelper::addRowCell();
+     * @see AdminListHelper::addRow();
+     * @see HelperWidget::changeGetListOptions();
      */
     public function getData($sort)
     {
         $this->list->AddHeaders($this->arHeader);
         $visibleColumns = $this->list->GetVisibleHeaderColumns();
 
-        /**@var DataManager $className */
-        $className = static::$model;
+        $className = static::getModel();
         $visibleColumns[] = static::pk();
 
         $raw = array(
-          'SELECT' => $visibleColumns,
-          'FILTER' => $this->arFilter,
-          'SORT' => $sort
+            'SELECT' => $visibleColumns,
+            'FILTER' => $this->arFilter,
+            'SORT' => $sort
         );
 
 
@@ -346,13 +419,11 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->fields as $code => $settings) {
             $widget = $this->createWidgetForField($code);
             if ($widget) {
-                $widget->changeGetListOptions($this->arFilter, $visibleColumns,
-                  $sort, $raw);
+                $widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
             }
         }
 
-        $res = $this->getList($className, $this->arFilter,
-          $visibleColumns, $sort, $raw);
+        $res = $this->getList($className, $this->arFilter, $visibleColumns, $sort, $raw);
 
         $res = new \CAdminResult($res, static::$tablePrefix . $this->table());
         $res->NavStart();
@@ -364,8 +435,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             list($link, $name) = $this->addRow($data);
             $row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
             foreach ($this->fields as $code => $settings) {
-                $editableInputName = "FIELDS[" . $data[$this->pk()] . "][" . $code . "]";
-                $this->addRowCell($row, $code, $data, $editableInputName);
+                $this->addRowCell($row, $code, $data);
 
             }
             $actions = $this->addRowActions($data);
@@ -374,8 +444,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         $this->addFooter($res);
         $this->list->AddFooter($this->footer);
-        $this->list->AddGroupActionTable($this->groupActionsList,
-          $this->groupActionsParams);
+        $this->list->AddGroupActionTable($this->groupActionsList, $this->groupActionsParams);
         $this->list->AddAdminContextMenu($this->contextMenu);
 
         $this->list->BeginPrologContent();
@@ -390,19 +459,24 @@ abstract class AdminListHelper extends AdminBaseHelper
     }
 
     /**
+     * Производит выборку данных. Функцию стоит переопределить в случае, если необходима своя логика, и её нельзя
+     * вынести в класс модели.
+     *
      * @param DataManager $className
      * @param array $filter
      * @param array $select
      * @param array $sort
      * @param array $raw
+     * @api
+     *
      * @return Result
      */
     protected function getList($className, $filter, $select, $sort, $raw)
     {
         $parameters = array(
-          'filter' => $filter,
-          'select' => $select,
-          'order' => $sort
+            'filter' => $filter,
+            'select' => $select,
+            'order' => $sort
         );
 
         /** @var Result $res */
@@ -412,6 +486,8 @@ abstract class AdminListHelper extends AdminBaseHelper
     }
 
     /**
+     * Является ли список всплывающим окном для выбора элементов из списка.
+     * В этой версии не должно быть операций удаления/перехода к редактированию.
      * @return boolean
      */
     public function isPopup()
@@ -423,6 +499,7 @@ abstract class AdminListHelper extends AdminBaseHelper
      * Настройки строки таблицы
      * @param array $data данные текущей строки БД
      * @return array возвращает ссылку на детальную страницу и её название
+     * @api
      */
     protected function addRow($data)
     {
@@ -431,8 +508,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         } else {
             $query = array_merge($this->additionalUrlParams, array(
-              'lang' => LANGUAGE_ID,
-              static::pk() => $data[static::pk()]
+                'lang' => LANGUAGE_ID,
+                static::pk() => $data[static::pk()]
             ));
 
             return array(static::getEditPageURL($query));
@@ -441,33 +518,42 @@ abstract class AdminListHelper extends AdminBaseHelper
 
     /**
      * Преобразует данные строки, перед тем как добавлять их в список
+     * @api
      * @param $data
+     * @see AdminListHelper::getList();
      */
-    protected function modifyRowData(&$data){
+    protected function modifyRowData(&$data)
+    {
 
     }
 
     /**
-     * Определяет поля для отображения данных каждого типа
+     * Для каждой ячейки таблицы создаёт виджет соответствующего типа.
+     * Виджет подготавливает необходимый HTML для списка
      *
-     * @param CAdminListRow $row
+     * @param \CAdminListRow $row
      * @param $code - сивольный код поля
      * @param $data - данные текущей строки
-     * @param $editableInputName - для режима редактирования  - атрибут "name" для input
+     * @see HelperWidget::genListHTML()
      */
-    protected function addRowCell($row, $code, $data, $editableInputName)
+    protected function addRowCell($row, $code, $data)
     {
         $widget = $this->createWidgetForField($code, $data);
         if ($widget) {
             $widget->genListHTML($row, $data);
-
         }
     }
 
     /**
-     * Добавляет действия при клике правой клавишей мыши на строке таблицы
+     * Возвращает массив со списком действий при клике правой клавишей мыши на строке таблицы
+     * По-умолчанию:
+     * * Редактировать элемент
+     * * Удалить элемент
+     * * Если это всплывающее окно - запустить кастомную JS-функцию.
+     *
      * @see CAdminListRow::AddActions
      *
+     * @api
      * @param $data - данные текущей строки
      * @return array
      */
@@ -476,31 +562,31 @@ abstract class AdminListHelper extends AdminBaseHelper
         $actions = array();
 
         if ($this->isPopup()) {
-            $jsData = CUtil::PhpToJSObject($data);
+            $jsData = \CUtil::PhpToJSObject($data);
             $actions[] = array(
-              "ICON" => "select",
-              "DEFAULT" => true,
-              "TEXT" => GetMessage("MAIN_ADMIN_LIST_SELECT"),
-              "ACTION" => 'javascript:' . $this->popupClickFunctionName . '(' . $jsData . ')'
+                "ICON" => "select",
+                "DEFAULT" => true,
+                "TEXT" => GetMessage("MAIN_ADMIN_LIST_SELECT"),
+                "ACTION" => 'javascript:' . $this->popupClickFunctionName . '(' . $jsData . ')'
             );
 
         } else {
             $viewQueryString = 'module=' . static::getModule() . '&view=' . static::$viewName;
             $query = array_merge($this->additionalUrlParams,
-              array($this->pk() => $data[$this->pk()]));
+                array($this->pk() => $data[$this->pk()]));
             if ($this->hasRights()) {
                 $actions[] = array(
-                  "ICON" => "edit",
-                  "DEFAULT" => true,
-                  "TEXT" => GetMessage("MAIN_ADMIN_LIST_EDIT"),
-                  "ACTION" => $this->list->ActionRedirect(static::getEditPageURL($query))
+                    "ICON" => "edit",
+                    "DEFAULT" => true,
+                    "TEXT" => GetMessage("MAIN_ADMIN_LIST_EDIT"),
+                    "ACTION" => $this->list->ActionRedirect(static::getEditPageURL($query))
                 );
 
                 $actions[] = array(
-                  "ICON" => "delete",
-                  "TEXT" => GetMessage("MAIN_ADMIN_LIST_DELETE"),
-                  "ACTION" => "if(confirm('" . GetMessage('MAIN_ADMIN_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
-                      "delete", $viewQueryString)
+                    "ICON" => "delete",
+                    "TEXT" => GetMessage("MAIN_ADMIN_LIST_DELETE"),
+                    "ACTION" => "if(confirm('" . GetMessage('MAIN_ADMIN_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
+                            "delete", $viewQueryString)
                 );
             }
         }
@@ -511,6 +597,8 @@ abstract class AdminListHelper extends AdminBaseHelper
     /**
      * Функция определяет js-функцию для двойонго клика по строке.
      * Вызывается в том случае, елси окно открыто в режиме попапа.
+     * По-умолчанию выводится  скрипт-заглушка.
+     * @api
      */
     protected function genPopupActionJS()
     {
@@ -530,8 +618,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         global $APPLICATION;
         print ' <form name="find_form" method="GET" action="' . static::getListPageURL($this->additionalUrlParams) . '?">';
 
-        $oFilter = new \CAdminFilter(static::$tablePrefix . $this->table() . '_filter',
-          $this->arFilterOpts);
+        $oFilter = new \CAdminFilter(static::$tablePrefix . $this->table() . '_filter', $this->isPopup(), $this->arFilterOpts);
         $oFilter->Begin();
         foreach ($this->arFilterOpts as $code => $name) {
             $widget = $this->createWidgetForField($code);
@@ -541,9 +628,9 @@ abstract class AdminListHelper extends AdminBaseHelper
         }
 
         $oFilter->Buttons(array(
-          "table_id" => static::$tablePrefix . $this->table(),
-          "url" => static::getListPageURL($this->additionalUrlParams),
-          "form" => "find_form",
+            "table_id" => static::$tablePrefix . $this->table(),
+            "url" => static::getListPageURL($this->additionalUrlParams),
+            "form" => "find_form",
         ));
         $oFilter->End();
 
@@ -552,7 +639,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 
     /**
      * Производит проверку корректности данных (в массиве $_REQUEST), переданных в фильтр
-     * TODO: нужно сделать вывод сообщений об ошибке фильтрации.
+     * @TODO: нужно сделать вывод сообщений об ошибке фильтрации.
+     * @param $arFilter
+     * @return bool
      */
     protected function checkFilter($arFilter)
     {
@@ -563,7 +652,7 @@ abstract class AdminListHelper extends AdminBaseHelper
                 $value = $arFilter[$type . $code];
                 if (!$widget->checkFilter($type, $value)) {
                     $filterValidationErrors = array_merge($filterValidationErrors,
-                      $widget->getValidationErrors());
+                        $widget->getValidationErrors());
                 }
             }
         }
@@ -573,20 +662,27 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 
     /**
-     * Сохранение полей, отредактированных в списке
+     * Сохранение полей для отной записи, отредактированной в списке.
+     * Этапы:
+     * * Выборка элемента по ID, чтобы удостовериться, что он существует. В противном случае  возвращается ошибка
+     * * Создание виджета для каждой ячейки, валидация значений поля
+     * * TODO: вывод ошибок валидации
+     * * Сохранение записи
+     * * Вывод ошибок сохранения, если таковые появились
+     * * Модификация данных сроки виджетами.
      *
      * @param int $id ID записи в БД
      * @param array $fields Поля с изменениями
+     *
+     * @see HelperWidget::processEditAction();
+     * @see HelperWidget::processAfterSaveAction();
      */
     protected function editAction($id, $fields)
     {
-        /** @var DataManager $className */
-        $className = static::$model;
+        $className = static::getModel();
         $el = $className::getById($id);
         if ($el->getSelectedRowsCount() == 0) {
-            $this->list->AddGroupError(GetMessage("MAIN_ADMIN_SAVE_ERROR"),
-              $id);
-
+            $this->list->AddGroupError(GetMessage("MAIN_ADMIN_SAVE_ERROR"), $id);
             return;
         }
 
@@ -600,18 +696,17 @@ abstract class AdminListHelper extends AdminBaseHelper
             $widget->setEntityName($className);
             $widget->setData($fields);
             $widget->processEditAction();
-            $this->validationErrors = array_merge($this->validationErrors,
-              $widget->getValidationErrors());
+            $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
             $allWidgets[] = $widget;
         }
+        //FIXME: может, надо добавить вывод ошибок ДО сохранения?..
         $this->addErrors($this->validationErrors);
 
         $result = $className::update($id, $fields);
         $errors = $result->getErrorMessages();
         if (empty($this->validationErrors) AND !empty($errors)) {
             $fieldList = implode("\n", $errors);
-            $this->list->AddGroupError(GetMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList,
-              $id);
+            $this->list->AddGroupError(GetMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList, $id);
         }
 
         if (!empty($errors)) {
@@ -624,7 +719,8 @@ abstract class AdminListHelper extends AdminBaseHelper
     }
 
     /**
-     * Выводит сформированный список
+     * Выводит сформированный список.
+     * Сохраняет обработанный GET-запрос в сессию
      */
     public function show()
     {
@@ -638,26 +734,29 @@ abstract class AdminListHelper extends AdminBaseHelper
         $this->saveGetQuery();
     }
 
+    /**
+     * Сохраняет параметры запроса для поторного использования после возврата с других страниц (к примеру, после
+     * перехода с детальной обратно в список - чтобы вернуться в точности в тот раздел, с которого ранее ушли)
+     */
     private function saveGetQuery()
     {
         $_SESSION['LAST_GET_QUERY'][get_called_class()] = $_GET;
     }
 
+    /**
+     * Восстанавливает последний GET-запрос, если в текущем задан параметр restore_query=Y
+     */
     private function restoreLastGetQuery()
     {
         if (!isset($_SESSION['LAST_GET_QUERY'][get_called_class()])
-          OR !isset($_REQUEST['restore_query'])
-          OR $_REQUEST['restore_query'] != 'Y'
+            OR !isset($_REQUEST['restore_query'])
+            OR $_REQUEST['restore_query'] != 'Y'
         ) {
             return;
         }
 
-        $_GET = array_merge($_GET,
-          $_SESSION['LAST_GET_QUERY'][get_called_class()]);
-        $_REQUEST = array_merge($_REQUEST,
-          $_SESSION['LAST_GET_QUERY'][get_called_class()]);
-
+        $_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
+        $_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
     }
-
 }
 

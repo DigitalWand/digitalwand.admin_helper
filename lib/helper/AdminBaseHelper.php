@@ -343,7 +343,6 @@ abstract class AdminBaseHelper
     /**
      * Получает название таблицы используемой модели
      * @return mixed
-     * @internal
      */
     public function table()
     {
