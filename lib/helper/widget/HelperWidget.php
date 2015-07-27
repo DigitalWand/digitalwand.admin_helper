@@ -55,6 +55,8 @@ IncludeModuleLangFile(__FILE__);
  *     объявленное виртуальным, отображается в графическом интерфейче, однако не участвоует в запросах к БД. Опция
  *     может быть полезной при реализации нестандартной логики, когда, к примеру, под именем одного поля могут
  *     выводиться данные из нескольких полей сразу. </li>
+ * <li><b>EDIT_IN_LIST</b> - параметр не обрабатывается непосредственно виджетом, однако используется хэлпером.
+ *     Указывает, можно ли редактировать данное поле в спискке</li>
  * </ul>
  *
  * @see HelperWidget::genEditHTML()
@@ -284,6 +286,8 @@ abstract class HelperWidget
 
     /**
      * Позволяет модифицировать опции, передаваемые в getList, непосредственно перед выборкой.
+     * Если в настройках явно указан способ фильтрации, до добавляет соответствующий префикс в $arFilter.
+     * Если фильтр BETWEEN, то формирует сложную логику фильтрации.
      *
      * @param array $filter $arFilter целиком
      * @param array $select
@@ -322,6 +326,10 @@ abstract class HelperWidget
                     }
                 }
             }
+
+        } else if ($filterPrefix = $this->getSettings('FILTER') AND isset($filter[$this->getCode()])) {
+            $filter[$filterPrefix . $this->getCode()] = $filter[$this->getCode()];
+            unset($filter[$this->getCode()]);
         }
     }
 

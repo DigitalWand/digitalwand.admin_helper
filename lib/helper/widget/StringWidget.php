@@ -3,16 +3,23 @@
 namespace AdminHelper\Widget;
 
 /**
- * Class StringWidget Виджет строки с текстом
+ * Class StringWidget
+ * Виджет строки с текстом.
+ *
  * Доступные опции:
  * <ul>
- * <li> STYLE - inline-стили
- * <li> SIZE - значение атрибута size для input
- * <li> TRANSLIT - true, если поле будет транслитерироваться в символьный код
+ * <li> <b>STYLE</b> - inline-стили для input </li>
+ * <li> <b>SIZE</b> - значение атрибута size для input </li>
+ * <li> <b>TRANSLIT</b> - true, если поле будет транслитерироваться в символьный код</li>
  * </ul>
  */
 class StringWidget extends HelperWidget
 {
+
+    static protected $defaults = array(
+        'FILTER' => '%' //Фильтрация по подстроке, а не по точному соответствию.
+    );
+
     /**
      * Генерирует HTML для редактирования поля
      * @see AdminEditHelper::showField();
@@ -49,30 +56,17 @@ class StringWidget extends HelperWidget
                        style="' . $style . '"/>' . $link;
     }
 
-    public function checkRequired()
-    {
-        if ($this->getSettings('REQUIRED') == true) {
-            $value = $this->getValue();
-
-            return !empty($value);
-        } else {
-            return true;
-        }
-    }
-
     /**
      * Генерирует HTML для поля в списке
      * @see AdminListHelper::addRowCell();
-     * @param CAdminListRow $row
+     * @param \CAdminListRow $row
      * @param array $data - данные текущей строки
-     * @return mixed
      */
     public function genListHTML(&$row, $data)
     {
         $value = $this->getValue();
         if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY']) {
-            $row->AddInputField($this->getCode(),
-              array('style' => 'width:90%'));
+            $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
         }
         $row->AddViewField($this->getCode(), $value);
 
@@ -80,6 +74,7 @@ class StringWidget extends HelperWidget
 
     /**
      * Генерирует HTML для поля фильтрации
+     * Если это BETWEEN, то выводит два поля для фильтрации
      * @see AdminListHelper::createFilterForm();
      * @return mixed
      */
@@ -109,23 +104,4 @@ class StringWidget extends HelperWidget
         }
         print '</tr>';
     }
-
-    /**
-     * Плиск по подстроке
-     * @param array $filter
-     * @param $select
-     * @param $sort
-     * @param array $raw
-     */
-    public function changeGetListOptions(&$filter, &$select, &$sort, $raw)
-    {
-        parent::changeGetListOptions($filter, $select, $sort, $raw);
-        if (isset($filter[$this->getCode()])) {
-            $filter["%" . $this->getCode()] = $filter[$this->getCode()];
-            unset($filter[$this->getCode()]);
-        }
-
-    }
-
-
 }
