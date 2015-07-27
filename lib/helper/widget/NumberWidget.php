@@ -5,15 +5,17 @@ namespace AdminHelper\Widget;
 IncludeModuleLangFile(__FILE__);
 
 /**
- * Class NumberWidget Виджет с числовыми значениями
- * Доступные опции:
- * <ul>
- * <li> STYLE - inline-стили
- * <li> SIZE - значение атрибута size для input
- * </ul>
+ * Class NumberWidget
+ * Виджет с числовыми значениями
+ * Точная копия StringWidget, только работает с числами и не ищет по подстроке
  */
 class NumberWidget extends StringWidget
 {
+
+    static protected $defaults = array(
+        'FILTER' => '='
+    );
+
     public function checkFilter($operationType, $value)
     {
         return $this->isNumber($value);
@@ -35,8 +37,6 @@ class NumberWidget extends StringWidget
             $this->addError('REQUIRED_FIELD_ERROR');
 
         } else if (!$this->isNumber($this->getValue())) {
-
-            $value = $this->getValue();
             $this->addError('VALUE_IS_NOT_NUMERIC');
         }
     }
