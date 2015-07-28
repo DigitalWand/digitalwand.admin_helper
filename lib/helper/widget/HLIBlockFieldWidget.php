@@ -1,11 +1,15 @@
 <?php
 namespace DigitalWand\AdminHelper\Widget;
 
-use AdminHelper\AdminBaseHelper;
+use DigitalWand\AdminHelper\AdminBaseHelper;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Entity\EntityError;
 use Bitrix\Main\Entity\Result;
 use Bitrix\Highloadblock as HL;
+use Bitrix\Main\Localization\Loc;
+
+
+Loc::loadMessages(__FILE__);
 
 class HLIBlockFieldWidget extends HelperWidget
 {

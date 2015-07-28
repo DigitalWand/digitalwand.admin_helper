@@ -3,6 +3,9 @@ namespace DigitalWand\AdminHelper\Widget;
 
 use AdminHelper\AdminBaseHelper;
 use Bitrix\Highloadblock\DataManager;
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
 
 class ImageWidget extends FileWidget
 {

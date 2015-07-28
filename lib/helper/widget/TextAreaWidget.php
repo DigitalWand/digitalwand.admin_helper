@@ -1,5 +1,10 @@
 <?php
 namespace DigitalWand\AdminHelper\Widget;
+
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 /**
  * Class TextAreaWidget
  * Выводит textarea для редактирования длинных строк.

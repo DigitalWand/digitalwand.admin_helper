@@ -1,8 +1,10 @@
 <?php
 namespace DigitalWand\AdminHelper\Widget;
 
-use AdminHelper\AdminBaseHelper;
-use Bitrix\Highloadblock\DataManager;
+use DigitalWand\AdminHelper\AdminBaseHelper;
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
 
 class FileWidget extends HelperWidget
 {

@@ -1,12 +1,14 @@
 <?php
 namespace DigitalWand\AdminHelper\Widget;
 
+use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\AdminBaseHelper;
 use DigitalWand\AdminHelper\AdminEditHelper;
 use DigitalWand\AdminHelper\AdminListHelper;
 use Bitrix\Main\Entity\DataManager;
 
-IncludeModuleLangFile(__FILE__);
+
+Loc::loadMessages(__FILE__);
 
 /**
  * Class HelperWidget

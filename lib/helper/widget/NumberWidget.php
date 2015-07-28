@@ -2,7 +2,9 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
-IncludeModuleLangFile(__FILE__);
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
 
 /**
  * Class NumberWidget

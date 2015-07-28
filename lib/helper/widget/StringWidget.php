@@ -2,6 +2,10 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 /**
  * Class StringWidget
  * Виджет строки с текстом.

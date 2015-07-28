@@ -2,7 +2,6 @@
 
 <?
 global $APPLICATION;
-RegisterModule("digitalwand.admin_helper");
 @CopyDirFiles($DOCUMENT_ROOT."/bitrix/modules/digitalwand.admin_helper/install/admin", $DOCUMENT_ROOT."/bitrix/admin", true);
 echo CAdminMessage::ShowNote(GetMessage("ADMIN_HELPER_INSTALL_COMPLETE_OK"));
 ?>

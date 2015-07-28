@@ -4,9 +4,11 @@ namespace DigitalWand\AdminHelper;
 
 IncludeModuleLangFile(__FILE__);
 
-
+use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
+
+Loc::loadMessages(__FILE__);
 
 /**
  * Class AdminListHelper

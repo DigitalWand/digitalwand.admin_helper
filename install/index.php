@@ -1,9 +1,11 @@
 <?
 global $MESS;
 
+use Bitrix\Main\Localization\Loc;
+
 $PathInstall = str_replace("\\", "/", __FILE__);
 $PathInstall = substr($PathInstall, 0, strlen($PathInstall) - strlen("/index.php"));
-IncludeModuleLangFile($PathInstall . "/install.php");
+Loc::loadMessages($PathInstall . "/install.php");
 include($PathInstall . "/version.php");
 
 if (class_exists("digital_wand_admin_helper")) return;

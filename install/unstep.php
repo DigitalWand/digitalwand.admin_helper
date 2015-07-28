@@ -1,7 +1,6 @@
 <?if(!check_bitrix_sessid()) return;?>
 <?
 global $APPLICATION;
-UnRegisterModule("digitalwand.admin_helper");
 echo CAdminMessage::ShowNote(GetMessage("ADMIN_HELPER_UNINSTALL_COMPLETE"));
 ?>
 

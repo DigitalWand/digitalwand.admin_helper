@@ -2,10 +2,11 @@
 
 namespace DigitalWand\AdminHelper;
 
+use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 
-IncludeModuleLangFile(__FILE__);
+Loc::loadMessages(__FILE__);
 
 /**
  * Class AdminEditHelper
