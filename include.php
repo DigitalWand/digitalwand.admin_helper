@@ -1,21 +1,23 @@
 <?
 
+use Bitrix\Main\Loader;
+
 IncludeModuleLangFile(__FILE__);
 
-CModule::AddAutoloadClasses('digitalwand.admin_helper',
-  array(
-    'AdminHelper\AdminBaseHelper' => "lib/helper/AdminBaseHelper.php",
-    'AdminHelper\AdminListHelper' => "lib/helper/AdminListHelper.php",
-    'AdminHelper\AdminEditHelper' => "lib/helper/AdminEditHelper.php",
+Loader::registerAutoLoadClasses('digitalwand.admin_helper',
+    array(
+        'DigitalWand\AdminHelper\AdminBaseHelper' => "lib/helper/AdminBaseHelper.php",
+        'DigitalWand\AdminHelper\AdminListHelper' => "lib/helper/AdminListHelper.php",
+        'DigitalWand\AdminHelper\AdminEditHelper' => "lib/helper/AdminEditHelper.php",
 
-    'AdminHelper\Widget\HelperWidget' => "lib/helper/widget/HelperWidget.php",
-    'AdminHelper\Widget\CheckboxWidget' => "lib/helper/widget/CheckboxWidget.php",
-    'AdminHelper\Widget\StringWidget' => "lib/helper/widget/StringWidget.php",
-    'AdminHelper\Widget\NumberWidget' => "lib/helper/widget/NumberWidget.php",
-    'AdminHelper\Widget\ImageWidget' => "lib/helper/widget/ImageWidget.php",
-    'AdminHelper\Widget\FileWidget' => "lib/helper/widget/FileWidget.php",
-    'AdminHelper\Widget\TextAreaWidget' => "lib/helper/widget/TextAreaWidget.php",
-    'AdminHelper\Widget\HLIBlockFieldWidget' => "lib/helper/widget/HLIBlockFieldWidget.php",
+        'DigitalWand\AdminHelper\Widget\HelperWidget' => "lib/helper/widget/HelperWidget.php",
+        'DigitalWand\AdminHelper\Widget\CheckboxWidget' => "lib/helper/widget/CheckboxWidget.php",
+        'DigitalWand\AdminHelper\Widget\StringWidget' => "lib/helper/widget/StringWidget.php",
+        'DigitalWand\AdminHelper\Widget\NumberWidget' => "lib/helper/widget/NumberWidget.php",
+        'DigitalWand\AdminHelper\Widget\ImageWidget' => "lib/helper/widget/ImageWidget.php",
+        'DigitalWand\AdminHelper\Widget\FileWidget' => "lib/helper/widget/FileWidget.php",
+        'DigitalWand\AdminHelper\Widget\TextAreaWidget' => "lib/helper/widget/TextAreaWidget.php",
+        'DigitalWand\AdminHelper\Widget\HLIBlockFieldWidget' => "lib/helper/widget/HLIBlockFieldWidget.php",
 
-  )
+    )
 );

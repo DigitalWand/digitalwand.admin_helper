@@ -1,8 +1,8 @@
 <?php
 
-namespace AdminHelper;
+namespace DigitalWand\AdminHelper;
 
-use AdminHelper\Widget\HelperWidget;
+use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
 

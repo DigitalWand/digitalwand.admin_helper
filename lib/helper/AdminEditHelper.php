@@ -1,8 +1,8 @@
 <?php
 
-namespace AdminHelper;
+namespace DigitalWand\AdminHelper;
 
-use AdminHelper\Widget\HelperWidget;
+use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 
 IncludeModuleLangFile(__FILE__);
@@ -105,7 +105,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
         if (isset($_REQUEST['apply']) OR isset($_REQUEST['save'])) {
             $this->data = $_REQUEST['FIELDS'];
             foreach ($fields as $name => $settings) {
-                if (is_a($settings['WIDGET'], 'AdminHelper\Widget\HLIBlockFieldWidget')) {
+                if (is_a($settings['WIDGET'], 'DigitalWand\AdminHelper\Widget\HLIBlockFieldWidget')) {
                     $this->data = array_merge($this->data, $_REQUEST);
                     break;
                 }

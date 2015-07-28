@@ -1,6 +1,6 @@
 <?php
 
-namespace AdminHelper\Widget;
+namespace DigitalWand\AdminHelper\Widget;
 
 IncludeModuleLangFile(__FILE__);
 

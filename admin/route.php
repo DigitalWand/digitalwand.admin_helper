@@ -1,7 +1,7 @@
 <?php
-use AdminHelper\AdminBaseHelper;
-use AdminHelper\AdminListHelper;
-use AdminHelper\AdminEditHelper;
+use DigitalWand\AdminHelper\AdminBaseHelper;
+use DigitalWand\AdminHelper\AdminListHelper;
+use DigitalWand\AdminHelper\AdminEditHelper;
 
 require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
 
@@ -43,12 +43,12 @@ $tabs = isset($interface['TABS']) ? $interface['TABS'] :array();
 $helperType = false;
 
 
-if (is_subclass_of($helper, 'AdminHelper\AdminEditHelper')) {
+if (is_subclass_of($helper, 'DigitalWand\AdminHelper\AdminEditHelper')) {
     $helperType = 'edit';
     /** @var AdminEditHelper $adminHelper */
     $adminHelper = new $helper($fields, $tabs);
 
-} else if (is_subclass_of($helper, 'AdminHelper\AdminListHelper')) {
+} else if (is_subclass_of($helper, 'DigitalWand\AdminHelper\AdminListHelper')) {
     $helperType = 'list';
     /** @var AdminListHelper $adminHelper */
     $adminHelper = new $helper($fields, $isPopup);

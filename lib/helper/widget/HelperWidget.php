@@ -1,9 +1,9 @@
 <?php
-namespace AdminHelper\Widget;
+namespace DigitalWand\AdminHelper\Widget;
 
-use AdminHelper\AdminBaseHelper;
-use AdminHelper\AdminEditHelper;
-use AdminHelper\AdminListHelper;
+use DigitalWand\AdminHelper\AdminBaseHelper;
+use DigitalWand\AdminHelper\AdminEditHelper;
+use DigitalWand\AdminHelper\AdminListHelper;
 use Bitrix\Main\Entity\DataManager;
 
 IncludeModuleLangFile(__FILE__);

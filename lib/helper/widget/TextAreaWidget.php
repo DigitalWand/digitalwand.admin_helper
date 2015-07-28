@@ -1,5 +1,5 @@
 <?php
-namespace AdminHelper\Widget;
+namespace DigitalWand\AdminHelper\Widget;
 /**
  * Class TextAreaWidget
  * Выводит textarea для редактирования длинных строк.

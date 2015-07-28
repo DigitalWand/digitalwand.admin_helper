@@ -1,11 +1,12 @@
 <?php
-namespace AdminHelper\Widget;
+namespace DigitalWand\AdminHelper\Widget;
 
 IncludeModuleLangFile(__FILE__);
 
 /**
- * Class CheckboxWidget Виджет "галочка"
-
+ * Class CheckboxWidget
+ * Виджет "галочка"
+ *
  */
 class CheckboxWidget extends HelperWidget
 {

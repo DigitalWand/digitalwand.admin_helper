@@ -1,5 +1,5 @@
 <?php
-namespace AdminHelper\Widget;
+namespace DigitalWand\AdminHelper\Widget;
 
 use AdminHelper\AdminBaseHelper;
 use Bitrix\Highloadblock\DataManager;

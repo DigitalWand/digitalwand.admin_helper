@@ -1,6 +1,6 @@
 <?php
 
-namespace AdminHelper;
+namespace DigitalWand\AdminHelper;
 
 IncludeModuleLangFile(__FILE__);
 
