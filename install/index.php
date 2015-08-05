@@ -8,9 +8,9 @@ $PathInstall = substr($PathInstall, 0, strlen($PathInstall) - strlen("/index.php
 Loc::loadMessages($PathInstall . "/install.php");
 include($PathInstall . "/version.php");
 
-if (class_exists("digital_wand_admin_helper")) return;
+if (class_exists("digitalwand_admin_helper")) return;
 
-Class digital_wand_admin_helper extends CModule
+Class digitalwand_admin_helper extends CModule
 {
     var $MODULE_ID = "digitalwand.admin_helper";
     var $MODULE_VERSION;
@@ -20,7 +20,7 @@ Class digital_wand_admin_helper extends CModule
     var $MODULE_GROUP_RIGHTS = "Y";
     var $MODULE_CSS;
 
-    function digital_wand_admin_helper()
+    function digitalwand_admin_helper()
     {
         $this->MODULE_VERSION = ADMIN_HELPER_VERSION;
         $this->MODULE_VERSION_DATE = ADMIN_HELPER_VERSION_DATE;
