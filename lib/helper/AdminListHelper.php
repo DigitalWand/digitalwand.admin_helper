@@ -283,12 +283,12 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         $this->footer = array(
             array(
-                "title" => GetMessage("MAIN_ADMIN_LIST_SELECTED"),
+                "title" => Loc::getMessage("MAIN_ADMIN_LIST_SELECTED"),
                 "value" => $res->SelectedRowsCount(),
             ),
             array(
                 "counter" => true,
-                "title" => GetMessage("MAIN_ADMIN_LIST_CHECKED"),
+                "title" => Loc::getMessage("MAIN_ADMIN_LIST_CHECKED"),
                 "value" => "0",
             ),
         );
@@ -306,9 +306,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         if (!$this->isPopup() && $this->hasRights()) {
             $this->contextMenu[] = array(
-                'TEXT' => GetMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
+                'TEXT' => Loc::getMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
                 'LINK' => static::getEditPageURL($this->additionalUrlParams),
-                'TITLE' => GetMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
+                'TITLE' => Loc::getMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
                 'ICON' => 'btn_new'
             );
         }
@@ -322,7 +322,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     protected function addGroupActions()
     {
         if (!$this->isPopup()) {
-            $this->groupActionsList = array('delete' => GetMessage("MAIN_ADMIN_LIST_DELETE"));
+            $this->groupActionsList = array('delete' => Loc::getMessage("MAIN_ADMIN_LIST_DELETE"));
         }
     }
 
@@ -433,7 +433,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $res = new \CAdminResult($res, static::$tablePrefix . $this->table());
         $res->NavStart();
 
-        $this->list->NavText($res->GetNavPrint(GetMessage("PAGES")));
+        $this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
 
         while ($data = $res->NavNext(false)) {
             $this->modifyRowData($data);
@@ -573,7 +573,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             $actions[] = array(
                 "ICON" => "select",
                 "DEFAULT" => true,
-                "TEXT" => GetMessage("MAIN_ADMIN_LIST_SELECT"),
+                "TEXT" => Loc::getMessage("MAIN_ADMIN_LIST_SELECT"),
                 "ACTION" => 'javascript:' . $this->popupClickFunctionName . '(' . $jsData . ')'
             );
 
@@ -585,14 +585,14 @@ abstract class AdminListHelper extends AdminBaseHelper
                 $actions[] = array(
                     "ICON" => "edit",
                     "DEFAULT" => true,
-                    "TEXT" => GetMessage("MAIN_ADMIN_LIST_EDIT"),
+                    "TEXT" => Loc::getMessage("MAIN_ADMIN_LIST_EDIT"),
                     "ACTION" => $this->list->ActionRedirect(static::getEditPageURL($query))
                 );
 
                 $actions[] = array(
                     "ICON" => "delete",
-                    "TEXT" => GetMessage("MAIN_ADMIN_LIST_DELETE"),
-                    "ACTION" => "if(confirm('" . GetMessage('MAIN_ADMIN_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
+                    "TEXT" => Loc::getMessage("MAIN_ADMIN_LIST_DELETE"),
+                    "ACTION" => "if(confirm('" . Loc::getMessage('MAIN_ADMIN_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
                             "delete", $viewQueryString)
                 );
             }
@@ -691,7 +691,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $className = static::getModel();
         $el = $className::getById($id);
         if ($el->getSelectedRowsCount() == 0) {
-            $this->list->AddGroupError(GetMessage("MAIN_ADMIN_SAVE_ERROR"), $id);
+            $this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR"), $id);
             return;
         }
 
@@ -715,7 +715,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $errors = $result->getErrorMessages();
         if (empty($this->validationErrors) AND !empty($errors)) {
             $fieldList = implode("\n", $errors);
-            $this->list->AddGroupError(GetMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList, $id);
+            $this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList, $id);
         }
 
         if (!empty($errors)) {

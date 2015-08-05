@@ -51,7 +51,7 @@ class CheckboxWidget extends HelperWidget
             $row->AddEditField($this->getCode(), $editHtml);
         }
 
-        $value = intval($this->getValue() == 'Y') ? GetMessage('CHECKBOX_YES') : GetMessage('CHECKBOX_NO');
+        $value = intval($this->getValue() == 'Y') ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
         $row->AddViewField($this->getCode(), $value);
 
     }
@@ -68,8 +68,8 @@ class CheckboxWidget extends HelperWidget
         print '<td>'.$this->settings['TITLE'].'</td>';
         print '<td> <select  name="'.$this->getFilterInputName().'">';
 
-        print '<option value="Y">'.GetMessage('CHECKBOX_YES').'</option>';
-        print '<option value="N">'.GetMessage('CHECKBOX_NO').'</option>';
+        print '<option value="Y">'.Loc::getMessage('CHECKBOX_YES').'</option>';
+        print '<option value="N">'.Loc::getMessage('CHECKBOX_NO').'</option>';
 
         print '</select></td>';
         print '</tr>';

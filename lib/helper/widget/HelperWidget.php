@@ -372,11 +372,11 @@ abstract class HelperWidget
     /**
      * Добавляет строку ошибки в массив ошибок.
      * @param string $messageId сообщение об ошибке. Плейсхолдер #FIELD# будет заменён на значение параметра TITLE
-     * @see GetMessage()
+     * @see Loc::getMessage()
      */
     protected function addError($messageId)
     {
-        $this->validationErrors[$this->getCode()] = GetMessage($messageId, array('#FIELD#' => $this->getSettings('TITLE')));
+        $this->validationErrors[$this->getCode()] = Loc::getMessage($messageId, array('#FIELD#' => $this->getSettings('TITLE')));
     }
 
     /**

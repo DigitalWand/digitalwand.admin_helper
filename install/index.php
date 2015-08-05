@@ -24,8 +24,8 @@ Class digitalwand_admin_helper extends CModule
     {
         $this->MODULE_VERSION = ADMIN_HELPER_VERSION;
         $this->MODULE_VERSION_DATE = ADMIN_HELPER_VERSION_DATE;
-        $this->MODULE_NAME = GetMessage("ADMIN_HELPER_INSTALL_NAME");
-        $this->MODULE_DESCRIPTION = GetMessage("ADMIN_HELPER_INSTALL_DESCRIPTION");
+        $this->MODULE_NAME = Loc::getMessage("ADMIN_HELPER_INSTALL_NAME");
+        $this->MODULE_DESCRIPTION = Loc::getMessage("ADMIN_HELPER_INSTALL_DESCRIPTION");
 
         $this->PARTNER_NAME = "DigitalWand";
         $this->PARTNER_URI = "";
@@ -37,7 +37,7 @@ Class digitalwand_admin_helper extends CModule
         RegisterModule($this->MODULE_ID);
         $this->InstallFiles();
         $APPLICATION->IncludeAdminFile(
-            GetMessage("ADMIN_HELPER_INSTALL_TITLE"),
+            Loc::getMessage("ADMIN_HELPER_INSTALL_TITLE"),
             $_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/" . $this->MODULE_ID . "/install/step.php"
         );
     }
@@ -47,7 +47,7 @@ Class digitalwand_admin_helper extends CModule
         global $APPLICATION;
         UnRegisterModule($this->MODULE_ID);
         $APPLICATION->IncludeAdminFile(
-            GetMessage("ADMIN_HELPER_INSTALL_TITLE"),
+            Loc::getMessage("ADMIN_HELPER_INSTALL_TITLE"),
             $_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/" . $this->MODULE_ID . "/install/unstep.php"
         );
     }

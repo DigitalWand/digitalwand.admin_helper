@@ -49,7 +49,7 @@ class StringWidget extends HelperWidget
             $nameId .= $pkVal;
             $linkedFunctionName .= $pkVal;
 
-            $link = '<image id="' . $nameId . '" title="' . GetMessage("IBSEC_E_LINK_TIP") . '" class="linked" src="/bitrix/themes/.default/icons/iblock/link.gif" onclick="' . $linkedFunctionName . '()" />';
+            $link = '<image id="' . $nameId . '" title="' . Loc::getMessage("IBSEC_E_LINK_TIP") . '" class="linked" src="/bitrix/themes/.default/icons/iblock/link.gif" onclick="' . $linkedFunctionName . '()" />';
         }
 
         //FIXME: тут было htmlentities, на на этом проекте оно превращает кириллицу в квакозябры.

@@ -72,9 +72,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
             $this->tabs = array(
                 array(
                     'DIV' => 'DEFAULT_TAB',
-                    'TAB' => GetMessage('DEFAULT_TAB'),
+                    'TAB' => Loc::getMessage('DEFAULT_TAB'),
                     "ICON" => "main_user_edit",
-                    'TITLE' => GetMessage('DEFAULT_TAB'),
+                    'TITLE' => Loc::getMessage('DEFAULT_TAB'),
                     'VISIBLE' => true,
                 )
             );
@@ -188,8 +188,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
     protected function fillMenu($showDeleteButton = true)
     {
         $returnToList = array(
-            "TEXT" => GetMessage('RETURN_TO_LIST'),
-            "TITLE" => GetMessage('RETURN_TO_LIST'),
+            "TEXT" => Loc::getMessage('RETURN_TO_LIST'),
+            "TITLE" => Loc::getMessage('RETURN_TO_LIST'),
             "LINK" => $this->getListPageURL(array_merge($this->additionalUrlParams,
                 array(
                     'restore_query' => 'Y'
@@ -205,8 +205,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
         if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasRights()) {
             $this->menu[] = array(
-                "TEXT" => GetMessage('DELETE'),
-                "TITLE" => GetMessage('DELETE'),
+                "TEXT" => Loc::getMessage('DELETE'),
+                "TITLE" => Loc::getMessage('DELETE'),
                 "LINK" => static::getEditPageURL(array_merge($this->additionalUrlParams,
                     array(
                         'ID' => $this->data[$this->pk()],
