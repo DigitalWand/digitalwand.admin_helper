@@ -325,25 +325,7 @@ abstract class AdminBaseHelper
      */
     public static function getModel()
     {
-        if(!class_exists(static::$model)){
-            $parameters = array(
-                'filter' => array(
-                    'NAME' => static::$model,
-                ),
-                'limit' => 1
-            );
-            $hlIblockInfo = HL\HighloadBlockTable::getList($parameters)->fetch();
-            if($hlIblockInfo){
-                $entity = HL\HighloadBlockTable::compileEntity($hlIblockInfo);
-                static::$model = $entity->getDataClass();
-            } else {
-                $error = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_GETMODEL_EXCEPTION');
-                $exception = new \Exception($error);
-
-                throw $exception;
-            }
-        }
-        return static::$model;
+        return static::getHLEntity(static::$model);
     }
 
     /**
@@ -655,22 +637,38 @@ abstract class AdminBaseHelper
     }
 
     /**
-     * @see Bitrix\Highloadblock\DataManager
-     * @see /bitrix/modules/highloadblock/admin/highloadblock_row_edit.php
-     * Только классы, полученные путём этой странной процедуры,
-     * могут корректно обрабатывать пользовательские множественные поля.
+     * Если класс не объявлен, то битрикс генерирует новый класс в рантайме.
+     * Если класс уже есть, то возвращаем имя как есть.
      *
-     * Необходимо использовать именно их для обработки результатов этого виджета.
-     *
-     * @param $entityId
-     *
+     * @param $className
      * @return \Bitrix\Highloadblock\DataManager
+     *
+     * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
+     * @throws \Exception
+     *
      */
-    public static function getHIBlockEntity($entityId)
+    public static function getHLEntity($className)
     {
-        $hlblock = HL\HighloadBlockTable::getById($entityId)->fetch();
-        $entity = HL\HighloadBlockTable::compileEntity($hlblock);
-        return $entity->getDataClass();
+        if(!class_exists($className)){
+            $parameters = array(
+                'filter' => array(
+                    'NAME' => $className,
+                ),
+                'limit' => 1
+            );
+            $hlInfo = HL\HighloadBlockTable::getList($parameters)->fetch();
+            if($hlInfo){
+                $entity = HL\HighloadBlockTable::compileEntity($hlInfo);
+                return $entity->getDataClass();
+            } else {
+                $error = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_GETMODEL_EXCEPTION');
+                $exception = new \Exception($error);
+
+                throw $exception;
+            }
+        }
+
+        return $className;
     }
 }

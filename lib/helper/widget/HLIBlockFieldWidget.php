@@ -68,6 +68,8 @@ class HLIBlockFieldWidget extends HelperWidget
      *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
+     *
+     * FIXME: переписать так, чтобы не зависел от ID хайлоад-иблока
      */
     public function processEditAction()
     {
@@ -79,7 +81,7 @@ class HLIBlockFieldWidget extends HelperWidget
         $data = array();
         $USER_FIELD_MANAGER->EditFormAddFields($iblockId, $data);
 
-        $entity_data_class = AdminBaseHelper::getHIBlockEntity($this->getSettings('HLIBLOCK_ID'));
+        $entity_data_class = AdminBaseHelper::getHLEntity($this->getSettings('HLIBLOCK_ID'));
 
         $oldData = $this->getOldFieldData($entity_data_class);
         $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $oldData, LANGUAGE_ID, false, 'ID');
