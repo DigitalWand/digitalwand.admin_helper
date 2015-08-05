@@ -2,6 +2,7 @@
 
 namespace DigitalWand\AdminHelper;
 
+use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
@@ -314,12 +315,34 @@ abstract class AdminBaseHelper
     }
 
     /**
-     * @return string | DataManager
+     * @return \Bitrix\Main\Entity\DataManager|string Возвращает имя класса используемой модели
      * Возвращает имя класса используемой модели
+     *
+     * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\SystemException
+     * @throws \Exception
      * @api
      */
     public static function getModel()
     {
+        if(!class_exists(static::$model)){
+            $parameters = array(
+                'filter' => array(
+                    'NAME' => static::$model,
+                ),
+                'limit' => 1
+            );
+            $hlIblockInfo = HL\HighloadBlockTable::getList($parameters)->fetch();
+            if($hlIblockInfo){
+                $entity = HL\HighloadBlockTable::compileEntity($hlIblockInfo);
+                static::$model = $entity->getDataClass();
+            } else {
+                $error = Loc::getMessage('ADMINHELPER_GETMODEL_EXCEPTION');
+                $exception = new \Exception($error);
+
+                throw $exception;
+            }
+        }
         return static::$model;
     }
 
