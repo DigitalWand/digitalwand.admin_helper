@@ -1,8 +1,9 @@
 <?
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 
-IncludeModuleLangFile(__FILE__);
+Loc::loadMessages(__FILE__);
 
 Loader::registerAutoLoadClasses('digitalwand.admin_helper',
     array(
