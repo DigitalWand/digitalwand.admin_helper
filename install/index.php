@@ -19,6 +19,8 @@ Class digitalwand_admin_helper extends CModule
     var $MODULE_DESCRIPTION;
     var $MODULE_GROUP_RIGHTS = "Y";
     var $MODULE_CSS;
+    var $PARTNER_NAME = "DigitalWand";
+    var $PARTNER_URI = "";
 
     function digitalwand_admin_helper()
     {
@@ -26,9 +28,6 @@ Class digitalwand_admin_helper extends CModule
         $this->MODULE_VERSION_DATE = ADMIN_HELPER_VERSION_DATE;
         $this->MODULE_NAME = Loc::getMessage("ADMIN_HELPER_INSTALL_NAME");
         $this->MODULE_DESCRIPTION = Loc::getMessage("ADMIN_HELPER_INSTALL_DESCRIPTION");
-
-        $this->PARTNER_NAME = "DigitalWand";
-        $this->PARTNER_URI = "";
     }
 
     function DoInstall()
@@ -38,7 +37,7 @@ Class digitalwand_admin_helper extends CModule
         $this->InstallFiles();
         $APPLICATION->IncludeAdminFile(
             Loc::getMessage("ADMIN_HELPER_INSTALL_TITLE"),
-            $_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/" . $this->MODULE_ID . "/install/step.php"
+            __DIR__ . "/step.php"
         );
     }
 
@@ -48,14 +47,13 @@ Class digitalwand_admin_helper extends CModule
         UnRegisterModule($this->MODULE_ID);
         $APPLICATION->IncludeAdminFile(
             Loc::getMessage("ADMIN_HELPER_INSTALL_TITLE"),
-            $_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/" . $this->MODULE_ID . "/install/unstep.php"
+            __DIR__ . "/unstep.php"
         );
     }
 
     function InstallFiles()
     {
-        CopyDirFiles($_SERVER['DOCUMENT_ROOT'] . "/local/modules/" . $this->MODULE_ID . "/install/admin",
-            $_SERVER['DOCUMENT_ROOT'] . "/bitrix/admin");
+        CopyDirFiles(__DIR__ . "/admin", $_SERVER['DOCUMENT_ROOT'] . "/bitrix/admin");
 
         return true;
     }
