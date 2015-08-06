@@ -9,6 +9,7 @@ use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
 
 Loader::includeModule('highloadblock');
+
 /**
  * Class AdminBaseHelper
  * Данный модуль реализует подход MVC для создания административного интерфейса.
@@ -652,16 +653,10 @@ abstract class AdminBaseHelper
      */
     public static function getHLEntity($className)
     {
-        if(!class_exists($className)){
-            $parameters = array(
-                'filter' => array(
-                    'NAME' => $className,
-                ),
-                'limit' => 1
-            );
-            $hlInfo = HL\HighloadBlockTable::getList($parameters)->fetch();
-            if($hlInfo){
-                $entity = HL\HighloadBlockTable::compileEntity($hlInfo);
+        if (!class_exists($className)) {
+            $info = static::getHLEntityInfo($className);
+            if ($info) {
+                $entity = HL\HighloadBlockTable::compileEntity($info);
                 return $entity->getDataClass();
             } else {
                 $error = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_GETMODEL_EXCEPTION');
@@ -672,5 +667,24 @@ abstract class AdminBaseHelper
         }
 
         return $className;
+    }
+
+    /**
+     * Получает запись из БД с информацией об HL.
+     *
+     * @param $className
+     * @return array|false
+     * @throws \Bitrix\Main\ArgumentException
+     */
+    public static function getHLEntityInfo($className)
+    {
+        $parameters = array(
+            'filter' => array(
+                'NAME' => $className,
+            ),
+            'limit' => 1
+        );
+
+        return HL\HighloadBlockTable::getList($parameters)->fetch();
     }
 }

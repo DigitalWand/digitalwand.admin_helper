@@ -8,12 +8,21 @@ use Bitrix\Main\Entity\Result;
 use Bitrix\Highloadblock as HL;
 use Bitrix\Main\Localization\Loc;
 
-
 Loc::loadMessages(__FILE__);
 
+/**
+ * Виджет, отображающийстандартные поля, создаваемые в HL-инфоблоке в админке.
+ *
+ * Настройки:
+ * <ul>
+ * <li><b>MODEL</b> - Название модели, из которой будет производиться выборка данных. По-умолчанию - модель текущего
+ * хэлпера</li>
+ * </ul>
+ * Class HLIBlockFieldWidget
+ * @package DigitalWand\AdminHelper\Widget
+ */
 class HLIBlockFieldWidget extends HelperWidget
 {
-
     static public $useBxAPI = true;
     static protected $userFieldsCache = array();
 
@@ -21,7 +30,7 @@ class HLIBlockFieldWidget extends HelperWidget
     {
         /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
         global $USER_FIELD_MANAGER;
-        $iblockId = 'HLBLOCK_'.$iblockId;
+        $iblockId = 'HLBLOCK_' . $iblockId;
         if (!isset(static::$userFieldsCache[$iblockId][$data['ID']])) {
             $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $data, LANGUAGE_ID, false, 'ID');
             self::$userFieldsCache[$iblockId][$data['ID']] = $fields;
@@ -39,7 +48,7 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     protected function genEditHTML()
     {
-        $iblockId = $this->getSettings('HLIBLOCK_ID');
+        $iblockId = $this->getHLId();
         $fields = self::getUserFields($iblockId, $this->data);
         if (isset($fields[$this->getCode()])) {
 
@@ -54,8 +63,8 @@ class HLIBlockFieldWidget extends HelperWidget
 
             $arUserField["VALUE_ID"] = intval($this->data['ID']);
 
-            if (isset($_REQUEST['def_'.$FIELD_NAME])) {
-                $arUserField['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_'.$FIELD_NAME];
+            if (isset($_REQUEST['def_' . $FIELD_NAME])) {
+                $arUserField['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
             }
             print $USER_FIELD_MANAGER->GetEditFormHTML($bVarsFromForm, $GLOBALS[$FIELD_NAME], $arUserField);
 
@@ -76,29 +85,28 @@ class HLIBlockFieldWidget extends HelperWidget
         /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
         global $USER_FIELD_MANAGER;
         global $APPLICATION;
-        $iblockId = 'HLBLOCK_'.$this->getSettings('HLIBLOCK_ID');
+        $iblockId = 'HLBLOCK_' . $this->getHLId();
 
         $data = array();
         $USER_FIELD_MANAGER->EditFormAddFields($iblockId, $data);
 
-        $entity_data_class = AdminBaseHelper::getHLEntity($this->getSettings('HLIBLOCK_ID'));
+        $entity_data_class = AdminBaseHelper::getHLEntity($this->getHLId());
 
         $oldData = $this->getOldFieldData($entity_data_class);
         $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $oldData, LANGUAGE_ID, false, 'ID');
         list($data, $multiValues) = $this->convertValuesBeforeSave($data, $fields);
         // use save modifiers
-        foreach ($data as $fieldName => $value)
-        {
+        foreach ($data as $fieldName => $value) {
             $field = $entity_data_class::getEntity()->getField($fieldName);
             $data[$fieldName] = $field->modifyValueBeforeSave($value, $data);
         }
 
         //Чтобы не терялись старые данные
-        if(!isset($data[$this->getCode()]) AND isset($data[$this->getCode().'_old_id'])){
-            $data[$this->getCode()] = $data[$this->getCode().'_old_id'];
+        if (!isset($data[$this->getCode()]) AND isset($data[$this->getCode() . '_old_id'])) {
+            $data[$this->getCode()] = $data[$this->getCode() . '_old_id'];
         }
 
-        if($unserialized = unserialize($data[$this->getCode()])){
+        if ($unserialized = unserialize($data[$this->getCode()])) {
             $this->data[$this->getCode()] = $unserialized;
         } else {
             $this->data[$this->getCode()] = $data[$this->getCode()];
@@ -129,38 +137,29 @@ class HLIBlockFieldWidget extends HelperWidget
     {
         $multiValues = array();
 
-        foreach ($data as $k => $v)
-        {
-            if ($k == 'ID')
-            {
+        foreach ($data as $k => $v) {
+            if ($k == 'ID') {
                 continue;
             }
 
             $userfield = $userfields[$k];
 
-            if ($userfield['MULTIPLE'] == 'N')
-            {
+            if ($userfield['MULTIPLE'] == 'N') {
                 $inputValue = array($v);
-            }
-            else
-            {
+            } else {
                 $inputValue = $v;
             }
 
             $tmpValue = array();
 
-            foreach ($inputValue as $singleValue)
-            {
+            foreach ($inputValue as $singleValue) {
                 $tmpValue[] = $this->convertSingleValueBeforeSave($singleValue, $userfield);
             }
 
             // write value back
-            if ($userfield['MULTIPLE'] == 'N')
-            {
+            if ($userfield['MULTIPLE'] == 'N') {
                 $data[$k] = $tmpValue[0];
-            }
-            else
-            {
+            } else {
                 // remove empty (false) values
                 $tmpValue = array_filter($tmpValue, 'strlen');
 
@@ -181,15 +180,13 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     protected function convertSingleValueBeforeSave($value, $userfield)
     {
-        if(is_callable(array($userfield["USER_TYPE"]["CLASS_NAME"], "onbeforesave")))
-        {
+        if (is_callable(array($userfield["USER_TYPE"]["CLASS_NAME"], "onbeforesave"))) {
             $value = call_user_func_array(
                 array($userfield["USER_TYPE"]["CLASS_NAME"], "onbeforesave"), array($userfield, $value)
             );
         }
 
-        if(strlen($value)<=0)
-        {
+        if (strlen($value) <= 0) {
             $value = false;
         }
 
@@ -197,12 +194,50 @@ class HLIBlockFieldWidget extends HelperWidget
     }
 
     /**
+     * Получаем ID HL-инфоблока по имени его класса
+     * @return mixed
+     */
+    protected function getHLId()
+    {
+        static $id = false;
+
+        if ($id === false) {
+            $model = $this->getSettings('MODEL');
+            $info = AdminBaseHelper::getHLEntityInfo($model);
+            if ($info AND isset($info['ID'])) {
+                $id = $info['ID'];
+            }
+        }
+
+        return $id;
+
+    }
+
+    /**
+     * Если запрашивается модель, и если модель явно не указана, то берется модель текущего хэлпера, сохраняется для
+     * последующего использования и возарвщвется пользователю.
+     *
+     * @param string $name
+     * @return array|\Bitrix\Main\Entity\DataManager|mixed|string
+     */
+    public function getSettings($name = '')
+    {
+        $value = parent::getSettings($name);
+        if (!$value AND $name == 'MODEL') {
+            $value = $this->helper->getModel();
+            $this->setSetting($name, $value);
+        }
+        return $value;
+    }
+
+
+    /**
      * Генерирует HTML для поля в списке
      *
      * @see AdminListHelper::addRowCell();
      *
      * @param \CAdminListRow $row
-     * @param array          $data - данные текущей строки
+     * @param array $data - данные текущей строки
      *
      * @return mixed
      */
