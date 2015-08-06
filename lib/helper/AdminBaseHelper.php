@@ -672,12 +672,17 @@ abstract class AdminBaseHelper
     /**
      * Получает запись из БД с информацией об HL.
      *
-     * @param $className
+     * @param $className - название класса, обязательно без Table в конце и без указания неймспейса
      * @return array|false
      * @throws \Bitrix\Main\ArgumentException
      */
     public static function getHLEntityInfo($className)
     {
+        $className = str_replace('\\', '', $className);
+        $pos = strripos($className, 'Table', -5);
+        if ($pos !== false) {
+            $className = substr($className, 0, $pos);
+        }
         $parameters = array(
             'filter' => array(
                 'NAME' => $className,
