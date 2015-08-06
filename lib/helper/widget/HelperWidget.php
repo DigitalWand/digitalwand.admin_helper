@@ -327,7 +327,7 @@ abstract class HelperWidget
                 }
             }
 
-        } else if ($filterPrefix = $this->getSettings('FILTER') AND isset($filter[$this->getCode()])) {
+        } else if ($filterPrefix = $this->getSettings('FILTER') AND $filterPrefix !== true AND isset($filter[$this->getCode()])) {
             $filter[$filterPrefix . $this->getCode()] = $filter[$this->getCode()];
             unset($filter[$this->getCode()]);
         }
