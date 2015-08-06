@@ -124,7 +124,7 @@ abstract class HelperWidget
      * В этом случае поля не нужно оборачивать в некоторые теги, некоторые функции не нужно запускать.
      * @see CAdminPage
      */
-    static public $useBxAPI = false;
+//    static public $useBxAPI = false;
 
     /**
      * @param array $settings
@@ -139,7 +139,6 @@ abstract class HelperWidget
     /**
      * Генерирует HTML для редактирования поля
      *
-     * @see AdminEditHelper::showField();
      * @return string
      * @api
      */
@@ -151,7 +150,6 @@ abstract class HelperWidget
      *
      * @param $isPKField - является ли поле первичным ключом модели
      *
-     * @see AdminEditHelper::showField();
      * @see HelperWidget::genEditHTML();
      */
     public function genBasicEditField($isPKField)
@@ -160,7 +158,7 @@ abstract class HelperWidget
             return;
         }
 
-        if (static::$useBxAPI) {
+        if ($this->getSettings('USE_BX_API')) {
             $this->genEditHTML();
 
         } else {
@@ -247,6 +245,16 @@ abstract class HelperWidget
                 }
             }
         }
+    }
+
+    /**
+     * Возвращает настройки по-умолчанию.
+     *
+     * @return array
+     */
+    static public function getDefaultSettings()
+    {
+        return static::$defaults;
     }
 
     /**

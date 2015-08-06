@@ -17,7 +17,6 @@ class ImageWidget extends FileWidget
     );
     /**
      * Генерирует HTML для редактирования поля
-     * @see AdminEditHelper::showField();
      * @return mixed
      */
     protected function genEditHTML()

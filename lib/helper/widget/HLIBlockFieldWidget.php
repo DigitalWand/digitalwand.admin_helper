@@ -23,8 +23,11 @@ Loc::loadMessages(__FILE__);
  */
 class HLIBlockFieldWidget extends HelperWidget
 {
-    static public $useBxAPI = true;
+//    static public $useBxAPI = true;
     static protected $userFieldsCache = array();
+    static protected $defaults = array(
+        'USE_BX_API' => true
+    );
 
     static public function getUserFields($iblockId, $data)
     {
@@ -43,7 +46,6 @@ class HLIBlockFieldWidget extends HelperWidget
      * Генерирует HTML для редактирования поля
      *
      * @see \CAdminForm::ShowUserFieldsWithReadyData
-     * @see AdminEditHelper::showField();
      * @return mixed
      */
     protected function genEditHTML()

@@ -296,47 +296,37 @@ abstract class AdminEditHelper extends AdminBaseHelper
      * Отрисовывает вкладку со всеми привязанными к ней полями.
      *
      * @param $tabSettings
-     * @see AdminEditHelper::showField()
      * @internal
      */
     private function showTabElements($tabSettings)
     {
         $this->tabControl->BeginNextFormTab();
         foreach ($this->getFields() as $code => $fieldSettings) {
-            $fieldOnCurrentTab = ((isset($fieldSettings['TAB']) AND $fieldSettings['TAB'] == $tabSettings['DIV']) OR $tabSettings['DIV'] == 'DEFAULT_TAB');
+
+            $widget = $this->createWidgetForField($code);
+            if(!$widget) continue;
+
+            $fieldTab = $widget->getSettings('TAB');
+            $fieldOnCurrentTab = ($fieldTab == $tabSettings['DIV'] OR $tabSettings['DIV'] == 'DEFAULT_TAB');
 
             if (!$fieldOnCurrentTab) {
                 continue;
             }
 
+            $fieldSettings = $widget->getSettings();
             if (isset($fieldSettings['VISIBLE']) && $fieldSettings['VISIBLE'] === false) {
                 continue;
             }
 
             $pkField = $code == $this->pk();
-            if (isset($fieldSettings['USE_BX_API']) AND $fieldSettings['USE_BX_API'] == true) {
-                $this->showField($code, $pkField);
+            if ($widget->getSettings('USE_BX_API')) {
+                $widget->genBasicEditField($pkField);
 
             } else {
-                $this->tabControl->BeginCustomField($code, $fieldSettings['TITLE']);
-                $this->showField($code, $pkField);
+                $this->tabControl->BeginCustomField($code, $widget->getSettings('TITLE'));
+                $widget->genBasicEditField($pkField);
                 $this->tabControl->EndCustomField($code);
             }
-        }
-    }
-
-    /**
-     * Отрисовывает поле для редактирования, используя для этого виджет, указанный в настройках
-     *
-     * @param string $code код поля (название колонки в БД)
-     * @param bool $isPKField является ли поле первичным ключом
-     * @internal
-     */
-    protected function showField($code, $isPKField)
-    {
-        $widget = $this->createWidgetForField($code, $this->data);
-        if ($widget) {
-            $widget->genBasicEditField($isPKField);
         }
     }
 

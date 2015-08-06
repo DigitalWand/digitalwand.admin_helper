@@ -15,7 +15,6 @@ class CheckboxWidget extends HelperWidget
     /**
      * Генерирует HTML для редактирования поля
      *
-     * @see AdminEditHelper::showField();
      * @return mixed
      */
     protected function genEditHTML()
