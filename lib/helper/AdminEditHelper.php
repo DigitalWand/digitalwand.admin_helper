@@ -488,9 +488,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
     protected function setElementTitle()
     {
         if (!empty($this->data)) {
-            $title = $this->data[$this->pk()];
+            $title = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_TITLE', array('#ID#' => $this->data[$this->pk()]));
         } else {
-            $title = "New element"; //FIXME: обернуть в ланги
+            $title = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_NEW_ELEMENT');
         }
 
         $this->setTitle($title);

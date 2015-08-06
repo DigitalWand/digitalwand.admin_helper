@@ -660,7 +660,7 @@ abstract class AdminBaseHelper
                 $entity = HL\HighloadBlockTable::compileEntity($info);
                 return $entity->getDataClass();
             } else {
-                $error = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_GETMODEL_EXCEPTION');
+                $error = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_GETMODEL_EXCEPTION', array('#CLASS#' => $className));
                 $exception = new \Exception($error);
 
                 throw $exception;
