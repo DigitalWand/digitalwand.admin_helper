@@ -98,7 +98,7 @@ abstract class AdminListHelper extends AdminBaseHelper
      * административного интерфейса, в результате чего неправильно будет работать паджинация, фильтрация. Вероятны
      * ошибки запросов к БД.
      */
-    static protected $tablePrefix = "digitalwand.admin_helper_";
+    static protected $tablePrefix = "digitalwand_admin_helper_";
 
     /**
      * @var array
@@ -163,8 +163,8 @@ abstract class AdminListHelper extends AdminBaseHelper
         }
 
         $className = static::getModel();
-        $oSort = new \CAdminSorting(static::$tablePrefix . $this->table(), static::pk(), "asc");
-        $this->list = new \CAdminList(static::$tablePrefix . $this->table(), $oSort);
+        $oSort = new \CAdminSorting($this->getListTableID(), static::pk(), "asc");
+        $this->list = new \CAdminList($this->getListTableID(), $oSort);
         $this->list->InitFilter($this->arFilterFields);
 
         if ($this->list->EditAction() AND $this->hasRights()) {
@@ -430,7 +430,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         $res = $this->getList($className, $this->arFilter, $visibleColumns, $sort, $raw);
 
-        $res = new \CAdminResult($res, static::$tablePrefix . $this->table());
+        $res = new \CAdminResult($res, $this->getListTableID());
         $res->NavStart();
 
         $this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
@@ -622,10 +622,9 @@ abstract class AdminListHelper extends AdminBaseHelper
      */
     public function createFilterForm()
     {
-        global $APPLICATION;
         print ' <form name="find_form" method="GET" action="' . static::getListPageURL($this->additionalUrlParams) . '?">';
 
-        $oFilter = new \CAdminFilter(static::$tablePrefix . $this->table() . '_filter', $this->isPopup(), $this->arFilterOpts);
+        $oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->isPopup(), $this->arFilterOpts);
         $oFilter->Begin();
         foreach ($this->arFilterOpts as $code => $name) {
             $widget = $this->createWidgetForField($code);
@@ -635,7 +634,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         }
 
         $oFilter->Buttons(array(
-            "table_id" => static::$tablePrefix . $this->table(),
+            "table_id" => $this->getListTableID(),
             "url" => static::getListPageURL($this->additionalUrlParams),
             "form" => "find_form",
         ));
@@ -667,12 +666,23 @@ abstract class AdminListHelper extends AdminBaseHelper
         return empty($filterValidationErrors);
     }
 
+    /**
+     * Возвращает ID таблицы, который не должен конфликтовать с ID в других разделах админки, а также нормально
+     * парситься в JS
+     *
+     * @return string
+     */
+    protected function getListTableID()
+    {
+        return str_replace('.', '', static::$tablePrefix . $this->table());
+    }
 
     /**
      * Сохранение полей для отной записи, отредактированной в списке.
      * Этапы:
      * <ul>
-     * <li> Выборка элемента по ID, чтобы удостовериться, что он существует. В противном случае  возвращается ошибка</li>
+     * <li> Выборка элемента по ID, чтобы удостовериться, что он существует. В противном случае  возвращается
+     * ошибка</li>
      * <li> Создание виджета для каждой ячейки, валидация значений поля</li>
      * <li> TODO: вывод ошибок валидации</li>
      * <li> Сохранение записи</li>
@@ -720,7 +730,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         if (!empty($errors)) {
             foreach ($allWidgets as $widget) {
-                /** @var \AdminHelper\Widget\HelperWidget $widget */
+                /** @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget */
                 $widget->setData($fields);
                 $widget->processAfterSaveAction();
             }
