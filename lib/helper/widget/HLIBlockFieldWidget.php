@@ -235,6 +235,7 @@ class HLIBlockFieldWidget extends HelperWidget
 
     /**
      * Генерирует HTML для поля в списке
+     * Копипаст из API Битрикса, бессмысленного и беспощадного...
      *
      * @see AdminListHelper::addRowCell();
      *
@@ -245,7 +246,24 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     public function genListHTML(&$row, $data)
     {
-        // TODO: Implement genListHTML() method.
+        $iblockId = $this->getHLId();
+        $fields = self::getUserFields($iblockId, $this->data);
+        if (isset($fields[$this->getCode()])) {
+
+            /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
+            global $USER_FIELD_MANAGER;
+            $FIELD_NAME = $this->getCode();
+            $GLOBALS[$FIELD_NAME] = isset($GLOBALS[$FIELD_NAME]) ? $GLOBALS[$FIELD_NAME] : $this->data[$this->getCode()];
+            $arUserField = $fields[$this->getCode()];
+
+            $arUserField["VALUE_ID"] = intval($this->data['ID']);
+
+            if (isset($_REQUEST['def_' . $FIELD_NAME])) {
+                $arUserField['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
+            }
+            $USER_FIELD_MANAGER->AddUserField($arUserField, $data[$this->getCode()], $row);
+
+        }
     }
 
     /**
