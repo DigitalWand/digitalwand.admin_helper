@@ -303,7 +303,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
         $this->tabControl->BeginNextFormTab();
         foreach ($this->getFields() as $code => $fieldSettings) {
 
-            $widget = $this->createWidgetForField($code);
+            $widget = $this->createWidgetForField($code, $this->data);
             if (!$widget) continue;
 
             $fieldTab = $widget->getSettings('TAB');

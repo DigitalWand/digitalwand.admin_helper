@@ -194,8 +194,7 @@ abstract class AdminListHelper extends AdminBaseHelper
                 foreach ($this->fields as $code => $settings) {
                     $widget = $this->createWidgetForField($code);
                     if ($widget) {
-                        $widget->changeGetListOptions($this->arFilter,
-                            $raw['SELECT'], $raw['SORT'], $raw);
+                        $widget->changeGetListOptions($this->arFilter, $raw['SELECT'], $raw['SORT'], $raw);
                     }
                 }
 
