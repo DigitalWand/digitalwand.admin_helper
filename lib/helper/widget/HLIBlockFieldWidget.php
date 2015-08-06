@@ -246,8 +246,8 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     public function genListHTML(&$row, $data)
     {
-        $iblockId = $this->getHLId();
-        $fields = self::getUserFields($iblockId, $this->data);
+        $id = $this->getHLId();
+        $fields = self::getUserFields($id, $this->data);
         if (isset($fields[$this->getCode()])) {
 
             /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
@@ -274,8 +274,8 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     public function genFilterHTML()
     {
-        $iblockId = $this->getHLId();
-        $fields = self::getUserFields($iblockId, $this->data);
+        $id = $this->getHLId();
+        $fields = self::getUserFields($id, $this->data);
         if (isset($fields[$this->getCode()])) {
             /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
             global $USER_FIELD_MANAGER;
