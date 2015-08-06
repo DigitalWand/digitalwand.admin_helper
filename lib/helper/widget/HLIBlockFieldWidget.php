@@ -60,9 +60,10 @@ class HLIBlockFieldWidget extends HelperWidget
             $arUserField = $fields[$this->getCode()];
             $bVarsFromForm = false;
 
-            //Копипаст из битрикса
-
             $arUserField["VALUE_ID"] = intval($this->data['ID']);
+            if(empty($arUserField['EDIT_FORM_LABEL'])){
+                $arUserField['EDIT_FORM_LABEL'] = $this->getSettings('TITLE');
+            }
 
             if (isset($_REQUEST['def_' . $FIELD_NAME])) {
                 $arUserField['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
@@ -78,8 +79,6 @@ class HLIBlockFieldWidget extends HelperWidget
      *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
-     *
-     * FIXME: переписать так, чтобы не зависел от ID хайлоад-иблока
      */
     public function processEditAction()
     {
@@ -284,6 +283,9 @@ class HLIBlockFieldWidget extends HelperWidget
             $arUserField = $fields[$this->getCode()];
 
             $arUserField["VALUE_ID"] = intval($this->data['ID']);
+            if(empty($arUserField['LIST_FILTER_LABEL'])){
+                $arUserField['LIST_FILTER_LABEL'] = $this->getSettings('TITLE');
+            }
 
             print $USER_FIELD_MANAGER->GetFilterHTML($arUserField, $this->getFilterInputName(), $this->getCurrentFilterValue());
         }
