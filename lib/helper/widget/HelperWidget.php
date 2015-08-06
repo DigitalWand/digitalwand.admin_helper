@@ -248,16 +248,6 @@ abstract class HelperWidget
     }
 
     /**
-     * Возвращает настройки по-умолчанию.
-     *
-     * @return array
-     */
-    static public function getDefaultSettings()
-    {
-        return static::$defaults;
-    }
-
-    /**
      * Передаёт в виджет ссылку на вызывающий его объект.
      * @param AdminBaseHelper $helper
      */
