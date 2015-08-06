@@ -2,11 +2,13 @@
 
 namespace DigitalWand\AdminHelper;
 
+use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
 
+Loader::includeModule('highloadblock');
 /**
  * Class AdminBaseHelper
  * Данный модуль реализует подход MVC для создания административного интерфейса.

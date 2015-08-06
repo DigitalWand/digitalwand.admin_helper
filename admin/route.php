@@ -1,4 +1,5 @@
 <?php
+use Bitrix\Main\Loader;
 use DigitalWand\AdminHelper\AdminBaseHelper;
 use DigitalWand\AdminHelper\AdminListHelper;
 use DigitalWand\AdminHelper\AdminEditHelper;
@@ -27,7 +28,7 @@ if (isset($_SESSION["SESS_SORT_ORDER"][$uniq])) {
 
 $module = getRequestParams('module');
 $view = getRequestParams('view');
-if (!$module OR !$view OR !CModule::IncludeModule($module)) {
+if (!$module OR !$view OR !Loader::IncludeModule($module)) {
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
 
