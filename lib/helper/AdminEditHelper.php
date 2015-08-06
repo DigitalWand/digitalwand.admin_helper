@@ -304,7 +304,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
         foreach ($this->getFields() as $code => $fieldSettings) {
 
             $widget = $this->createWidgetForField($code);
-            if(!$widget) continue;
+            if (!$widget) continue;
 
             $fieldTab = $widget->getSettings('TAB');
             $fieldOnCurrentTab = ($fieldTab == $tabSettings['DIV'] OR $tabSettings['DIV'] == 'DEFAULT_TAB');
@@ -318,15 +318,11 @@ abstract class AdminEditHelper extends AdminBaseHelper
                 continue;
             }
 
-            $pkField = $code == $this->pk();
-            if ($widget->getSettings('USE_BX_API')) {
-                $widget->genBasicEditField($pkField);
+            $this->tabControl->BeginCustomField($code, $widget->getSettings('TITLE'));
+            $pkField = ($code == $this->pk());
+            $widget->genBasicEditField($pkField);
+            $this->tabControl->EndCustomField($code);
 
-            } else {
-                $this->tabControl->BeginCustomField($code, $widget->getSettings('TITLE'));
-                $widget->genBasicEditField($pkField);
-                $this->tabControl->EndCustomField($code);
-            }
         }
     }
 

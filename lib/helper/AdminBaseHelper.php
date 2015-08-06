@@ -9,6 +9,7 @@ use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
 
 Loader::includeModule('highloadblock');
+Loc::loadMessages(__FILE__);
 
 /**
  * Class AdminBaseHelper

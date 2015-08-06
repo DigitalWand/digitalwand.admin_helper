@@ -23,7 +23,6 @@ Loc::loadMessages(__FILE__);
  */
 class HLIBlockFieldWidget extends HelperWidget
 {
-//    static public $useBxAPI = true;
     static protected $userFieldsCache = array();
     static protected $defaults = array(
         'USE_BX_API' => true
@@ -92,7 +91,7 @@ class HLIBlockFieldWidget extends HelperWidget
         $data = array();
         $USER_FIELD_MANAGER->EditFormAddFields($iblockId, $data);
 
-        $entity_data_class = AdminBaseHelper::getHLEntity($this->getHLId());
+        $entity_data_class = AdminBaseHelper::getHLEntity($this->getSettings('MODEL'));
 
         $oldData = $this->getOldFieldData($entity_data_class);
         $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $oldData, LANGUAGE_ID, false, 'ID');
@@ -125,6 +124,7 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     protected function getOldFieldData($entity_data_class)
     {
+        if(is_null($this->data) OR !isset($this->data[$this->helper->pk()])) return false;
         return $entity_data_class::getByPrimary($this->data[$this->helper->pk()])->fetch();
     }
 
