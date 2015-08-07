@@ -706,13 +706,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         $allWidgets = array();
         foreach ($fields as $key => $value) {
-            $widget = $this->createWidgetForField($key);
+            $widget = $this->createWidgetForField($key, $fields);
             if (!$widget) {
                 continue;
             }
 
-            $widget->setEntityName($className);
-            $widget->setData($fields);
             $widget->processEditAction();
             $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
             $allWidgets[] = $widget;

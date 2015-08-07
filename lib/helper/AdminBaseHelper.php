@@ -630,11 +630,10 @@ abstract class AdminBaseHelper
 
         /** @var HelperWidget $widget */
         $widget = $this->fields[$code]['WIDGET'];
-        $modelObject = isset($this->element) ? $this->element : $data;
 
         $widget->setHelper($this);
         $widget->setCode($code);
-        $widget->setEntityName($modelObject);
+        $widget->setEntityName($this->getModel());
         $widget->setData($data);
 
         return $widget;

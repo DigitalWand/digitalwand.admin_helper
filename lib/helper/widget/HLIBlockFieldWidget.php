@@ -87,7 +87,7 @@ class HLIBlockFieldWidget extends HelperWidget
         global $APPLICATION;
         $iblockId = 'HLBLOCK_' . $this->getHLId();
 
-        $data = array();
+        $data = $this->data;
         $USER_FIELD_MANAGER->EditFormAddFields($iblockId, $data);
 
         $entity_data_class = AdminBaseHelper::getHLEntity($this->getSettings('MODEL'));
