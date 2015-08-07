@@ -49,26 +49,24 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     protected function genEditHTML()
     {
-        $iblockId = $this->getHLId();
-        $fields = self::getUserFields($iblockId, $this->data);
-        if (isset($fields[$this->getCode()])) {
+        $info = $this->getUserFieldInfo();
+        if ($info) {
 
             /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
             global $USER_FIELD_MANAGER;
             $FIELD_NAME = $this->getCode();
             $GLOBALS[$FIELD_NAME] = isset($GLOBALS[$FIELD_NAME]) ? $GLOBALS[$FIELD_NAME] : $this->data[$this->getCode()];
-            $arUserField = $fields[$this->getCode()];
             $bVarsFromForm = false;
 
-            $arUserField["VALUE_ID"] = intval($this->data['ID']);
-            if(empty($arUserField['EDIT_FORM_LABEL'])){
-                $arUserField['EDIT_FORM_LABEL'] = $this->getSettings('TITLE');
+            $info["VALUE_ID"] = intval($this->data['ID']);
+            if (empty($info['EDIT_FORM_LABEL'])) {
+                $info['EDIT_FORM_LABEL'] = $this->getSettings('TITLE');
             }
 
             if (isset($_REQUEST['def_' . $FIELD_NAME])) {
-                $arUserField['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
+                $info['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
             }
-            print $USER_FIELD_MANAGER->GetEditFormHTML($bVarsFromForm, $GLOBALS[$FIELD_NAME], $arUserField);
+            print $USER_FIELD_MANAGER->GetEditFormHTML($bVarsFromForm, $GLOBALS[$FIELD_NAME], $info);
 
         }
     }
@@ -123,7 +121,7 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     protected function getOldFieldData($entity_data_class)
     {
-        if(is_null($this->data) OR !isset($this->data[$this->helper->pk()])) return false;
+        if (is_null($this->data) OR !isset($this->data[$this->helper->pk()])) return false;
         return $entity_data_class::getByPrimary($this->data[$this->helper->pk()])->fetch();
     }
 
@@ -224,9 +222,20 @@ class HLIBlockFieldWidget extends HelperWidget
     public function getSettings($name = '')
     {
         $value = parent::getSettings($name);
-        if (!$value AND $name == 'MODEL') {
-            $value = $this->helper->getModel();
-            $this->setSetting($name, $value);
+        if (!$value) {
+            if ($name == 'MODEL') {
+                $value = $this->helper->getModel();
+                $this->setSetting($name, $value);
+
+            } else if ($name == 'TITLE') {
+
+                $id = $this->getHLId();
+                $fields = self::getUserFields($id, $this->data);
+                if (isset($fields[$this->getCode()])) {
+
+                }
+
+            }
         }
         return $value;
     }
@@ -245,22 +254,20 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     public function genListHTML(&$row, $data)
     {
-        $id = $this->getHLId();
-        $fields = self::getUserFields($id, $this->data);
-        if (isset($fields[$this->getCode()])) {
+        $info = $this->getUserFieldInfo();
+        if ($info) {
 
             /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
             global $USER_FIELD_MANAGER;
             $FIELD_NAME = $this->getCode();
             $GLOBALS[$FIELD_NAME] = isset($GLOBALS[$FIELD_NAME]) ? $GLOBALS[$FIELD_NAME] : $this->data[$this->getCode()];
-            $arUserField = $fields[$this->getCode()];
 
-            $arUserField["VALUE_ID"] = intval($this->data['ID']);
+            $info["VALUE_ID"] = intval($this->data['ID']);
 
             if (isset($_REQUEST['def_' . $FIELD_NAME])) {
-                $arUserField['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
+                $info['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
             }
-            $USER_FIELD_MANAGER->AddUserField($arUserField, $data[$this->getCode()], $row);
+            $USER_FIELD_MANAGER->AddUserField($info, $data[$this->getCode()], $row);
 
         }
     }
@@ -273,23 +280,30 @@ class HLIBlockFieldWidget extends HelperWidget
      */
     public function genFilterHTML()
     {
-        $id = $this->getHLId();
-        $fields = self::getUserFields($id, $this->data);
-        if (isset($fields[$this->getCode()])) {
+        $info = $this->getUserFieldInfo();
+        if ($info) {
             /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
             global $USER_FIELD_MANAGER;
             $FIELD_NAME = $this->getCode();
             $GLOBALS[$FIELD_NAME] = isset($GLOBALS[$FIELD_NAME]) ? $GLOBALS[$FIELD_NAME] : $this->data[$this->getCode()];
-            $arUserField = $fields[$this->getCode()];
 
-            $arUserField["VALUE_ID"] = intval($this->data['ID']);
-            if(empty($arUserField['LIST_FILTER_LABEL'])){
-                $arUserField['LIST_FILTER_LABEL'] = $this->getSettings('TITLE');
+            $info["VALUE_ID"] = intval($this->data['ID']);
+            if (empty($info['LIST_FILTER_LABEL'])) {
+                $info['LIST_FILTER_LABEL'] = $this->getSettings('TITLE');
             }
 
-            print $USER_FIELD_MANAGER->GetFilterHTML($arUserField, $this->getFilterInputName(), $this->getCurrentFilterValue());
+            print $USER_FIELD_MANAGER->GetFilterHTML($info, $this->getFilterInputName(), $this->getCurrentFilterValue());
         }
+    }
 
+    public function getUserFieldInfo()
+    {
+        $id = $this->getHLId();
+        $fields = static::getUserFields($id, $this->data);
+        if (isset($fields[$this->getCode()])) {
+            return $fields[$this->getCode()];
+        }
+        return false;
     }
 
 }
