@@ -59,6 +59,9 @@ class HLIBlockFieldWidget extends HelperWidget
     }
 
     /**
+     * Конвертирует данные при сохранении так, как это делали бы пользовательские свойства битрикса.
+     * Выполняет валидацию с помощью CheckFields() пользовательских полей.
+     *
      * @see Bitrix\Highloadblock\DataManager
      * @see /bitrix/modules/highloadblock/admin/highloadblock_row_edit.php
      *
@@ -94,6 +97,14 @@ class HLIBlockFieldWidget extends HelperWidget
             $this->data[$this->getCode()] = $unserialized;
         } else {
             $this->data[$this->getCode()] = $data[$this->getCode()];
+        }
+
+        $className = $fields[$this->getCode()]['USER_TYPE']['CLASS_NAME'];
+        if(is_callable(array($className,'CheckFields'))){
+            $errors = $className::CheckFields($fields[$this->getCode()], $this->data[$this->getCode()]);
+            if(!empty($errors)){
+                $this->helper->addErrors($errors);
+            }
         }
     }
 
