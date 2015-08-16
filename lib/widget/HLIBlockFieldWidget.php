@@ -80,11 +80,10 @@ class HLIBlockFieldWidget extends HelperWidget
         $oldData = $this->getOldFieldData($entity_data_class);
         $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $oldData, LANGUAGE_ID, false, 'ID');
         list($data, $multiValues) = $this->convertValuesBeforeSave($data, $fields);
+
         // use save modifiers
-        foreach ($data as $fieldName => $value) {
-            $field = $entity_data_class::getEntity()->getField($fieldName);
-            $data[$fieldName] = $field->modifyValueBeforeSave($value, $data);
-        }
+        $field = $entity_data_class::getEntity()->getField($this->getCode());
+        $data[$this->getCode()] = $field->modifyValueBeforeSave($data[$this->getCode()], $data);
 
         //Чтобы не терялись старые данные
         if (!isset($data[$this->getCode()]) AND isset($data[$this->getCode() . '_old_id'])) {
