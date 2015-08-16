@@ -668,7 +668,7 @@ abstract class AdminBaseHelper
                 return $entity->getDataClass();
             } else {
                 $error = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_GETMODEL_EXCEPTION', array('#CLASS#' => $className));
-                $exception = new \Exception($error);
+                $exception = new Exception($error);
 
                 throw $exception;
             }
