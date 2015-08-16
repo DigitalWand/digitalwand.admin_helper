@@ -109,7 +109,13 @@ abstract class AdminEditHelper extends AdminBaseHelper
         $this->tabControl = new \CAdminForm(str_replace("\\", "", get_called_class()), $this->tabs);
 
         if (isset($_REQUEST['apply']) OR isset($_REQUEST['save'])) {
+
             $this->data = $_REQUEST['FIELDS'];
+            if (isset($_REQUEST[$this->pk()])) {
+                //Первичный ключ проставляем отдельно, чтобы не вынуждать всегда указывать его в настройках интерфейса.
+                $this->data[$this->pk()] = $_REQUEST[$this->pk()];
+            }
+
             foreach ($fields as $name => $settings) {
                 if (is_a($settings['WIDGET'], 'DigitalWand\AdminHelper\Widget\HLIBlockFieldWidget')) {
                     $this->data = array_merge($this->data, $_REQUEST);

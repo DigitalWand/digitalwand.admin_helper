@@ -100,10 +100,10 @@ class HLIBlockFieldWidget extends HelperWidget
         }
 
         $className = $fields[$this->getCode()]['USER_TYPE']['CLASS_NAME'];
-        if(is_callable(array($className,'CheckFields'))){
+        if (is_callable(array($className, 'CheckFields'))) {
             $errors = $className::CheckFields($fields[$this->getCode()], $this->data[$this->getCode()]);
-            if(!empty($errors)){
-                $this->helper->addErrors($errors);
+            if (!empty($errors)) {
+                $this->addError($errors);
             }
         }
     }
@@ -324,4 +324,30 @@ class HLIBlockFieldWidget extends HelperWidget
 
         return self::$userFieldsCache[$iblockId][$data['ID']];
     }
+
+    /**
+     * Заменяем оригинальную функцию, т.к. текст ошибки приходит от битрикса, причем название поля там почему-то не
+     * проставлено
+     * @param string $messageId
+     */
+    protected function addError($messageId)
+    {
+        if (is_array($messageId)) {
+            foreach ($messageId as $key => $error) {
+                if (isset($error['text'])) {
+                    //FIXME: почему-то битрикс не подхватывает корректное название поля, поэтому запихиваем его сами.
+                    if (isset($error['id']) AND strpos($error['text'], '""')) {
+                        $messageId[$key] = str_replace('""', '"' . $this->getSettings('TITLE') . '"', $error['text']);
+
+                    } else {
+                        $messageId[$key] = $error['text'];
+                    }
+                }
+            }
+        }
+
+        $messageId = implode("\n", $messageId);
+        $this->validationErrors[$this->getCode()] = $messageId;
+    }
+
 }
