@@ -1,8 +1,8 @@
 <?php
 use Bitrix\Main\Loader;
-use DigitalWand\AdminHelper\AdminBaseHelper;
-use DigitalWand\AdminHelper\AdminListHelper;
-use DigitalWand\AdminHelper\AdminEditHelper;
+use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
+use DigitalWand\AdminHelper\Helper\AdminListHelper;
+use DigitalWand\AdminHelper\Helper\AdminEditHelper;
 
 require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
 
