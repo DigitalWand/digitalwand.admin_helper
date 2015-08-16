@@ -250,10 +250,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         foreach ($this->fields as $code => $settings) {
 
-            $this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_FILTER);
             $widget = $this->createWidgetForField($code);
-
             if ((isset($settings['FILTER']) AND $settings['FILTER'] != false) OR !isset($settings['FILTER'])) {
+
+                $this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_FILTER);
+
                 $filterVarName = 'find_' . $code;
                 $this->arFilterFields[] = $filterVarName;
 
@@ -261,6 +262,7 @@ abstract class AdminListHelper extends AdminBaseHelper
                 if (is_string($settings['FILTER'])) {
                     $filterType = $settings['FILTER'];
                 }
+
                 if (isset($_REQUEST[$filterVarName])
                     AND !isset($_REQUEST['del_filter'])
                     AND $_REQUEST['del_filter'] != 'Y'
@@ -268,6 +270,7 @@ abstract class AdminListHelper extends AdminBaseHelper
                     $arFilter[$filterType . $code] = $_REQUEST[$filterVarName];
                     $this->filterTypes[$code] = $filterType;
                 }
+
                 $this->arFilterOpts[$code] = $widget->getSettings('TITLE');
             }
 
