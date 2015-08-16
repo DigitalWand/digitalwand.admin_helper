@@ -203,9 +203,7 @@ abstract class AdminListHelper extends AdminBaseHelper
                 );
                 foreach ($this->fields as $code => $settings) {
                     $widget = $this->createWidgetForField($code);
-                    if ($widget) {
-                        $widget->changeGetListOptions($this->arFilter, $raw['SELECT'], $raw['SORT'], $raw);
-                    }
+                    $widget->changeGetListOptions($this->arFilter, $raw['SELECT'], $raw['SORT'], $raw);
                 }
 
                 $res = $className::getList(array(
@@ -439,9 +437,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         foreach ($this->fields as $code => $settings) {
             $widget = $this->createWidgetForField($code);
-            if ($widget) {
-                $widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
-            }
+            $widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
         }
 
         $res = $this->getList($className, $this->arFilter, $visibleColumns, $sort, $raw);
@@ -560,10 +556,9 @@ abstract class AdminListHelper extends AdminBaseHelper
     protected function addRowCell($row, $code, $data)
     {
         $widget = $this->createWidgetForField($code, $data);
-        if ($widget) {
-            $this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
-            $widget->genListHTML($row, $data);
-        }
+        $this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
+        $widget->genListHTML($row, $data);
+
     }
 
     /**
@@ -646,9 +641,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $oFilter->Begin();
         foreach ($this->arFilterOpts as $code => $name) {
             $widget = $this->createWidgetForField($code);
-            if ($widget) {
-                $widget->genFilterHTML();
-            }
+            $widget->genFilterHTML();
         }
 
         $oFilter->Buttons(array(
@@ -673,12 +666,10 @@ abstract class AdminListHelper extends AdminBaseHelper
         $filterValidationErrors = array();
         foreach ($this->filterTypes as $code => $type) {
             $widget = $this->createWidgetForField($code);
-            if ($widget) {
-                $value = $arFilter[$type . $code];
-                if (!$widget->checkFilter($type, $value)) {
-                    $filterValidationErrors = array_merge($filterValidationErrors,
-                        $widget->getValidationErrors());
-                }
+            $value = $arFilter[$type . $code];
+            if (!$widget->checkFilter($type, $value)) {
+                $filterValidationErrors = array_merge($filterValidationErrors,
+                    $widget->getValidationErrors());
             }
         }
 
@@ -729,9 +720,6 @@ abstract class AdminListHelper extends AdminBaseHelper
         $allWidgets = array();
         foreach ($fields as $key => $value) {
             $widget = $this->createWidgetForField($key, $fields);
-            if (!$widget) {
-                continue;
-            }
 
             $widget->processEditAction();
             $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());

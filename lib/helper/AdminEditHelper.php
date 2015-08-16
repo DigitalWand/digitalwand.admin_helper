@@ -311,7 +311,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
         foreach ($this->getFields() as $code => $fieldSettings) {
 
             $widget = $this->createWidgetForField($code, $this->data);
-            if (!$widget) continue;
 
             $fieldTab = $widget->getSettings('TAB');
             $fieldOnCurrentTab = ($fieldTab == $tabSettings['DIV'] OR $tabSettings['DIV'] == 'DEFAULT_TAB');
@@ -363,11 +362,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
         $allWidgets = array();
         foreach ($this->getFields() as $code => $settings) {
             $widget = $this->createWidgetForField($code, $this->data);
-            if ($widget) {
-                $widget->processEditAction();
-                $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
-                $allWidgets[] = $widget;
-            }
+            $widget->processEditAction();
+            $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
+            $allWidgets[] = $widget;
         }
 
         $this->addErrors($this->validationErrors);

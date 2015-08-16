@@ -176,7 +176,8 @@ abstract class AdminBaseHelper
     protected $additionalUrlParams = array();
 
     /**
-     * @var string контекст выполнения. Полезен для информирования виджетов о том, какая операция в настоящий момент производится.
+     * @var string контекст выполнения. Полезен для информирования виджетов о том, какая операция в настоящий момент
+     *     производится.
      */
     protected $context = '';
 
@@ -624,13 +625,15 @@ abstract class AdminBaseHelper
      *
      * @param string $code ключ поля для данного виджета (должен быть в массиве $data)
      * @param array $data - данные объекта в виде массива
-     * @return bool|HelperWidget
+     * @return bool|\DigitalWand\AdminHelper\Widget\HelperWidget
+     * @throws \DigitalWand\AdminHelper\Helper\Exception
      * @internal
      */
     public function createWidgetForField($code, &$data = array())
     {
         if (!isset($this->fields[$code]['WIDGET'])) {
-            return false;
+            $error = str_replace('#CODE#', $code, 'Can\'t create widget for the code "#CODE#"');
+            throw new Exception($error, Exception::CODE_NO_WIDGET);
         }
 
         /** @var HelperWidget $widget */
@@ -703,11 +706,13 @@ abstract class AdminBaseHelper
      * @param $context
      * @see $context
      */
-    protected function setContext($context) {
+    protected function setContext($context)
+    {
         $this->context = $context;
     }
 
-    public function getContext() {
+    public function getContext()
+    {
         return $this->context;
     }
 }
