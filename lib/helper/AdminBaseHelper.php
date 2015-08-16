@@ -1,6 +1,6 @@
 <?php
 
-namespace DigitalWand\AdminHelper;
+namespace DigitalWand\AdminHelper\Helper;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
