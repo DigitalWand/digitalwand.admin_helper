@@ -44,12 +44,12 @@ $tabs = isset($interface['TABS']) ? $interface['TABS'] :array();
 $helperType = false;
 
 
-if (is_subclass_of($helper, 'DigitalWand\AdminHelper\AdminEditHelper')) {
+if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper')) {
     $helperType = 'edit';
     /** @var AdminEditHelper $adminHelper */
     $adminHelper = new $helper($fields, $tabs);
 
-} else if (is_subclass_of($helper, 'DigitalWand\AdminHelper\AdminListHelper')) {
+} else if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper')) {
     $helperType = 'list';
     /** @var AdminListHelper $adminHelper */
     $adminHelper = new $helper($fields, $isPopup);
