@@ -431,6 +431,20 @@ abstract class AdminBaseHelper
         $notes = $this->getNotes();
 
         if (!empty($allErrors)) {
+            if (is_array($allErrors[0])) {
+                foreach ($allErrors as $key => $error) {
+                    if (isset($error['text'])) {
+                        //FIXME: почему-то битрикс не подхватывает корректное название поля, поэтому запихиваем его сами.
+                        if (isset($error['id']) AND strpos($error['text'], '""')) {
+                            $widget = $this->createWidgetForField($error['id']);
+                            $allErrors[$key] = str_replace('""', '"' . $widget->getSettings('TITLE') . '"', $error['text']);
+
+                        } else {
+                            $allErrors[$key] = $error['text'];
+                        }
+                    }
+                }
+            }
             $errorList[] = implode("\n", $allErrors);
         }
         if ($e = $this->getLastException()) {
@@ -515,7 +529,7 @@ abstract class AdminBaseHelper
     }
 
     /**
-     * @return bool
+     * @return bool|array
      * @api
      */
     protected function getErrors()
