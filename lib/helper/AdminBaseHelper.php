@@ -656,7 +656,7 @@ abstract class AdminBaseHelper
      *
      * @throws \Bitrix\Main\ArgumentException
      * @throws \Bitrix\Main\SystemException
-     * @throws \Exception
+     * @throws Exception
      *
      */
     public static function getHLEntity($className)
@@ -668,7 +668,7 @@ abstract class AdminBaseHelper
                 return $entity->getDataClass();
             } else {
                 $error = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_GETMODEL_EXCEPTION', array('#CLASS#' => $className));
-                $exception = new Exception($error);
+                $exception = new Exception($error, Exception::CODE_NO_HL_ENTITY_INFORMATION);
 
                 throw $exception;
             }
