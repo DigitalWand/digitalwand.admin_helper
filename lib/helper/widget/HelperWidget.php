@@ -73,6 +73,12 @@ abstract class HelperWidget
 
     /**
      * @var string
+     * Информация о том, во время выполнения какой операции вызываются функции виджета.
+     */
+    public $context;
+
+    /**
+     * @var string
      * Название поля ("символьный код")
      */
     protected $code;
@@ -117,14 +123,6 @@ abstract class HelperWidget
      * Строка, добавляемая к полю name полей фильтра
      */
     protected $filterFieldPrefix = 'find_';
-
-    /**
-     * @var bool
-     * Флаг, означающий, что интерфейс редактирования будет генерироваться с использованием API CAdminPage
-     * В этом случае поля не нужно оборачивать в некоторые теги, некоторые функции не нужно запускать.
-     * @see CAdminPage
-     */
-//    static public $useBxAPI = false;
 
     /**
      * @param array $settings

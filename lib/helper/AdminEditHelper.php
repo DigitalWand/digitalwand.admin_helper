@@ -30,6 +30,11 @@ Loc::loadMessages(__FILE__);
  */
 abstract class AdminEditHelper extends AdminBaseHelper
 {
+
+    const OP_SHOW_TAB_ELEMENTS = 'AdminEditHelper::showTabElements';
+    const OP_EDIT_ACTION_BEFORE = 'AdminEditHelper::editAction_before';
+    const OP_EDIT_ACTION_AFTER = 'AdminEditHelper::editAction_after';
+
     /**
      * @var array
      * Данные сущности, редактируемой в данный момент.
@@ -306,6 +311,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
             $widget = $this->createWidgetForField($code, $this->data);
             if (!$widget) continue;
 
+            $widget->context = AdminEditHelper::OP_SHOW_TAB_ELEMENTS;
+
             $fieldTab = $widget->getSettings('TAB');
             $fieldOnCurrentTab = ($fieldTab == $tabSettings['DIV'] OR $tabSettings['DIV'] == 'DEFAULT_TAB');
 
@@ -356,6 +363,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
         foreach ($this->getFields() as $code => $settings) {
             $widget = $this->createWidgetForField($code, $this->data);
             if ($widget) {
+                $widget->context = AdminEditHelper::OP_EDIT_ACTION_BEFORE;
                 $widget->processEditAction();
                 $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
                 $allWidgets[] = $widget;
@@ -388,6 +396,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
             }
             foreach ($allWidgets as $widget) {
                 /** @var HelperWidget $widget */
+                $widget->context = AdminEditHelper::OP_EDIT_ACTION_AFTER;
                 $widget->setData($this->data);
                 $widget->processAfterSaveAction();
             }

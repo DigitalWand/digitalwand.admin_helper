@@ -32,6 +32,15 @@ Loc::loadMessages(__FILE__);
  */
 abstract class AdminListHelper extends AdminBaseHelper
 {
+    const OP_GROUP_ACTION = 'AdminListHelper::__construct_groupAction';
+    const OP_ADMIN_VARIABLES_FILTER = 'AdminListHelper::prepareAdminVariables_filter';
+    const OP_ADMIN_VARIABLES_HEADER = 'AdminListHelper::prepareAdminVariables_header';
+    const OP_GET_DATA_BEFORE = 'AdminListHelper::getData_before';
+    const OP_ADD_ROW_CELL = 'AdminListHelper::addRowCell';
+    const OP_CREATE_FILTER_FORM = 'AdminListHelper::createFilterForm';
+    const OP_CHECK_FILTER = 'AdminListHelper::checkFilter';
+    const OP_EDIT_ACTION = 'AdminListHelper::editAction';
+
     /**
      * @var bool
      * Является ли список всплывающим окном для выбора элементов из списка.
@@ -194,6 +203,7 @@ abstract class AdminListHelper extends AdminBaseHelper
                 foreach ($this->fields as $code => $settings) {
                     $widget = $this->createWidgetForField($code);
                     if ($widget) {
+                        $widget->context = AdminListHelper::OP_GROUP_ACTION;
                         $widget->changeGetListOptions($this->arFilter, $raw['SELECT'], $raw['SORT'], $raw);
                     }
                 }
@@ -242,6 +252,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->fields as $code => $settings) {
 
             $widget = $this->createWidgetForField($code);
+            $widget->context = AdminListHelper::OP_ADMIN_VARIABLES_FILTER;
 
             if ((isset($settings['FILTER']) AND $settings['FILTER'] != false) OR !isset($settings['FILTER'])) {
                 $filterVarName = 'find_' . $code;
@@ -262,6 +273,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             }
 
             if (!isset($settings['HEADER']) OR $settings['HEADER'] != false) {
+                $widget->context = AdminListHelper::OP_ADMIN_VARIABLES_HEADER;
                 $this->arHeader[] = array(
                     "id" => $code,
                     "content" => $widget->getSettings('TITLE'),
@@ -425,6 +437,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->fields as $code => $settings) {
             $widget = $this->createWidgetForField($code);
             if ($widget) {
+                $widget->context = AdminListHelper::OP_GET_DATA_BEFORE;
                 $widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
             }
         }
@@ -546,6 +559,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         $widget = $this->createWidgetForField($code, $data);
         if ($widget) {
+            $widget->context = AdminListHelper::OP_ADD_ROW_CELL;
             $widget->genListHTML($row, $data);
         }
     }
@@ -630,6 +644,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->arFilterOpts as $code => $name) {
             $widget = $this->createWidgetForField($code);
             if ($widget) {
+                $widget->context = AdminListHelper::OP_CREATE_FILTER_FORM;
                 $widget->genFilterHTML();
             }
         }
@@ -656,6 +671,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->filterTypes as $code => $type) {
             $widget = $this->createWidgetForField($code);
             if ($widget) {
+                $widget->context = AdminListHelper::OP_CHECK_FILTER;
                 $value = $arFilter[$type . $code];
                 if (!$widget->checkFilter($type, $value)) {
                     $filterValidationErrors = array_merge($filterValidationErrors,
@@ -712,7 +728,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             if (!$widget) {
                 continue;
             }
-
+            $widget->context = AdminListHelper::OP_EDIT_ACTION;
             $widget->processEditAction();
             $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
             $allWidgets[] = $widget;

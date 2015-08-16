@@ -28,19 +28,6 @@ class HLIBlockFieldWidget extends HelperWidget
         'USE_BX_API' => true
     );
 
-    static public function getUserFields($iblockId, $data)
-    {
-        /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
-        global $USER_FIELD_MANAGER;
-        $iblockId = 'HLBLOCK_' . $iblockId;
-        if (!isset(static::$userFieldsCache[$iblockId][$data['ID']])) {
-            $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $data, LANGUAGE_ID, false, 'ID');
-            self::$userFieldsCache[$iblockId][$data['ID']] = $fields;
-        }
-
-        return self::$userFieldsCache[$iblockId][$data['ID']];
-    }
-
     /**
      * Генерирует HTML для редактирования поля
      *
@@ -59,9 +46,7 @@ class HLIBlockFieldWidget extends HelperWidget
             $bVarsFromForm = false;
 
             $info["VALUE_ID"] = intval($this->data['ID']);
-            if (empty($info['EDIT_FORM_LABEL'])) {
-                $info['EDIT_FORM_LABEL'] = $this->getSettings('TITLE');
-            }
+            $info['EDIT_FORM_LABEL'] = $this->getSettings('TITLE');
 
             if (isset($_REQUEST['def_' . $FIELD_NAME])) {
                 $info['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
@@ -193,26 +178,6 @@ class HLIBlockFieldWidget extends HelperWidget
     }
 
     /**
-     * Получаем ID HL-инфоблока по имени его класса
-     * @return mixed
-     */
-    protected function getHLId()
-    {
-        static $id = false;
-
-        if ($id === false) {
-            $model = $this->getSettings('MODEL');
-            $info = AdminBaseHelper::getHLEntityInfo($model);
-            if ($info AND isset($info['ID'])) {
-                $id = $info['ID'];
-            }
-        }
-
-        return $id;
-
-    }
-
-    /**
      * Если запрашивается модель, и если модель явно не указана, то берется модель текущего хэлпера, сохраняется для
      * последующего использования и возарвщвется пользователю.
      *
@@ -229,12 +194,13 @@ class HLIBlockFieldWidget extends HelperWidget
 
             } else if ($name == 'TITLE') {
 
-                $id = $this->getHLId();
-                $fields = self::getUserFields($id, $this->data);
-                if (isset($fields[$this->getCode()])) {
-
+                $info = $this->getUserFieldInfo();
+                if (isset($info['LIST_COLUMN_LABEL']) AND !empty($info['LIST_COLUMN_LABEL'])) {
+                    $value = $info['LIST_COLUMN_LABEL'];
+                } else {
+                    $value = $info['FIELD_NAME'];
                 }
-
+                $this->setSetting('TITLE', $value);
             }
         }
         return $value;
@@ -288,9 +254,7 @@ class HLIBlockFieldWidget extends HelperWidget
             $GLOBALS[$FIELD_NAME] = isset($GLOBALS[$FIELD_NAME]) ? $GLOBALS[$FIELD_NAME] : $this->data[$this->getCode()];
 
             $info["VALUE_ID"] = intval($this->data['ID']);
-            if (empty($info['LIST_FILTER_LABEL'])) {
-                $info['LIST_FILTER_LABEL'] = $this->getSettings('TITLE');
-            }
+            $info['LIST_FILTER_LABEL'] = $this->getSettings('TITLE');
 
             print $USER_FIELD_MANAGER->GetFilterHTML($info, $this->getFilterInputName(), $this->getCurrentFilterValue());
         }
@@ -306,4 +270,35 @@ class HLIBlockFieldWidget extends HelperWidget
         return false;
     }
 
+    /**
+     * Получаем ID HL-инфоблока по имени его класса
+     * @return mixed
+     */
+    protected function getHLId()
+    {
+        static $id = false;
+
+        if ($id === false) {
+            $model = $this->getSettings('MODEL');
+            $info = AdminBaseHelper::getHLEntityInfo($model);
+            if ($info AND isset($info['ID'])) {
+                $id = $info['ID'];
+            }
+        }
+
+        return $id;
+    }
+
+    static public function getUserFields($iblockId, $data)
+    {
+        /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
+        global $USER_FIELD_MANAGER;
+        $iblockId = 'HLBLOCK_' . $iblockId;
+        if (!isset(static::$userFieldsCache[$iblockId][$data['ID']])) {
+            $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $data, LANGUAGE_ID, false, 'ID');
+            self::$userFieldsCache[$iblockId][$data['ID']] = $fields;
+        }
+
+        return self::$userFieldsCache[$iblockId][$data['ID']];
+    }
 }
