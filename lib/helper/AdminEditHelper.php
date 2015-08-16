@@ -305,13 +305,13 @@ abstract class AdminEditHelper extends AdminBaseHelper
      */
     private function showTabElements($tabSettings)
     {
+        $this->setContext(AdminEditHelper::OP_SHOW_TAB_ELEMENTS);
+
         $this->tabControl->BeginNextFormTab();
         foreach ($this->getFields() as $code => $fieldSettings) {
 
             $widget = $this->createWidgetForField($code, $this->data);
             if (!$widget) continue;
-
-            $widget->context = AdminEditHelper::OP_SHOW_TAB_ELEMENTS;
 
             $fieldTab = $widget->getSettings('TAB');
             $fieldOnCurrentTab = ($fieldTab == $tabSettings['DIV'] OR $tabSettings['DIV'] == 'DEFAULT_TAB');
@@ -354,6 +354,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
      */
     protected function editAction()
     {
+        $this->setContext(AdminEditHelper::OP_EDIT_ACTION_BEFORE);
         if (!$this->hasRights()) {
             $this->addErrors('Недостаточно прав для редактирования данных');
 
@@ -363,7 +364,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
         foreach ($this->getFields() as $code => $settings) {
             $widget = $this->createWidgetForField($code, $this->data);
             if ($widget) {
-                $widget->context = AdminEditHelper::OP_EDIT_ACTION_BEFORE;
                 $widget->processEditAction();
                 $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
                 $allWidgets[] = $widget;
@@ -374,6 +374,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
         $success = empty($this->validationErrors);
         if ($success) {
+
+            $this->setContext(AdminEditHelper::OP_EDIT_ACTION_AFTER);
 
             $existing = false;
             $id = isset($_REQUEST['FIELDS'][$this->pk()]) ? $_REQUEST['FIELDS'][$this->pk()] : $_REQUEST[$this->pk()];
@@ -396,7 +398,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
             }
             foreach ($allWidgets as $widget) {
                 /** @var HelperWidget $widget */
-                $widget->context = AdminEditHelper::OP_EDIT_ACTION_AFTER;
                 $widget->setData($this->data);
                 $widget->processAfterSaveAction();
             }

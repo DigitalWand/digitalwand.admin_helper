@@ -73,12 +73,6 @@ abstract class HelperWidget
 
     /**
      * @var string
-     * Информация о том, во время выполнения какой операции вызываются функции виджета.
-     */
-    public $context;
-
-    /**
-     * @var string
      * Название поля ("символьный код")
      */
     protected $code;

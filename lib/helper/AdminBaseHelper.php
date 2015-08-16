@@ -116,7 +116,7 @@ abstract class AdminBaseHelper
     protected $fields = array();
 
     /**
-     * @var CMain
+     * @var \CMain
      * Замена global $APPLICATION;
      */
     protected $app;
@@ -174,6 +174,11 @@ abstract class AdminBaseHelper
      * @api
      */
     protected $additionalUrlParams = array();
+
+    /**
+     * @var string контекст выполнения. Полезен для информирования виджетов о том, какая операция в настоящий момент производится.
+     */
+    protected $context = '';
 
     /**
      * @param array $fields список используемых полей и виджетов для них
@@ -691,5 +696,18 @@ abstract class AdminBaseHelper
         );
 
         return HL\HighloadBlockTable::getList($parameters)->fetch();
+    }
+
+    /**
+     * Выставляет текущий контекст исполнения.
+     * @param $context
+     * @see $context
+     */
+    protected function setContext($context) {
+        $this->context = $context;
+    }
+
+    public function getContext() {
+        return $this->context;
     }
 }

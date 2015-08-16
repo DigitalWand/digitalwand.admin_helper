@@ -191,6 +191,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         if ($IDs = $this->list->GroupAction() AND $this->hasRights()) {
 
             if ($_REQUEST['action_target'] == 'selected') {
+                $this->setContext(AdminListHelper::OP_GROUP_ACTION);
                 $IDs = array();
 
                 //Текущий фильтр должен быть модифицирован виждтами
@@ -203,7 +204,6 @@ abstract class AdminListHelper extends AdminBaseHelper
                 foreach ($this->fields as $code => $settings) {
                     $widget = $this->createWidgetForField($code);
                     if ($widget) {
-                        $widget->context = AdminListHelper::OP_GROUP_ACTION;
                         $widget->changeGetListOptions($this->arFilter, $raw['SELECT'], $raw['SORT'], $raw);
                     }
                 }
@@ -240,6 +240,7 @@ abstract class AdminListHelper extends AdminBaseHelper
      */
     protected function prepareAdminVariables()
     {
+
         $this->arHeader = array();
         $this->arFilter = array();
         $this->arFilterFields = array();
@@ -251,8 +252,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         foreach ($this->fields as $code => $settings) {
 
+            $this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_FILTER);
             $widget = $this->createWidgetForField($code);
-            $widget->context = AdminListHelper::OP_ADMIN_VARIABLES_FILTER;
 
             if ((isset($settings['FILTER']) AND $settings['FILTER'] != false) OR !isset($settings['FILTER'])) {
                 $filterVarName = 'find_' . $code;
@@ -273,7 +274,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             }
 
             if (!isset($settings['HEADER']) OR $settings['HEADER'] != false) {
-                $widget->context = AdminListHelper::OP_ADMIN_VARIABLES_HEADER;
+                $this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_HEADER);
                 $this->arHeader[] = array(
                     "id" => $code,
                     "content" => $widget->getSettings('TITLE'),
@@ -408,6 +409,8 @@ abstract class AdminListHelper extends AdminBaseHelper
      */
     public function getData($sort)
     {
+        $this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
+
         $this->list->AddHeaders($this->arHeader);
         $visibleColumns = $this->list->GetVisibleHeaderColumns();
 
@@ -437,7 +440,6 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->fields as $code => $settings) {
             $widget = $this->createWidgetForField($code);
             if ($widget) {
-                $widget->context = AdminListHelper::OP_GET_DATA_BEFORE;
                 $widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
             }
         }
@@ -559,7 +561,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         $widget = $this->createWidgetForField($code, $data);
         if ($widget) {
-            $widget->context = AdminListHelper::OP_ADD_ROW_CELL;
+            $this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
             $widget->genListHTML($row, $data);
         }
     }
@@ -637,6 +639,7 @@ abstract class AdminListHelper extends AdminBaseHelper
      */
     public function createFilterForm()
     {
+        $this->setContext(AdminListHelper::OP_CREATE_FILTER_FORM);
         print ' <form name="find_form" method="GET" action="' . static::getListPageURL($this->additionalUrlParams) . '?">';
 
         $oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->isPopup(), $this->arFilterOpts);
@@ -644,7 +647,6 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->arFilterOpts as $code => $name) {
             $widget = $this->createWidgetForField($code);
             if ($widget) {
-                $widget->context = AdminListHelper::OP_CREATE_FILTER_FORM;
                 $widget->genFilterHTML();
             }
         }
@@ -667,11 +669,11 @@ abstract class AdminListHelper extends AdminBaseHelper
      */
     protected function checkFilter($arFilter)
     {
+        $this->setContext(AdminListHelper::OP_CHECK_FILTER);
         $filterValidationErrors = array();
         foreach ($this->filterTypes as $code => $type) {
             $widget = $this->createWidgetForField($code);
             if ($widget) {
-                $widget->context = AdminListHelper::OP_CHECK_FILTER;
                 $value = $arFilter[$type . $code];
                 if (!$widget->checkFilter($type, $value)) {
                     $filterValidationErrors = array_merge($filterValidationErrors,
@@ -715,6 +717,8 @@ abstract class AdminListHelper extends AdminBaseHelper
      */
     protected function editAction($id, $fields)
     {
+        $this->setContext(AdminListHelper::OP_EDIT_ACTION);
+
         $className = static::getModel();
         $el = $className::getById($id);
         if ($el->getSelectedRowsCount() == 0) {
@@ -728,7 +732,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             if (!$widget) {
                 continue;
             }
-            $widget->context = AdminListHelper::OP_EDIT_ACTION;
+
             $widget->processEditAction();
             $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
             $allWidgets[] = $widget;
