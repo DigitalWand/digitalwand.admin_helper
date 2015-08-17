@@ -116,10 +116,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
                 $this->data[$this->pk()] = $_REQUEST[$this->pk()];
             }
 
-            foreach ($fields as $name => $settings) {
-                if (is_a($settings['WIDGET'], 'DigitalWand\AdminHelper\Widget\HLIBlockFieldWidget')) {
-                    $this->data = array_merge($this->data, $_REQUEST);
-                    break;
+            foreach ($fields as $code => $settings) {
+                if(isset($_REQUEST[$code])){
+                    $this->data[$code] = $_REQUEST[$code];
                 }
             }
 

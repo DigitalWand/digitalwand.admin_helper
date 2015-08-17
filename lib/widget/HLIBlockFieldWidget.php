@@ -72,7 +72,6 @@ class HLIBlockFieldWidget extends HelperWidget
     {
         /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
         global $USER_FIELD_MANAGER;
-        global $APPLICATION;
         $iblockId = 'HLBLOCK_' . $this->getHLId();
 
         $data = $this->data;
@@ -82,7 +81,17 @@ class HLIBlockFieldWidget extends HelperWidget
 
         $oldData = $this->getOldFieldData($entity_data_class);
         $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $oldData, LANGUAGE_ID, false, 'ID');
-        list($data, $multiValues) = $this->convertValuesBeforeSave($data, $fields);
+
+        $className = $fields[$this->getCode()]['USER_TYPE']['CLASS_NAME'];
+        if (is_callable(array($className, 'CheckFields'))) {
+            $errors = $className::CheckFields($fields[$this->getCode()], $data[$this->getCode()]);
+            if (!empty($errors)) {
+                $this->addError($errors);
+                return;
+            }
+        }
+
+        $data = $this->convertValuesBeforeSave($data[$this->getCode()], $fields);
 
         // use save modifiers
         $field = $entity_data_class::getEntity()->getField($this->getCode());
@@ -97,14 +106,6 @@ class HLIBlockFieldWidget extends HelperWidget
             $this->data[$this->getCode()] = $unserialized;
         } else {
             $this->data[$this->getCode()] = $data[$this->getCode()];
-        }
-
-        $className = $fields[$this->getCode()]['USER_TYPE']['CLASS_NAME'];
-        if (is_callable(array($className, 'CheckFields'))) {
-            $errors = $className::CheckFields($fields[$this->getCode()], $this->data[$this->getCode()]);
-            if (!empty($errors)) {
-                $this->addError($errors);
-            }
         }
     }
 
@@ -123,48 +124,38 @@ class HLIBlockFieldWidget extends HelperWidget
     }
 
     /**
+     * Как у батрикса, только приспособлено для обработки одного значения
+     *
      * @see Bitrix\Highloadblock\DataManager::convertValuesBeforeSave
-     * @param $data
-     * @param $userfields
+     * @param $value
+     * @param $fieldInfo
      *
      * @return array
      */
-    protected function convertValuesBeforeSave($data, $userfields)
+    protected function convertValuesBeforeSave($value, $fieldInfo)
     {
-        $multiValues = array();
-
-        foreach ($data as $k => $v) {
-            if ($k == 'ID') {
-                continue;
-            }
-
-            $userfield = $userfields[$k];
-
-            if ($userfield['MULTIPLE'] == 'N') {
-                $inputValue = array($v);
-            } else {
-                $inputValue = $v;
-            }
-
-            $tmpValue = array();
-
-            foreach ($inputValue as $singleValue) {
-                $tmpValue[] = $this->convertSingleValueBeforeSave($singleValue, $userfield);
-            }
-
-            // write value back
-            if ($userfield['MULTIPLE'] == 'N') {
-                $data[$k] = $tmpValue[0];
-            } else {
-                // remove empty (false) values
-                $tmpValue = array_filter($tmpValue, 'strlen');
-
-                $data[$k] = $tmpValue;
-                $multiValues[$k] = $tmpValue;
-            }
+        if ($fieldInfo['MULTIPLE'] == 'N') {
+            $inputValue = array($value);
+        } else {
+            $inputValue = $value;
         }
 
-        return array($data, $multiValues);
+        $tmpValue = array();
+
+        foreach ($inputValue as $singleValue) {
+            $tmpValue[] = $this->convertSingleValueBeforeSave($singleValue, $fieldInfo);
+        }
+
+        // write value back
+        if ($fieldInfo['MULTIPLE'] == 'N') {
+            $value = $tmpValue[0];
+        } else {
+            // remove empty (false) values
+            $tmpValue = array_filter($tmpValue, 'strlen');
+            $value = $tmpValue;
+        }
+
+        return $value;
     }
 
     /**
