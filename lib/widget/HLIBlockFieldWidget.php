@@ -111,6 +111,10 @@ class HLIBlockFieldWidget extends HelperWidget
 
         if ($unserialized = unserialize($value)) {
             $this->data[$this->getCode()] = $unserialized;
+
+        } else if ($className == 'CUserTypeFile' AND !is_array($value)) {
+            $this->data[$this->getCode()] = intval($value);
+
         } else {
             $this->data[$this->getCode()] = $value;
         }
