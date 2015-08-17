@@ -79,8 +79,13 @@ class HLIBlockFieldWidget extends HelperWidget
             $this->data[$this->getCode()] = $_REQUEST[$this->getCode() . '_old_id'];
         }
 
-        $data = $this->data;
-        $USER_FIELD_MANAGER->EditFormAddFields($iblockId, $data);
+        //Функция работает для всех полей, так что запускаем её только один раз, результат кешируем.
+        static $data = array();
+        if (empty($data)) {
+            $data = $this->data;
+            $USER_FIELD_MANAGER->EditFormAddFields($iblockId, $data);
+        }
+
         $value = $data[$this->getCode()];
 
         $entity_data_class = AdminBaseHelper::getHLEntity($this->getSettings('MODEL'));
