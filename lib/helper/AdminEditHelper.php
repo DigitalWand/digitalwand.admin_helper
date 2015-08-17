@@ -396,6 +396,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
             }
 
             if (!$result->isSuccess()) {
+                $this->addErrors($result->getErrorMessages());
                 return false;
             }
             foreach ($allWidgets as $widget) {

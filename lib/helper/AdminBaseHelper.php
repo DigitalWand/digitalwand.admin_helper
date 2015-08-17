@@ -488,8 +488,7 @@ abstract class AdminBaseHelper
         }
 
         if (isset($_SESSION['ELEMENT_SAVE_ERRORS']) AND !empty($_SESSION['ELEMENT_SAVE_ERRORS'])) {
-            $_SESSION['ELEMENT_SAVE_ERRORS'] = array_merge($_SESSION['ELEMENT_SAVE_ERRORS'],
-                $errors);
+            $_SESSION['ELEMENT_SAVE_ERRORS'] = array_merge($_SESSION['ELEMENT_SAVE_ERRORS'], $errors);
         } else {
             $_SESSION['ELEMENT_SAVE_ERRORS'] = $errors;
         }

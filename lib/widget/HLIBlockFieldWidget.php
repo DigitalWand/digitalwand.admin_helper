@@ -74,38 +74,40 @@ class HLIBlockFieldWidget extends HelperWidget
         global $USER_FIELD_MANAGER;
         $iblockId = 'HLBLOCK_' . $this->getHLId();
 
+        //Чтобы не терялись старые данные
+        if (!isset($this->data[$this->getCode()]) AND isset($_REQUEST[$this->getCode() . '_old_id'])) {
+            $this->data[$this->getCode()] = $_REQUEST[$this->getCode() . '_old_id'];
+        }
+
         $data = $this->data;
         $USER_FIELD_MANAGER->EditFormAddFields($iblockId, $data);
+        $value = $data[$this->getCode()];
 
         $entity_data_class = AdminBaseHelper::getHLEntity($this->getSettings('MODEL'));
 
         $oldData = $this->getOldFieldData($entity_data_class);
-        $fields = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $oldData, LANGUAGE_ID, false, 'ID');
+        $fieldsInfo = $USER_FIELD_MANAGER->getUserFieldsWithReadyData($iblockId, $oldData, LANGUAGE_ID, false, 'ID');
+        $fieldInfo = $fieldsInfo[$this->getCode()];
 
-        $className = $fields[$this->getCode()]['USER_TYPE']['CLASS_NAME'];
+        $className = $fieldInfo['USER_TYPE']['CLASS_NAME'];
         if (is_callable(array($className, 'CheckFields'))) {
-            $errors = $className::CheckFields($fields[$this->getCode()], $data[$this->getCode()]);
+            $errors = $className::CheckFields($fieldInfo, $value);
             if (!empty($errors)) {
                 $this->addError($errors);
                 return;
             }
         }
 
-        $data = $this->convertValuesBeforeSave($data[$this->getCode()], $fields);
+        $value = $this->convertValuesBeforeSave($value, $fieldInfo);
 
         // use save modifiers
         $field = $entity_data_class::getEntity()->getField($this->getCode());
-        $data[$this->getCode()] = $field->modifyValueBeforeSave($data[$this->getCode()], $data);
+        $value = $field->modifyValueBeforeSave($value, $data);
 
-        //Чтобы не терялись старые данные
-        if (!isset($data[$this->getCode()]) AND isset($data[$this->getCode() . '_old_id'])) {
-            $data[$this->getCode()] = $data[$this->getCode() . '_old_id'];
-        }
-
-        if ($unserialized = unserialize($data[$this->getCode()])) {
+        if ($unserialized = unserialize($value)) {
             $this->data[$this->getCode()] = $unserialized;
         } else {
-            $this->data[$this->getCode()] = $data[$this->getCode()];
+            $this->data[$this->getCode()] = $value;
         }
     }
 
