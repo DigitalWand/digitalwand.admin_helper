@@ -109,13 +109,17 @@ class HLIBlockFieldWidget extends HelperWidget
         $field = $entity_data_class::getEntity()->getField($this->getCode());
         $value = $field->modifyValueBeforeSave($value, $data);
 
+        //Типоспецифичные хаки
         if ($unserialized = unserialize($value)) {
+            //Список значений прилетает сериализованным
             $this->data[$this->getCode()] = $unserialized;
 
         } else if ($className == 'CUserTypeFile' AND !is_array($value)) {
+            //Если не сделать intval, то при сохранении с ранее добавленным файлом будет выскакивать ошибка
             $this->data[$this->getCode()] = intval($value);
 
         } else {
+            //Все остальные поля - сохраняем как есть.
             $this->data[$this->getCode()] = $value;
         }
     }
