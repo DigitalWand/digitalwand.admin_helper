@@ -1,14 +1,14 @@
 <? use Bitrix\Main\Localization\Loc;
 
-if(!check_bitrix_sessid()) return;?>
+if (!check_bitrix_sessid()) return; ?>
 
 <?
 global $APPLICATION;
-@CopyDirFiles($DOCUMENT_ROOT."/bitrix/modules/digitalwand.admin_helper/install/admin", $DOCUMENT_ROOT."/bitrix/admin", true);
+@CopyDirFiles(__DIR__ . '/admin', $DOCUMENT_ROOT . "/bitrix/admin", true);
 echo CAdminMessage::ShowNote(Loc::getMessage("ADMIN_HELPER_INSTALL_COMPLETE_OK"));
 ?>
 
-<form action="<?echo $APPLICATION->GetCurPage()?>">
-	<input type="hidden" name="lang" value="<?echo LANG?>">
-	<input type="submit" name="" value="<?echo Loc::getMessage("ADMIN_HELPER_INSTALL_BACK")?>">
-<form>
+<form action="<? echo $APPLICATION->GetCurPage() ?>">
+    <input type="hidden" name="lang" value="<? echo LANG ?>">
+    <input type="submit" name="" value="<? echo Loc::getMessage("ADMIN_HELPER_INSTALL_BACK") ?>">
+</form>
