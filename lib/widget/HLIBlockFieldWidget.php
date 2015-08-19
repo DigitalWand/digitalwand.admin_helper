@@ -43,17 +43,16 @@ class HLIBlockFieldWidget extends HelperWidget
 
             /** @var \CAllUserTypeManager $USER_FIELD_MANAGER */
             global $USER_FIELD_MANAGER;
-            $FIELD_NAME = $this->getCode();
-            $GLOBALS[$FIELD_NAME] = isset($GLOBALS[$FIELD_NAME]) ? $GLOBALS[$FIELD_NAME] : $this->data[$this->getCode()];
+            $GLOBALS[$this->getCode()] = isset($GLOBALS[$this->getCode()]) ? $GLOBALS[$this->getCode()] : $this->data[$this->getCode()];
             $bVarsFromForm = false;
 
             $info["VALUE_ID"] = intval($this->data['ID']);
             $info['EDIT_FORM_LABEL'] = $this->getSettings('TITLE');
 
-            if (isset($_REQUEST['def_' . $FIELD_NAME])) {
-                $info['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $FIELD_NAME];
+            if (isset($_REQUEST['def_' . $this->getCode()])) {
+                $info['SETTINGS']['DEFAULT_VALUE'] = $_REQUEST['def_' . $this->getCode()];
             }
-            print $USER_FIELD_MANAGER->GetEditFormHTML($bVarsFromForm, $GLOBALS[$FIELD_NAME], $info);
+            print $USER_FIELD_MANAGER->GetEditFormHTML($bVarsFromForm, $GLOBALS[$this->getCode()], $info);
 
         }
     }
@@ -103,8 +102,6 @@ class HLIBlockFieldWidget extends HelperWidget
             }
         }
 
-        $value = $this->convertValuesBeforeSave($value, $fieldInfo);
-
         // use save modifiers
         $field = $entity_data_class::getEntity()->getField($this->getCode());
         $value = $field->modifyValueBeforeSave($value, $data);
@@ -136,63 +133,6 @@ class HLIBlockFieldWidget extends HelperWidget
     {
         if (is_null($this->data) OR !isset($this->data[$this->helper->pk()])) return false;
         return $entity_data_class::getByPrimary($this->data[$this->helper->pk()])->fetch();
-    }
-
-    /**
-     * Как у батрикса, только приспособлено для обработки одного значения
-     *
-     * @see Bitrix\Highloadblock\DataManager::convertValuesBeforeSave
-     * @param $value
-     * @param $fieldInfo
-     *
-     * @return array
-     */
-    protected function convertValuesBeforeSave($value, $fieldInfo)
-    {
-        if ($fieldInfo['MULTIPLE'] == 'N') {
-            $inputValue = array($value);
-        } else {
-            $inputValue = $value;
-        }
-
-        $tmpValue = array();
-
-        foreach ($inputValue as $singleValue) {
-            $tmpValue[] = $this->convertSingleValueBeforeSave($singleValue, $fieldInfo);
-        }
-
-        // write value back
-        if ($fieldInfo['MULTIPLE'] == 'N') {
-            $value = $tmpValue[0];
-        } else {
-            // remove empty (false) values
-            $tmpValue = array_filter($tmpValue, 'strlen');
-            $value = $tmpValue;
-        }
-
-        return $value;
-    }
-
-    /**
-     * @see Bitrix\Highloadblock\DataManager::convertSingleValueBeforeSave
-     * @param $value
-     * @param $userfield
-     *
-     * @return bool|mixed
-     */
-    protected function convertSingleValueBeforeSave($value, $userfield)
-    {
-        if (is_callable(array($userfield["USER_TYPE"]["CLASS_NAME"], "onbeforesave"))) {
-            $value = call_user_func_array(
-                array($userfield["USER_TYPE"]["CLASS_NAME"], "onbeforesave"), array($userfield, $value)
-            );
-        }
-
-        if (strlen($value) <= 0) {
-            $value = false;
-        }
-
-        return $value;
     }
 
     /**
