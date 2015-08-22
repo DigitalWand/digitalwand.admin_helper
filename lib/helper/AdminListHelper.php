@@ -89,8 +89,8 @@ abstract class AdminListHelper extends AdminBaseHelper
     protected $arFilterFields = array();
 
     /**
+     * Список полей, для которых доступна фильтрация
      * @var array
-     * @FIXME: убей-не помню, нафига оно надо!
      * @see \CAdminFilter::__construct();
      */
     protected $arFilterOpts = array();
