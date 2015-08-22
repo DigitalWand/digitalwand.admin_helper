@@ -345,8 +345,6 @@ abstract class AdminListHelper extends AdminBaseHelper
      * Обработчик групповых операций.
      * По-умолчанию прописаны операции активации/деактивации и удаления.
      *
-     * @FIXME: Активация-деактивация строго завязаны на поле ACTIVE с вариантами Y|N. нужно сделать как-то гибче...
-     *
      * @api
      * @param array $IDs
      * @param string $action
@@ -362,28 +360,6 @@ abstract class AdminListHelper extends AdminBaseHelper
         if ($action == 'delete') {
             foreach ($IDs as $id) {
                 $className::delete($id);
-            }
-
-        } else {
-            if (in_array($action, array(
-                    'activate',
-                    'deactivate'
-                )) AND isset($this->fields['ACTIVE'])
-            ) {
-                $active = false;
-                if ($action == 'activate') {
-                    $active = 1;
-                } else {
-                    if ($action == 'deactivate') {
-                        $active = 0;
-                    }
-                }
-
-                if ($active !== false) {
-                    foreach ($IDs as $id) {
-                        $className::update($id, array('ACTIVE' => ($active ? 'Y' : 'N')));
-                    }
-                }
             }
         }
     }
