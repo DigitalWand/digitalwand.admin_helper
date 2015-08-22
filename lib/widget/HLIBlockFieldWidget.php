@@ -156,14 +156,20 @@ class HLIBlockFieldWidget extends HelperWidget
                 $info = $this->getUserFieldInfo();
 
                 if (($context == AdminListHelper::OP_ADMIN_VARIABLES_FILTER OR $context == AdminListHelper::OP_CREATE_FILTER_FORM)
-                    AND isset($info['LIST_FILTER_LABEL'])
+                    AND (isset($info['LIST_FILTER_LABEL']) AND !empty($info['LIST_FILTER_LABEL']))
                 ) {
                     $value = $info['LIST_FILTER_LABEL'];
 
-                } else if ($context == AdminListHelper::OP_ADMIN_VARIABLES_HEADER AND isset($info['LIST_COLUMN_LABEL'])) {
+                } else if ($context == AdminListHelper::OP_ADMIN_VARIABLES_HEADER
+                    AND isset($info['LIST_COLUMN_LABEL'])
+                    AND !empty($info['LIST_COLUMN_LABEL'])
+                ) {
                     $value = $info['LIST_COLUMN_LABEL'];
 
-                } else if ($context == AdminEditHelper::OP_SHOW_TAB_ELEMENTS AND isset($info['EDIT_FORM_LABEL'])) {
+                } else if ($context == AdminEditHelper::OP_SHOW_TAB_ELEMENTS
+                    AND isset($info['EDIT_FORM_LABEL'])
+                    AND !empty($info['EDIT_FORM_LABEL'])
+                ) {
                     $value = $info['EDIT_FORM_LABEL'];
 
                 } else {
