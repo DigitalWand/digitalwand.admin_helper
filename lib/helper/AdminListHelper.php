@@ -640,7 +640,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $this->setContext(AdminListHelper::OP_CREATE_FILTER_FORM);
         print ' <form name="find_form" method="GET" action="' . static::getListPageURL($this->additionalUrlParams) . '?">';
 
-        $oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->isPopup(), $this->arFilterOpts);
+        $oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->arFilterOpts);
         $oFilter->Begin();
         foreach ($this->arFilterOpts as $code => $name) {
             $widget = $this->createWidgetForField($code);
