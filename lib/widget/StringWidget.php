@@ -21,7 +21,8 @@ class StringWidget extends HelperWidget
 {
 
     static protected $defaults = array(
-        'FILTER' => '%' //Фильтрация по подстроке, а не по точному соответствию.
+        'FILTER' => '%', //Фильтрация по подстроке, а не по точному соответствию.
+        'EDIT_IN_LIST' => true
     );
 
     /**
@@ -68,7 +69,7 @@ class StringWidget extends HelperWidget
     public function genListHTML(&$row, $data)
     {
         $value = $this->getValue();
-        if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY']) {
+        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
             $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
         }
         $row->AddViewField($this->getCode(), $value);

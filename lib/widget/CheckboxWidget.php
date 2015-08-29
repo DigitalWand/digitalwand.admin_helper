@@ -36,7 +36,7 @@ class CheckboxWidget extends HelperWidget
      */
     public function genListHTML(&$row, $data)
     {
-        if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY']) {
+        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
             $checked = intval($this->getValue() == 'Y') ? 'checked' : '';
             $js = 'var input = document.getElementsByName(\''.$this->getEditableListInputName().'\')[0];
                    input.value = this.checked ? \'Y\' : \'N\';';
@@ -64,7 +64,7 @@ class CheckboxWidget extends HelperWidget
     public function genFilterHTML()
     {
         print '<tr>';
-        print '<td>'.$this->settings['TITLE'].'</td>';
+        print '<td>'.$this->getSettings('TITLE').'</td>';
         print '<td> <select  name="'.$this->getFilterInputName().'">';
 
         print '<option value="Y">'.Loc::getMessage('CHECKBOX_YES').'</option>';
