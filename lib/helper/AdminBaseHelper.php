@@ -204,14 +204,19 @@ abstract class AdminBaseHelper
     }
 
     /**
-     * @return array
-     * Возвращает настройки интерфейса для данного класса.
+     * @param string $viewName - имя вьюхи, для которой мы хотим получить натсройки
+     *
+     * @return array Возвращает настройки интерфейса для данного класса.
+     *
      * @see AdminBaseHelper::setInterfaceSettings()
      * @api
      */
-    static public function getInterfaceSettings()
+    static public function getInterfaceSettings($viewName = '')
     {
-        return static::$interfaceSettings;
+        if (empty($viewName)) {
+            $viewName = static::$viewName;
+        }
+        return self::$interfaceSettings[static::$module][$viewName]['interface'];
     }
 
     /**
@@ -225,62 +230,42 @@ abstract class AdminBaseHelper
      *
      * @api
      */
-    static public function setInterfaceSettings(array $settings, array $helpers = array(), $module = "")
+    static public function setInterfaceSettings(array $settings, array $helpers = array(), $module = '')
     {
-        if (empty(static::$interfaceSettings)) {
-            static::$interfaceSettings = $settings;
-            if (!empty($helpers)) {
-                static::registerHelpersInterfaceSettings($module, $helpers);
-            }
-
-            return true;
-
-        } else {
-            return false;
+        foreach ($helpers as $helper/**@var AdminBaseHelper $helper */) {
+            $success = $helper::registerInterfaceSettings($module, $settings);
+            if (!$success) return false;
         }
-    }
 
-    /**
-     * Регистрирует настройки интерфейса для всех переданных хэлперов
-     *
-     * @param string $module имя текущего модуля
-     * @param array $helperModels массив хелперов, настройки интерфейса для которых нужно зарегистрировать.
-     * @internal
-     */
-    static public function registerHelpersInterfaceSettings($module, $helperModels = array())
-    {
-        foreach ($helperModels as $helper/**@var AdminBaseHelper $helper */) {
-            $helper::registerInterfaceSettings($module);
-        }
+        return true;
     }
 
     /**
      * Регистрирует настройки интерфейса для текущего хелпера
      *
      * @param string $module имя текущего модуля
+     * @param $interfaceSettings
      * @return bool
      * @internal
      */
-    static public function registerInterfaceSettings($module)
+    static public function registerInterfaceSettings($module, $interfaceSettings)
     {
         if (empty($module)) {
             return false;
         }
         self::$module = $module;
 
-        $interface = static::getInterfaceSettings();
-        if (empty($interface)) {
+        if (empty($interfaceSettings)) {
             return false;
         }
 
-        global $admin_helperInterface;
-        if (isset($admin_helperInterface[$module][static::$viewName])) {
+        if (isset(self::$interfaceSettings[$module][static::$viewName])) {
             return false;
         }
 
-        $admin_helperInterface[$module][static::$viewName] = array(
+        self::$interfaceSettings[$module][static::$viewName] = array(
             'helper' => get_called_class(),
-            'interface' => $interface
+            'interface' => $interfaceSettings
         );
 
         return true;
@@ -303,14 +288,13 @@ abstract class AdminBaseHelper
      */
     static public function getGlobalInterfaceSettings($module, $view)
     {
-        global $admin_helperInterface;
-        if (!isset($admin_helperInterface[$module][$view])) {
+        if (!isset(self::$interfaceSettings[$module][$view])) {
             return false;
         }
 
         return array(
-            $admin_helperInterface[$module][$view]['helper'],
-            $admin_helperInterface[$module][$view]['interface'],
+            self::$interfaceSettings[$module][$view]['helper'],
+            self::$interfaceSettings[$module][$view]['interface'],
         );
     }
 
