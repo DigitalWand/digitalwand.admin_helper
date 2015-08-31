@@ -1,13 +1,8 @@
 <?php
 
-global $MESS;
-
 use Bitrix\Main\Localization\Loc;
 
-$PathInstall = str_replace("\\", "/", __FILE__);
-$PathInstall = substr($PathInstall, 0, strlen($PathInstall) - strlen('/index.php'));
-Loc::loadMessages($PathInstall . '/install.php');
-include($PathInstall . '/version.php');
+Loc::loadMessages(__FILE__);
 
 if (class_exists('digitalwand_admin_helper')) return;
 
@@ -25,6 +20,8 @@ class digitalwand_admin_helper extends CModule
 
     function digitalwand_admin_helper()
     {
+        include __DIR__ . '/version.php';
+
         $this->MODULE_VERSION = ADMIN_HELPER_VERSION;
         $this->MODULE_VERSION_DATE = ADMIN_HELPER_VERSION_DATE;
         $this->MODULE_NAME = Loc::getMessage('ADMIN_HELPER_INSTALL_NAME');
