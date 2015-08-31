@@ -41,7 +41,7 @@ class digitalwand_admin_helper extends CModule
             'main',
             'OnPageStart',
             $this->MODULE_ID,
-            '\DigitalWand\AdminHelper\EventManager',
+            '\DigitalWand\AdminHelper\EventHandlers',
             'onPageStart'
         );
 
@@ -60,7 +60,7 @@ class digitalwand_admin_helper extends CModule
             'main',
             'OnPageStart',
             $this->MODULE_ID,
-            '\DigitalWand\AdminHelper\EventManager',
+            '\DigitalWand\AdminHelper\EventHandlers',
             'onPageStart'
         );
 

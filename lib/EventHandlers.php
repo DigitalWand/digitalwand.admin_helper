@@ -13,7 +13,7 @@ use Bitrix\Main\Loader;
  *
  * @author Nik Samokhvalov <nik@samokhvalov.info>
  */
-class EventManager
+class EventHandlers
 {
     /**
      * Автоматическое подключение модуля в админке.
