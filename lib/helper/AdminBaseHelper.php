@@ -216,7 +216,7 @@ abstract class AdminBaseHelper
         if (empty($viewName)) {
             $viewName = static::$viewName;
         }
-        return self::$interfaceSettings[static::$module][$viewName]['interface'];
+        return self::$interfaceSettings[static::getModule()][$viewName]['interface'];
     }
 
     /**
@@ -329,7 +329,9 @@ abstract class AdminBaseHelper
      */
     static public function getModule()
     {
-        return static::$module;
+        $request = Context::getCurrent()->getRequest();
+
+        return $request->get('module');
     }
 
     /**
