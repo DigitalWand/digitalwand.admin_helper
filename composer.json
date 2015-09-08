@@ -1,0 +1,23 @@
+{
+  "name": "DigitalWand/digitalwand.admin_helper",
+  "description": "API for custom admin interface in Bitrix.",
+  "keywords": [
+    "bitrix",
+    "admin",
+    "api"
+  ],
+  "support": {
+    "issues": "https://github.com/DigitalWand/digitalwand.admin_helper/issues",
+    "source": "https://github.com/DigitalWand/digitalwand.admin_helper"
+  },
+  "authors": [
+    {
+      "name": "DigitalWand",
+      "email": "a.volkov@digitalwand.ru"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.0"
+  },
+  "minimum-stability": "dev"
+}
