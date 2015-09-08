@@ -7,6 +7,7 @@ use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
+use Bitrix\Main\Context;
 
 Loader::includeModule('highloadblock');
 Loc::loadMessages(__FILE__);
