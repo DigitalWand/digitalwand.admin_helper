@@ -7,6 +7,7 @@ use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
+use Bitrix\Main\Context;
 
 Loader::includeModule('highloadblock');
 Loc::loadMessages(__FILE__);
@@ -216,7 +217,7 @@ abstract class AdminBaseHelper
         if (empty($viewName)) {
             $viewName = static::$viewName;
         }
-        return self::$interfaceSettings[static::$module][$viewName]['interface'];
+        return self::$interfaceSettings[static::getModule()][$viewName]['interface'];
     }
 
     /**
@@ -329,7 +330,9 @@ abstract class AdminBaseHelper
      */
     static public function getModule()
     {
-        return static::$module;
+        $request = Context::getCurrent()->getRequest();
+
+        return $request->get('module');
     }
 
     /**

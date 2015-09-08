@@ -1,9 +1,6 @@
-<?
+<?php
 
 use Bitrix\Main\Loader;
-use Bitrix\Main\Localization\Loc;
-
-Loc::loadMessages(__FILE__);
 
 Loader::registerAutoLoadClasses('digitalwand.admin_helper',
     array(
