@@ -2,7 +2,6 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
-
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
@@ -321,9 +320,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         if (!$this->isPopup() && $this->hasRights()) {
             $this->contextMenu[] = array(
-                'TEXT' => Loc::getMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
+                'TEXT' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_CREATE_NEW'),
                 'LINK' => static::getEditPageURL($this->additionalUrlParams),
-                'TITLE' => Loc::getMessage('MAIN_ADMIN_LIST_CREATE_NEW'),
+                'TITLE' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_CREATE_NEW'),
                 'ICON' => 'btn_new'
             );
         }
@@ -337,7 +336,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     protected function addGroupActions()
     {
         if (!$this->isPopup()) {
-            $this->groupActionsList = array('delete' => Loc::getMessage("MAIN_ADMIN_LIST_DELETE"));
+            $this->groupActionsList = array('delete' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"));
         }
     }
 
@@ -564,7 +563,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             $actions[] = array(
                 "ICON" => "select",
                 "DEFAULT" => true,
-                "TEXT" => Loc::getMessage("MAIN_ADMIN_LIST_SELECT"),
+                "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_SELECT"),
                 "ACTION" => 'javascript:' . $this->popupClickFunctionName . '(' . $jsData . ')'
             );
 
@@ -576,14 +575,14 @@ abstract class AdminListHelper extends AdminBaseHelper
                 $actions[] = array(
                     "ICON" => "edit",
                     "DEFAULT" => true,
-                    "TEXT" => Loc::getMessage("MAIN_ADMIN_LIST_EDIT"),
+                    "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_EDIT"),
                     "ACTION" => $this->list->ActionRedirect(static::getEditPageURL($query))
                 );
 
                 $actions[] = array(
                     "ICON" => "delete",
-                    "TEXT" => Loc::getMessage("MAIN_ADMIN_LIST_DELETE"),
-                    "ACTION" => "if(confirm('" . Loc::getMessage('MAIN_ADMIN_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
+                    "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),
+                    "ACTION" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
                             "delete", $viewQueryString)
                 );
             }
@@ -692,7 +691,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $className = static::getModel();
         $el = $className::getById($id);
         if ($el->getSelectedRowsCount() == 0) {
-            $this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR"), $id);
+            $this->list->AddGroupError(Loc::getMessage("DIGITALWAND_ADMIN_HELPER_SAVE_ERROR"), $id);
             return;
         }
 
@@ -711,7 +710,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $errors = $result->getErrorMessages();
         if (empty($this->validationErrors) AND !empty($errors)) {
             $fieldList = implode("\n", $errors);
-            $this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList, $id);
+            $this->list->AddGroupError(Loc::getMessage("DIGITALWAND_ADMIN_HELPER_SAVE_ERROR") . " " . $fieldList, $id);
         }
 
         if (!empty($errors)) {
@@ -764,4 +763,3 @@ abstract class AdminListHelper extends AdminBaseHelper
         $_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
     }
 }
-
