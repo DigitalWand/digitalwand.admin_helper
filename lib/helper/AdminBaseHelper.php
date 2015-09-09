@@ -330,9 +330,7 @@ abstract class AdminBaseHelper
      */
     static public function getModule()
     {
-        $request = Context::getCurrent()->getRequest();
-
-        return $request->get('module');
+        return static::$module;
     }
 
     /**

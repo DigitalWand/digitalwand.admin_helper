@@ -172,7 +172,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         }
 
         $className = static::getModel();
-        $oSort = new \CAdminSorting($this->getListTableID(), static::pk(), "asc");
+        $oSort = new \CAdminSorting($this->getListTableID(), static::pk(), "desc");
         $this->list = new \CAdminList($this->getListTableID(), $oSort);
         $this->list->InitFilter($this->arFilterFields);
 
