@@ -1,6 +1,7 @@
 {
   "name": "digitalwand/digitalwand.admin_helper",
   "description": "API for custom admin interface in Bitrix.",
+  "type": "bitrix-module",
   "keywords": [
     "bitrix",
     "admin",
@@ -14,8 +15,16 @@
     {
       "name": "DigitalWand",
       "email": "a.volkov@digitalwand.ru"
+    },
+    {
+      "name": "Nik Samokhvalov",
+      "homepage": "http://samokhvalov.info",
+      "email": "nik@samokhvalov.info"
     }
   ],
+  "extra": {
+    "installer-name": "digitalwand.admin_helper"
+  },
   "require": {
     "php": ">=5.3.0"
   },
