@@ -17,5 +17,7 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Widget\FileWidget' => 'lib/widget/FileWidget.php',
         'DigitalWand\AdminHelper\Widget\TextAreaWidget' => 'lib/widget/TextAreaWidget.php',
         'DigitalWand\AdminHelper\Widget\HLIBlockFieldWidget' => 'lib/widget/HLIBlockFieldWidget.php',
+        'DigitalWand\AdminHelper\Widget\ComboBoxWidget' => 'lib/widget/ComboBoxWidget.php',
+        'DigitalWand\AdminHelper\Widget\DateTimeWidget' => 'lib/widget/DateTimeWidget.php',
     )
 );
