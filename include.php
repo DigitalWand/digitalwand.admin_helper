@@ -20,5 +20,7 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Widget\ComboBoxWidget' => 'lib/widget/ComboBoxWidget.php',
         'DigitalWand\AdminHelper\Widget\DateTimeWidget' => 'lib/widget/DateTimeWidget.php',
         'DigitalWand\AdminHelper\Widget\IblockElementWidget' => 'lib/widget/IblockElementWidget.php',
+        'DigitalWand\AdminHelper\Widget\UrlWidget' => 'lib/widget/UrlWidget.php',
+        'DigitalWand\AdminHelper\Widget\VisualEditorWidget' => 'lib/widget/VisualEditorWidget.php',
     )
 );
