@@ -192,6 +192,8 @@ abstract class AdminBaseHelper
         global $APPLICATION;
         $this->app = $APPLICATION;
 
+        $this->loadMessages();
+
         $settings = array(
             'FIELDS' => $fields,
             'TABS' => $tabs
@@ -202,6 +204,14 @@ abstract class AdminBaseHelper
             $settings = static::getInterfaceSettings();
             $this->fields = $settings['FIELDS'];
         }
+    }
+
+    /**
+     * Подгрузка ленг-файла с сообщениями для локализации
+     */
+    protected function loadMessages()
+    {
+
     }
 
     /**
