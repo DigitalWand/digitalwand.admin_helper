@@ -5,6 +5,7 @@ namespace DigitalWand\AdminHelper\Widget;
 use Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
+\CModule::IncludeModule("iblock");
 
 /**
  * Виджет для выбора элемента инфоблока
@@ -49,11 +50,11 @@ class IblockElementWidget extends NumberWidget
                      value="'.$elementId.'"
                      size="'.$inputSize.'"
                      type="text">'.
-            '<input type="button"
+        '<input type="button"
                     value="..."
                     onClick="jsUtils.OpenWindow(\'/bitrix/admin/iblock_element_search.php?lang='.LANGUAGE_ID.
-                    '&amp;IBLOCK_ID='.$iblock.'&amp;n='.$name.'&amp;k='.$key.'\', '.$windowWidth.', '.$windowHeight.');">'.
-            '&nbsp;<span id="sp_'.md5($name).'_'.$key.'" >'.$arRes['NAME'].'</span>';
+        '&amp;IBLOCK_ID='.$iblock.'&amp;n='.$name.'&amp;k='.$key.'\', '.$windowWidth.', '.$windowHeight.');">'.
+        '&nbsp;<span id="sp_'.md5($name).'_'.$key.'" >'.$arRes['NAME'].'</span>';
     }
 
     public function getValueReadonly()
@@ -85,7 +86,7 @@ class IblockElementWidget extends NumberWidget
         {
             $strElement = '';
         }
- 
+
         $row->AddViewField($this->getCode(), $strElement);
     }
 }
