@@ -2,7 +2,6 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
-
 class DateTimeWidget extends HelperWidget
 {
     /**
@@ -20,14 +19,14 @@ class DateTimeWidget extends HelperWidget
 				"FORM_NAME" => "",
 				"INPUT_NAME" => $this->getEditInputName(),
 				"INPUT_VALUE" => ConvertTimeStamp(strtotime($this->getValue()), "FULL"),
-				"INPUT_VALUE_FINISH" => "", 
+				"INPUT_VALUE_FINISH" => "",
 				"SHOW_TIME" => "Y",
 				"HIDE_TIMEBAR" => "N"
 			)
 		);
         $html = ob_get_contents();
         ob_end_clean();
-    
+
         return $html;
     }
 
@@ -60,19 +59,21 @@ class DateTimeWidget extends HelperWidget
         print '<td>' . $this->settings['TITLE'] . '</td>';
         print '<td width="0%" nowrap>' . CalendarPeriod($inputNameFrom, $$inputNameFrom, $inputNameTo, $$inputNameTo, "find_form") . '</td>';
     }
-    
+
     /**
      * Сконвертируем дату в формат Mysql
      * @return boolean
      */
     public function processEditAction()
     {
-		if (!isset($this->modelObject->{$this->code})) {
-			return parent::processEditAction();
-		}
-		
-        $this->modelObject->{$this->code} = date("d.m.Y H:i:s", MakeTimeStamp($this->modelObject->{$this->code}));
-		
+        $value = $this->getValue();
+        $valueTimestamp = \MakeTimeStamp($value, "DD.MM.YYYY HH:MI:SS");
+
+        $newValue = new \Bitrix\Main\Type\Date(date('Y-m-d H:i:s', $valueTimestamp), 'Y-m-d H:i:s');
+
+        $this->setValue($newValue);
+
+
         if (!$this->checkRequired()) {
             $this->addError('REQUIRED_FIELD_ERROR');
         }
