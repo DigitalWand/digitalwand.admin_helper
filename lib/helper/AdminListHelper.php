@@ -560,7 +560,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         if ($this->isPopup()) {
             $jsData = \CUtil::PhpToJSObject($data);
-            $actions[] = array(
+            $actions['select'] = array(
                 "ICON" => "select",
                 "DEFAULT" => true,
                 "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_SELECT"),
@@ -572,14 +572,14 @@ abstract class AdminListHelper extends AdminBaseHelper
             $query = array_merge($this->additionalUrlParams,
                 array($this->pk() => $data[$this->pk()]));
             if ($this->hasRights()) {
-                $actions[] = array(
+                $actions['edit'] = array(
                     "ICON" => "edit",
                     "DEFAULT" => true,
                     "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_EDIT"),
                     "ACTION" => $this->list->ActionRedirect(static::getEditPageURL($query))
                 );
 
-                $actions[] = array(
+                $actions['delete'] = array(
                     "ICON" => "delete",
                     "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),
                     "ACTION" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
