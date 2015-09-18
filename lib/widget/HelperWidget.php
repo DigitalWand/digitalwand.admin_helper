@@ -563,10 +563,10 @@ abstract class HelperWidget
      */
     protected function getCurrentViewType()
     {
-        if (is_a($this->helper, 'AdminListHelper')) {
+        if (is_a($this->helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper')) {
             return self::LIST_HELPER;
         } else {
-            if (is_a($this->helper, 'AdminEditHelper')) {
+            if (is_a($this->helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper')) {
                 return self::EDIT_HELPER;
             }
         }
