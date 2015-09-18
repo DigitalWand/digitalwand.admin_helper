@@ -2,6 +2,10 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 /**
  * Виджет инпута для ввода ссылки
  *
@@ -53,5 +57,6 @@ class UrlWidget extends StringWidget
         {
             $this->addError('PROTOCOL_REQUIRED');
         }
+
     }
 }
