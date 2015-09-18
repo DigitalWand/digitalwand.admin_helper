@@ -26,6 +26,22 @@ class IblockElementWidget extends NumberWidget
         'WINDOW_HEIGHT' => 500,
     );
 
+    /**
+     * Добавляем получение ID по коду инфоблока в конструктор объекта
+     * @param array $settings
+     */
+    public function __construct($settings = array())
+    {
+        if( empty($settings['IBLOCK_ID']) && !empty($settings['IBLOCK_CODE']) && \CModule::IncludeModule('iblock') ){
+            $dbRes = \CIBlock::GetList([],['CODE'=>$settings['IBLOCK_CODE']]);
+            $arRes = $dbRes->GetNext();
+            if(!empty($arRes)){
+                $settings['IBLOCK_ID'] = $arRes['ID'];
+            }
+        }
+        $this->settings = $settings;
+    }
+
     public function genEditHtml()
     {
         $iblock = (int) $this->getSettings('IBLOCK_ID');
