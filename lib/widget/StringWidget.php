@@ -15,6 +15,7 @@ Loc::loadMessages(__FILE__);
  * <li> <b>STYLE</b> - inline-стили для input </li>
  * <li> <b>SIZE</b> - значение атрибута size для input </li>
  * <li> <b>TRANSLIT</b> - true, если поле будет транслитерироваться в символьный код</li>
+ * <li> <b>MULTIPLE</b> - поддерживается множественный ввод. В таблице требуется наличие поля VALUE</li>
  * </ul>
  */
 class StringWidget extends HelperWidget
@@ -83,7 +84,7 @@ class StringWidget extends HelperWidget
 		<script>
 			var multiple = new MultipleWidgetHelper(
 				'#<?= $uniqueId ?>-field-container',
-				'<input type="text" name="<?= $this->getCode()?>[][LINK]" style="<?=$style?>" size="<?=$size?>">'
+				'<input type="text" name="<?= $this->getCode()?>[][VALUE]" style="<?=$style?>" size="<?=$size?>">'
 			);
 			// TODO Добавление созданных полей
 			multiple.addField();
