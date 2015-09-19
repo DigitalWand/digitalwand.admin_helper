@@ -68,7 +68,13 @@ class StringWidget extends HelperWidget
 		$style = $this->getSettings('STYLE');
 		$size = $this->getSettings('SIZE');
 		$uniqueId = $this->getEditInputHtmlId();
-		ob_start();
+		/*
+		if (!empty($this->data['ID'])) {
+			$entityName = $this->entityName;
+			$entityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]])->fetch();
+		}
+		*/
+				ob_start();
 		?>
 
 		<div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
@@ -77,7 +83,7 @@ class StringWidget extends HelperWidget
 		<script>
 			var multiple = new MultipleWidgetHelper(
 				'#<?= $uniqueId ?>-field-container',
-				'<input type="text" name="<?= $this->getCode()?>[]" style="<?=$style?>" size="<?=$size?>">'
+				'<input type="text" name="<?= $this->getCode()?>[][LINK]" style="<?=$style?>" size="<?=$size?>">'
 			);
 			// TODO Добавление созданных полей
 			multiple.addField();
