@@ -6,6 +6,9 @@ use Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
 
+/**
+ * Для множественного поля в таблице должен быть столбец FILE_ID
+ */
 class FileWidget extends HelperWidget
 {
     /**

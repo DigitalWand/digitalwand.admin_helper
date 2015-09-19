@@ -68,12 +68,12 @@ class StringWidget extends HelperWidget
 		$style = $this->getSettings('STYLE');
 		$size = $this->getSettings('SIZE');
 		$uniqueId = $this->getEditInputHtmlId();
-		/*
+/*
 		if (!empty($this->data['ID'])) {
 			$entityName = $this->entityName;
 			$entityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]])->fetch();
 		}
-		*/
+*/
 				ob_start();
 		?>
 
