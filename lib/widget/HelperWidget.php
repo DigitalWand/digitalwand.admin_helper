@@ -142,9 +142,6 @@ abstract class HelperWidget
 	public function __construct($settings = array())
 	{
 		$this->settings = $settings;
-
-		// JS хелперы
-		$this->jsHelper();
 	}
 
 	/**
@@ -169,6 +166,9 @@ abstract class HelperWidget
 		{
 			return;
 		}
+
+		// JS хелперы
+		$this->jsHelper();
 
 		if ($this->getSettings('USE_BX_API'))
 		{
