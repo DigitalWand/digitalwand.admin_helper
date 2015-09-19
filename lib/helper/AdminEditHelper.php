@@ -327,6 +327,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	protected function showEpilog()
 	{
+		echo bitrix_sessid_post();
 		$interfaceSettings = static::getInterfaceSettings();
 		foreach ($interfaceSettings['FIELDS'] as $code => $settings)
 		{

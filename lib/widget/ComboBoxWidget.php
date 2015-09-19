@@ -1,7 +1,6 @@
-<?php 
+<?php
 
 namespace DigitalWand\AdminHelper\Widget;
-
 
 /**
  * Class ComboBoxWidget Выпадающий список
@@ -25,7 +24,8 @@ class ComboBoxWidget extends HelperWidget
 		$style = $this->getSettings('STYLE');
 
 		$name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
-		$result = "<select name='" . $name . "' style='" . $style . "'>";
+		$result = "<select name='" . $name . ($this->getSettings('MULTIPLE') ? '[]' : null) .
+			"' ".($this->getSettings('MULTIPLE') ? 'multiple="multiple"' : null)." style='" . $style . "'>";
 		$variants = $this->getVariants();
 		$default = $this->getValue();
 		if (is_null($default))
@@ -43,6 +43,16 @@ class ComboBoxWidget extends HelperWidget
 		$result .= "</select>";
 
 		return $result;
+	}
+
+	public function processEditAction()
+	{
+		parent::processEditAction();
+	}
+
+	protected function genMultipleEditHTML()
+	{
+		return $this->genEditHTML();
 	}
 
 	protected function getValueReadonly()
