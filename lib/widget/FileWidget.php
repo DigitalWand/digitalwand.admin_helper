@@ -85,25 +85,28 @@ class FileWidget extends HelperWidget
 						// Определение приставки для полей связанной сущности
 						$prefix = str_replace('ID', '', reset(array_flip($arData)));
 					}
-
-				$fileInfo = \CFile::GetByID($arData[$prefix . 'VALUE'])->fetch();
-				if ($fileInfo)
-				{
-					$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
-					if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
-						$fileInfoHtml .= '('.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').')';
+					if (empty($arData[$prefix . 'ID']))
+					{
+						continue;
 					}
-				}
-				else
-				{
-					$fileInfoHtml = 'Файл не найден';
-				}
+					$fileInfo = \CFile::GetByID($arData[$prefix . 'VALUE'])->fetch();
+					if ($fileInfo)
+					{
+						$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
+						if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
+							$fileInfoHtml .= '('.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').')';
+						}
+					}
+					else
+					{
+						$fileInfoHtml = 'Файл не найден';
+					}
 
-				?>
-				multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
-					'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][FILE]" value="<?= $arData[$prefix . 'ID'] ?>">',
+					?>
+					multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
+					'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][FILE]" value="#field_id#">',
 					{field_id: <?= $arData[$prefix . 'ID'] ?>});
-				<?
+					<?
 			   }
 			}
 			?>

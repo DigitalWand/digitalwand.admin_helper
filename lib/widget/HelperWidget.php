@@ -823,7 +823,7 @@ abstract class HelperWidget
 					}
 
 					$.each(data, function (key, value) {
-						fieldTemplate = fieldTemplate.replace('#' + key + '#', value);
+						fieldTemplate = fieldTemplate.replace(new RegExp('\#' + key + '\#', ['g']), value);
 					});
 					fieldTemplate = fieldTemplate.replace(/\#[^\#]+\#/g, '');
 

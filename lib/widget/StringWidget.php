@@ -86,7 +86,7 @@ class StringWidget extends HelperWidget
 		<script>
 			var multiple = new MultipleWidgetHelper(
 				'#<?= $uniqueId ?>-field-container',
-				'<input type="text" name="<?= $this->getCode()?>[][VALUE]" style="<?=$style?>" size="<?=$size?>" value="#value#">'
+				'#field_original_id#<input type="text" name="<?= $this->getCode()?>[#field_id#][VALUE]" style="<?=$style?>" size="<?=$size?>" value="#value#">'
 			);
 			<?
 			if ($rsEntityData)
@@ -99,8 +99,14 @@ class StringWidget extends HelperWidget
 					// Определение приставки для полей связанной сущности
 					$prefix = str_replace('ID', '', reset(array_flip($arData)));
 					}
-
-					?> multiple.addField({value: '<?= $arData[$prefix . 'VALUE'] ?>'}); <?
+					if (empty($arData[$prefix . 'ID']))
+					{
+						continue;
+					}
+					?> multiple.addField({value: '<?= $arData[$prefix . 'VALUE'] ?>',
+						field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[#field_id#][ID]" value="<?= $arData[$prefix . 'ID'] ?>">',
+						field_id: <?= $arData[$prefix . 'ID'] ?>
+					}); <?
 				}
 			}
 			?>
