@@ -159,6 +159,11 @@ class VisualEditorWidget extends TextAreaWidget
 					$bxCodeType .= '_' . $id;
 				}
 
+				if(!$_REQUEST[$bxCode] && $this->getSettings('REQUIRED') == true)
+				{
+					$this->addError('REQUIRED_FIELD_ERROR');
+				}
+
 				$this->data[$this->code] = $_REQUEST[$bxCode];
 				$this->data[$codeType] = $_REQUEST[$bxCodeType];
 				break;
