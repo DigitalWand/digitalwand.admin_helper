@@ -48,6 +48,14 @@ class ComboBoxWidget extends HelperWidget
 	public function processEditAction()
 	{
 		parent::processEditAction();
+
+		$sphere = $this->data[$this->getCode()];
+		unset($this->data[$this->getCode()]);
+
+		foreach ($sphere as $sphereKey)
+		{
+			$this->data[$this->getCode()][] = ['VALUE' => $sphereKey];
+		}
 	}
 
 	protected function genMultipleEditHTML()
