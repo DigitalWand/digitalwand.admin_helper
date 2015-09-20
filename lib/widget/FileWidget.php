@@ -67,7 +67,7 @@ class FileWidget extends HelperWidget
 
 			<? if ($descriptionField) { ?>
 			fileInputTemplate = fileInputTemplate + '<input type="text" name="<?= $this->getCode() ?>[#field_id#][DESCRIPTION]"' +
-					' style="margin-left: 5px;" placeholder="Описание">';
+				' style="margin-left: 5px;" placeholder="Описание">';
 			<? } ?>
 
 			var multiple = new MultipleWidgetHelper(
@@ -103,13 +103,13 @@ class FileWidget extends HelperWidget
 					}
 
 					?>
-					multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
-					'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][FILE]" value="#field_id#">',
-					{field_id: <?= $arData[$prefix . 'ID'] ?>});
-					<?
-			   }
-			}
-			?>
+			multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
+				'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][ID]" value="#field_id#">',
+				{field_id: <?= $arData[$prefix . 'ID'] ?>});
+			<?
+	   }
+	}
+	?>
 
 			multiple.addField();
 		</script>
@@ -160,8 +160,26 @@ class FileWidget extends HelperWidget
 			{
 				foreach ($_FILES[$this->getCode()]['name'] as $key => $fileName)
 				{
-					$fileId = $this->saveFile($fileName, $_FILES[$this->getCode()]['tmp_name'][$key]);
-					$this->data['IMAGES'][] = ['VALUE' => $fileId];
+					$description = null;
+
+					if (isset($this->data['IMAGES'][$key]['DESCRIPTION']))
+					{
+						$description = $this->data['IMAGES'][$key]['DESCRIPTION'];
+						unset($this->data['IMAGES'][$key]['DESCRIPTION']);
+					}
+					if (empty($this->data['IMAGES'][$key])) {
+						unset($this->data['IMAGES'][$key]);
+					}
+
+					$fileId = $this->saveFile($fileName, $_FILES[$this->getCode()]['tmp_name'][$key], false, $description);
+					if ($fileId)
+					{
+						$this->data['IMAGES'][] = ['VALUE' => $fileId];
+					}
+					else
+					{
+						ShowError('Не удалось добавить файл ' . $_FILES[$this->getCode()]['name'][$key]);
+					}
 					// TODO Учитывание пустых VALUE в RelativeManager
 				}
 			}
@@ -189,7 +207,7 @@ class FileWidget extends HelperWidget
 		}
 	}
 
-	protected function saveFile($name, $path, $type = false)
+	protected function saveFile($name, $path, $type = false, $description = null)
 	{
 		if (!$path)
 		{
@@ -202,6 +220,11 @@ class FileWidget extends HelperWidget
 		);
 
 		if (!$fileInfo) return false;
+
+		if (!empty($description))
+		{
+			$fileInfo['description'] = $description;
+		}
 
 		if (stripos($fileInfo['type'], "image") === false)
 		{
