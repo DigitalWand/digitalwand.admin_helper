@@ -94,7 +94,7 @@ class FileWidget extends HelperWidget
 					{
 						$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
 						if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
-							$fileInfoHtml .= '('.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').')';
+							$fileInfoHtml .= ' - '.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').'...';
 						}
 					}
 					else
@@ -103,7 +103,7 @@ class FileWidget extends HelperWidget
 					}
 
 					?>
-			multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
+				multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
 				'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][ID]" value="#field_id#">',
 				{field_id: <?= $arData[$prefix . 'ID'] ?>});
 			<?
@@ -166,22 +166,29 @@ class FileWidget extends HelperWidget
 			{
 				foreach ($_FILES[$this->getCode()]['name'] as $key => $fileName)
 				{
+					if (empty($fileName)
+						|| empty($_FILES[$this->getCode()]['tmp_name'][$key])
+						|| !empty($_FILES[$this->getCode()]['error'][$key])) {
+						continue;
+					}
+
 					$description = null;
 
-					if (isset($this->data['IMAGES'][$key]['DESCRIPTION']))
+					if (isset($this->data[$this->getCode()][$key]['DESCRIPTION']))
 					{
-						$description = $this->data['IMAGES'][$key]['DESCRIPTION'];
-						unset($this->data['IMAGES'][$key]['DESCRIPTION']);
+						$description = $this->data[$this->getCode()][$key]['DESCRIPTION'];
+						unset($this->data[$this->getCode()][$key]['DESCRIPTION']);
 					}
-					if (empty($this->data['IMAGES'][$key]))
+					if (empty($this->data[$this->getCode()][$key]))
 					{
-						unset($this->data['IMAGES'][$key]);
+						unset($this->data[$this->getCode()][$key]);
 					}
 
 					$fileId = $this->saveFile($fileName, $_FILES[$this->getCode()]['tmp_name'][$key], false, $description);
+
 					if ($fileId)
 					{
-						$this->data['IMAGES'][] = ['VALUE' => $fileId];
+						$this->data[$this->getCode()][] = ['VALUE' => $fileId];
 					}
 					else
 					{

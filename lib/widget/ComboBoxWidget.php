@@ -1,6 +1,7 @@
 <?php
 
 namespace DigitalWand\AdminHelper\Widget;
+
 use Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
@@ -50,7 +51,7 @@ class ComboBoxWidget extends HelperWidget
 
 		$variants = $this->getVariants();
 
-		if(!$multiple)
+		if (!$multiple)
 		{
 			$variantEmpty = [
 				'' => [
@@ -96,14 +97,16 @@ class ComboBoxWidget extends HelperWidget
 
 	public function processEditAction()
 	{
-		parent::processEditAction();
-
-		$sphere = $this->data[$this->getCode()];
-		unset($this->data[$this->getCode()]);
-
-		foreach ($sphere as $sphereKey)
+		if ($this->getSettings('MULTIPLE'))
 		{
-			$this->data[$this->getCode()][] = ['VALUE' => $sphereKey];
+
+			$sphere = $this->data[$this->getCode()];
+			unset($this->data[$this->getCode()]);
+
+			foreach ($sphere as $sphereKey)
+			{
+				$this->data[$this->getCode()][] = ['VALUE' => $sphereKey];
+			}
 		}
 	}
 
