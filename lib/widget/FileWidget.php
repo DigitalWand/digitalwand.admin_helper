@@ -54,6 +54,7 @@ class FileWidget extends HelperWidget
 		}
 
 		ob_start();
+		// TODO Рефакторинг
 		?>
 
 		<div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
@@ -61,11 +62,12 @@ class FileWidget extends HelperWidget
 
 		<script>
 			var fileInputTemplate = '<span class="adm-input-file"><span>Выбрать файл</span>' +
-				'<input type="file" name="<?= $this->getCode() ?>[]" style="<?= $style ?>" size="<?= $size ?>"' +
+				'<input type="file" name="<?= $this->getCode() ?>[#field_id#]" style="<?= $style ?>" size="<?= $size ?>"' +
 				' class="adm-designed-file" onchange="BXHotKeys.OnFileInputChange(this);"></span>';
 
 			<? if ($descriptionField) { ?>
-			fileInputTemplate = fileInputTemplate + '<input type="text" name="DESCRIPTION" style="margin-left: 5px;" placeholder="Описание">';
+			fileInputTemplate = fileInputTemplate + '<input type="text" name="<?= $this->getCode() ?>[#field_id#][DESCRIPTION]"' +
+					' style="margin-left: 5px;" placeholder="Описание">';
 			<? } ?>
 
 			var multiple = new MultipleWidgetHelper(
@@ -98,7 +100,9 @@ class FileWidget extends HelperWidget
 				}
 
 				?>
-				multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>');
+				multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
+					'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][FILE]" value="<?= $arData[$prefix . 'ID'] ?>">',
+					{field_id: <?= $arData[$prefix . 'ID'] ?>});
 				<?
 			   }
 			}

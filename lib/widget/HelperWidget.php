@@ -734,7 +734,10 @@ abstract class HelperWidget
 			 * - создайте экземпляр MultipleWidgetHelper
 			 * Например: var multiple = MultipleWidgetHelper(селектор контейнера, шаблон)
 			 * шаблон - это код, который будет подставлен в качестве поля
-			 * В шаблон можно добавлять переменные обрамленные решетками. Например #ENTITY_ID#
+			 * В шаблон можно добавлять переменные обрамленные решетками. Например #entity_id#
+			 * В шаблоне должна быть обязательно подставлена переменная #field_id#, если в контейнере несколько полей
+			 * Например <input type="text" name="image[#field_id#][DESCRIPTION]">
+			 * Если добавляемые поле не новое, то обязательно передавайте в data параметр field_id с ID записи
 			 * В метод addField можно передать значения этих переменных
 			 */
 			function MultipleWidgetHelper(container, fieldTemplate) {
@@ -763,6 +766,10 @@ abstract class HelperWidget
 				 */
 				fieldTemplate: null,
 				/**
+				 * Счетчик добавлений полей
+				 */
+				fieldsCounter: 0,
+				/**
 				 * Добавления поля
 				 * @param data object Данные для шаблона в виде ключ: значение
 				 */
@@ -771,6 +778,7 @@ abstract class HelperWidget
 					this.addFieldHtml(this.fieldTemplate, data);
 				},
 				addFieldHtml: function(fieldTemplate, data) {
+					this.fieldsCounter++;
 					this.$fieldsContainer.append(this._generateFieldContent(fieldTemplate, data));
 				},
 				/**
@@ -796,7 +804,7 @@ abstract class HelperWidget
 				 */
 				_generateFieldContent: function (fieldTemplate, data) {
 					return '<div class="field-container" style="margin-bottom: 5px;">'
-						+ this._generateFieldTemplate(fieldTemplate) + this._getDeleteButton()
+						+ this._generateFieldTemplate(fieldTemplate, data) + this._getDeleteButton()
 						+ '</div>';
 				},
 				/**
@@ -809,6 +817,11 @@ abstract class HelperWidget
 					if (!data) {
 						data = {};
 					}
+
+					if (typeof data.field_id == 'undefined') {
+						data.field_id = 'new_' + this.fieldsCounter;
+					}
+
 					$.each(data, function (key, value) {
 						fieldTemplate = fieldTemplate.replace('#' + key + '#', value);
 					});
