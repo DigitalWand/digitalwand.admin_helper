@@ -35,7 +35,7 @@ class ComboBoxWidget extends HelperWidget
 				if (empty($prefix))
 				{
 					// Определение приставки для полей связанной сущности
-					$prefix = str_replace('ID', '', reset(array_flip($arData)));
+					$prefix = str_replace('ID', '', array_keys($arData)[0]);
 				}
 				$multipleSelected[] = $arData[$prefix . 'VALUE'];
 			}

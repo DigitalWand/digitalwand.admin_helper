@@ -8,7 +8,7 @@ use DigitalWand\AdminHelper\Helper\AdminListHelper;
 use Bitrix\Main\Entity\DataManager;
 
 Loc::loadMessages(__FILE__);
-
+// TODO В мультивиджетах сделать поддержку READONLY
 /**
  * Class HelperWidget
  * @package AdminHelper\Widget
