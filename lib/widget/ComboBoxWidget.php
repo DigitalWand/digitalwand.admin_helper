@@ -22,10 +22,28 @@ class ComboBoxWidget extends HelperWidget
 	protected function genEditHTML($forFilter = false)
 	{
 		$style = $this->getSettings('STYLE');
+		$multiple = $this->getSettings('MULTIPLE');
+
+		$multipleSelected = [];
+		if ($multiple && !empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]]);
+			while ($arString = $rsEntityData->fetch())
+			{
+				// TODO Сделать правильное получение связанных данных
+				if (empty($prefix))
+				{
+					// Определение приставки для полей связанной сущности
+					$prefix = str_replace('ID', '', reset(array_flip($arString)));
+				}
+				$multipleSelected[] = $arString[$prefix . 'VALUE'];
+			}
+		}
 
 		$name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
-		$result = "<select name='" . $name . ($this->getSettings('MULTIPLE') ? '[]' : null) .
-			"' ".($this->getSettings('MULTIPLE') ? 'multiple="multiple"' : null)." style='" . $style . "'>";
+		$result = "<select name='" . $name . ($multiple ? '[]' : null) .
+			"' " . ($multiple ? 'multiple="multiple"' : null) . " style='" . $style . "'>";
 		$variants = $this->getVariants();
 		$default = $this->getValue();
 		if (is_null($default))
@@ -36,8 +54,22 @@ class ComboBoxWidget extends HelperWidget
 		foreach ($variants as $id => $data)
 		{
 			$name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
-
-			$result .= "<option value='" . $id . "' " . ($id == $default ? "selected" : "") . ">" . $name . "</option>";
+			$selected = false;
+			if ($multiple)
+			{
+				if (in_array($id, $multipleSelected))
+				{
+					$selected = true;
+				}
+			}
+			else
+			{
+				if ($id == $default)
+				{
+					$selected = true;
+				}
+			}
+			$result .= "<option value='" . $id . "' " . ($selected ? "selected" : "") . ">" . $name . "</option>";
 		}
 
 		$result .= "</select>";
