@@ -44,6 +44,13 @@ class VisualEditorWidget extends TextAreaWidget
 				}
 			}
 
+			// TODO Избавиться от данного костыля
+			if($_REQUEST[$bxCode])
+			{
+				$this->data[$this->code] = $_REQUEST[$bxCode];
+			}
+
+
 			\CFileMan::AddHTMLEditorFrame(
 				$bxCode,
 				$this->data[$this->code],
