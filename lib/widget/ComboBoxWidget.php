@@ -165,13 +165,19 @@ class ComboBoxWidget extends HelperWidget
 	 */
 	public function genListHTML(&$row, $data)
 	{
-		if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY'])
+		if ($this->getSettings('MULTIPLE'))
 		{
-			$row->AddInputField($this->getCode(), ['style' => 'width:90%']);
 		}
 		else
 		{
-			$row->AddViewField($this->getCode(), $this->getValueReadonly());
+			if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY'])
+			{
+				$row->AddInputField($this->getCode(), ['style' => 'width:90%']);
+			}
+			else
+			{
+				$row->AddViewField($this->getCode(), $this->getValueReadonly());
+			}
 		}
 	}
 
@@ -182,10 +188,16 @@ class ComboBoxWidget extends HelperWidget
 	 */
 	public function genFilterHTML()
 	{
-		print '<tr>';
-		print '<td>' . $this->getSettings('TITLE') . '</td>';
-		print '<td>' . $this->genEditHTML(true) . '</td>';
-		print '</tr>';
+		if ($this->getSettings('MULTIPLE'))
+		{
+		}
+		else
+		{
+			print '<tr>';
+			print '<td>' . $this->getSettings('TITLE') . '</td>';
+			print '<td>' . $this->genEditHTML(true) . '</td>';
+			print '</tr>';
+		}
 	}
 
 	/**

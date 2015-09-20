@@ -126,19 +126,25 @@ class FileWidget extends HelperWidget
 	 */
 	public function genListHTML(&$row, $data)
 	{
-		$file = \CFile::GetPath($data[$this->code]);
-		$res = \CFile::GetByID($data[$this->code]);
-		$fileInfo = $res->Fetch();
-
-		if (!$file)
+		if ($this->getSettings('MULTIPLE'))
 		{
-			$html = "";
 		}
 		else
 		{
-			$html = '<a href="' . $file . '" >' . $fileInfo['FILE_NAME'] . ' (' . $fileInfo['FILE_DESCRIPTION'] . ')' . '</a>';
+			$file = \CFile::GetPath($data[$this->code]);
+			$res = \CFile::GetByID($data[$this->code]);
+			$fileInfo = $res->Fetch();
+
+			if (!$file)
+			{
+				$html = "";
+			}
+			else
+			{
+				$html = '<a href="' . $file . '" >' . $fileInfo['FILE_NAME'] . ' (' . $fileInfo['FILE_DESCRIPTION'] . ')' . '</a>';
+			}
+			$row->AddViewField($this->code, $html);
 		}
-		$row->AddViewField($this->code, $html);
 	}
 
 	/**
@@ -167,7 +173,8 @@ class FileWidget extends HelperWidget
 						$description = $this->data['IMAGES'][$key]['DESCRIPTION'];
 						unset($this->data['IMAGES'][$key]['DESCRIPTION']);
 					}
-					if (empty($this->data['IMAGES'][$key])) {
+					if (empty($this->data['IMAGES'][$key]))
+					{
 						unset($this->data['IMAGES'][$key]);
 					}
 

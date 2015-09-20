@@ -126,12 +126,19 @@ class StringWidget extends HelperWidget
 	 */
 	public function genListHTML(&$row, $data)
 	{
-		$value = $this->getValue();
-		if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))
+		if ($this->getSettings('MULTIPLE'))
 		{
-			$row->AddInputField($this->getCode(), array('style' => 'width:90%'));
+
 		}
-		$row->AddViewField($this->getCode(), $value);
+		else
+		{
+			$value = $this->getValue();
+			if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))
+			{
+				$row->AddInputField($this->getCode(), array('style' => 'width:90%'));
+			}
+			$row->AddViewField($this->getCode(), $value);
+		}
 	}
 
 	/**
@@ -142,13 +149,19 @@ class StringWidget extends HelperWidget
 	 */
 	public function genFilterHTML()
 	{
-		print '<tr>';
-		print '<td>' . $this->getSettings('TITLE') . '</td>';
-
-		if ($this->isFilterBetween())
+		if ($this->getSettings('MULTIPLE'))
 		{
-			list($from, $to) = $this->getFilterInputName();
-			print '<td>
+
+		}
+		else
+		{
+			print '<tr>';
+			print '<td>' . $this->getSettings('TITLE') . '</td>';
+
+			if ($this->isFilterBetween())
+			{
+				list($from, $to) = $this->getFilterInputName();
+				print '<td>
             <div class="adm-filter-box-sizing">
                 <span style="display: inline-block; left: 11px; top: 5px; position: relative;">От:</span>
                 <div class="adm-input-wrap" style="display: inline-block">
@@ -160,11 +173,12 @@ class StringWidget extends HelperWidget
                 </div>
             </div>
             </td> ';
+			}
+			else
+			{
+				print '<td><input type="text" name="' . $this->getFilterInputName() . '" size="47" value="' . $this->getCurrentFilterValue() . '"></td>';
+			}
+			print '</tr>';
 		}
-		else
-		{
-			print '<td><input type="text" name="' . $this->getFilterInputName() . '" size="47" value="' . $this->getCurrentFilterValue() . '"></td>';
-		}
-		print '</tr>';
 	}
 }
