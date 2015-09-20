@@ -10,8 +10,7 @@ Loc::loadMessages(__FILE__);
  * Для множественного поля в таблице должен быть столбец FILE_ID
  * Настройки класса:
  * <ul>
- * <li><b>IMAGES</b> - bool ограничивать ли загрузку только изображениями</li>
- * <li><b>DESCRIPTION</b> - bool нужно ли поле описания</li>
+ * <li><b>DESCRIPTION_FIELD</b> - bool нужно ли поле описания</li>
  * <li><b>MULTIPLE</b> - bool является ли поле множественным</li>
  * </ul>
  */
@@ -44,6 +43,7 @@ class FileWidget extends HelperWidget
 	{
 		$style = $this->getSettings('STYLE');
 		$size = $this->getSettings('SIZE');
+		$descriptionField = $this->getSettings('DESCRIPTION_FIELD');
 		$uniqueId = $this->getEditInputHtmlId();
 
 		$rsEntityData = null;
@@ -60,12 +60,17 @@ class FileWidget extends HelperWidget
 		</div>
 
 		<script>
+			var fileInputTemplate = '<span class="adm-input-file"><span>Выбрать файл</span>' +
+				'<input type="file" name="<?= $this->getCode() ?>[]" style="<?= $style ?>" size="<?= $size ?>"' +
+				' class="adm-designed-file" onchange="BXHotKeys.OnFileInputChange(this);"></span>';
+
+			<? if ($descriptionField) { ?>
+			fileInputTemplate = fileInputTemplate + '<input type="text" name="DESCRIPTION" style="margin-left: 5px;" placeholder="Описание">';
+			<? } ?>
+
 			var multiple = new MultipleWidgetHelper(
 				'#<?= $uniqueId ?>-field-container',
-				'<span class="adm-input-file"><span>Выбрать файл</span>' +
-				'<input class="adm-designed-file" onchange="BXHotKeys.OnFileInputChange(this);" type="file" ' +
-				'name="<?= $this->getCode()?>[]" style="<?= $style ?> size="<?= $size ?>"></span>'
-			);
+				fileInputTemplate);
 
 			<?
 			if ($rsEntityData)
@@ -83,6 +88,9 @@ class FileWidget extends HelperWidget
 				if ($fileInfo)
 				{
 					$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
+					if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
+						$fileInfoHtml .= '('.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').')';
+					}
 				}
 				else
 				{
