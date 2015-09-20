@@ -1,6 +1,9 @@
 <?php
 
 namespace DigitalWand\AdminHelper\Widget;
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
 
 /**
  * Class ComboBoxWidget Выпадающий список
@@ -44,7 +47,21 @@ class ComboBoxWidget extends HelperWidget
 		$name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
 		$result = "<select name='" . $name . ($multiple ? '[]' : null) .
 			"' " . ($multiple ? 'multiple="multiple"' : null) . " style='" . $style . "'>";
+
 		$variants = $this->getVariants();
+
+		if(!$multiple)
+		{
+			$variantEmpty = [
+				'' => [
+					'ID' => '',
+					'TITLE' => Loc::getMessage('COMBO_BOX_LIST_EMPTY')
+				]
+			];
+
+			$variants = $variantEmpty + $variants;
+		}
+
 		$default = $this->getValue();
 		if (is_null($default))
 		{
@@ -165,19 +182,13 @@ class ComboBoxWidget extends HelperWidget
 	 */
 	public function genListHTML(&$row, $data)
 	{
-		if ($this->getSettings('MULTIPLE'))
+		if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY'])
 		{
+			$row->AddInputField($this->getCode(), ['style' => 'width:90%']);
 		}
 		else
 		{
-			if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY'])
-			{
-				$row->AddInputField($this->getCode(), ['style' => 'width:90%']);
-			}
-			else
-			{
-				$row->AddViewField($this->getCode(), $this->getValueReadonly());
-			}
+			$row->AddViewField($this->getCode(), $this->getValueReadonly());
 		}
 	}
 
@@ -188,16 +199,10 @@ class ComboBoxWidget extends HelperWidget
 	 */
 	public function genFilterHTML()
 	{
-		if ($this->getSettings('MULTIPLE'))
-		{
-		}
-		else
-		{
-			print '<tr>';
-			print '<td>' . $this->getSettings('TITLE') . '</td>';
-			print '<td>' . $this->genEditHTML(true) . '</td>';
-			print '</tr>';
-		}
+		print '<tr>';
+		print '<td>' . $this->getSettings('TITLE') . '</td>';
+		print '<td>' . $this->genEditHTML(true) . '</td>';
+		print '</tr>';
 	}
 
 	/**
