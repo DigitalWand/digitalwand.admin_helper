@@ -187,7 +187,6 @@ class FileWidget extends HelperWidget
 					{
 						ShowError('Не удалось добавить файл ' . $_FILES[$this->getCode()]['name'][$key]);
 					}
-					// TODO Учитывание пустых VALUE в RelativeManager
 				}
 			}
 		}

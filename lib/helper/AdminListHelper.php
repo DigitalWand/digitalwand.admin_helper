@@ -412,13 +412,19 @@ abstract class AdminListHelper extends AdminBaseHelper
             }
         }
         $visibleColumns = array_unique($visibleColumns);
-
+		// Поля для селекта (перевернутый массив)
+		$listSelect = array_flip($visibleColumns);
         foreach ($this->fields as $code => $settings) {
             $widget = $this->createWidgetForField($code);
             $widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
+			// Множественные поля не должны быть в селекте
+       		if (!empty($settings['MULTIPLE'])) {
+				unset($listSelect[$code]);
+			}
         }
-
-        $res = $this->getList($className, $this->arFilter, $visibleColumns, $sort, $raw);
+		// Поля для селекта (множественные поля отфильтрованы)
+		$listSelect = array_flip($listSelect);
+        $res = $this->getList($className, $this->arFilter, $listSelect, $sort, $raw);
 
         $res = new \CAdminResult($res, $this->getListTableID());
         $res->NavStart();
