@@ -91,16 +91,16 @@ class StringWidget extends HelperWidget
 			<?
 			if ($rsEntityData)
 			{
-				while($arString = $rsEntityData->fetch())
+				while($arData = $rsEntityData->fetch())
 				{
 					// TODO Написать свой метод получения (или обработки) результатов связанных сущностей и заменить это
 					if (empty($prefix))
 					{
 					// Определение приставки для полей связанной сущности
-					$prefix = str_replace('ID', '', reset(array_flip($arString)));
+					$prefix = str_replace('ID', '', reset(array_flip($arData)));
 					}
 
-					?> multiple.addField({value: '<?= $arString[$prefix . 'VALUE'] ?>'}); <?
+					?> multiple.addField({value: '<?= $arData[$prefix . 'VALUE'] ?>'}); <?
 				}
 			}
 			?>

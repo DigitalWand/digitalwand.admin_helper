@@ -46,6 +46,13 @@ class FileWidget extends HelperWidget
 		$size = $this->getSettings('SIZE');
 		$uniqueId = $this->getEditInputHtmlId();
 
+		$rsEntityData = null;
+		if (!empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]]);
+		}
+
 		ob_start();
 		?>
 
@@ -55,9 +62,40 @@ class FileWidget extends HelperWidget
 		<script>
 			var multiple = new MultipleWidgetHelper(
 				'#<?= $uniqueId ?>-field-container',
-				'<input type="file" name="<?= $this->getCode()?>[]" style="<?=$style?>" size="<?=$size?>">'
+				'<span class="adm-input-file"><span>Выбрать файл</span>' +
+				'<input class="adm-designed-file" onchange="BXHotKeys.OnFileInputChange(this);" type="file" ' +
+				'name="<?= $this->getCode()?>[]" style="<?= $style ?> size="<?= $size ?>"></span>'
 			);
-			// TODO Добавление созданных полей
+
+			<?
+			if ($rsEntityData)
+			{
+				while($arData = $rsEntityData->fetch())
+				{
+					// TODO Написать свой метод получения (или обработки) результатов связанных сущностей и заменить это
+					if (empty($prefix))
+					{
+						// Определение приставки для полей связанной сущности
+						$prefix = str_replace('ID', '', reset(array_flip($arData)));
+					}
+
+				$fileInfo = \CFile::GetByID($arData[$prefix . 'VALUE'])->fetch();
+				if ($fileInfo)
+				{
+					$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
+				}
+				else
+				{
+					$fileInfoHtml = 'Файл не найден';
+				}
+
+				?>
+				multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>');
+				<?
+			   }
+			}
+			?>
+
 			multiple.addField();
 		</script>
 		<?

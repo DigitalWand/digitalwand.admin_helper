@@ -768,7 +768,10 @@ abstract class HelperWidget
 				 */
 				addField: function (data) {
 					console.log('Добавление поля');
-					this.$fieldsContainer.append(this._generateFieldContent(data));
+					this.addFieldHtml(this.fieldTemplate, data);
+				},
+				addFieldHtml: function(fieldTemplate, data) {
+					this.$fieldsContainer.append(this._generateFieldContent(fieldTemplate, data));
 				},
 				/**
 				 * Удаление поля
@@ -791,9 +794,9 @@ abstract class HelperWidget
 				 * @returns {string}
 				 * @private
 				 */
-				_generateFieldContent: function (data) {
+				_generateFieldContent: function (fieldTemplate, data) {
 					return '<div class="field-container" style="margin-bottom: 5px;">'
-						+ this._generateFieldTemplate(data) + this._getDeleteButton()
+						+ this._generateFieldTemplate(fieldTemplate) + this._getDeleteButton()
 						+ '</div>';
 				},
 				/**
@@ -802,11 +805,10 @@ abstract class HelperWidget
 				 * @returns {null}
 				 * @private
 				 */
-				_generateFieldTemplate: function (data) {
+				_generateFieldTemplate: function (fieldTemplate, data) {
 					if (!data) {
 						data = {};
 					}
-					var fieldTemplate = this.fieldTemplate;
 					$.each(data, function (key, value) {
 						fieldTemplate = fieldTemplate.replace('#' + key + '#', value);
 					});

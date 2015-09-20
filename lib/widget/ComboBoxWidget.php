@@ -29,15 +29,15 @@ class ComboBoxWidget extends HelperWidget
 		{
 			$entityName = $this->entityName;
 			$rsEntityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]]);
-			while ($arString = $rsEntityData->fetch())
+			while ($arData = $rsEntityData->fetch())
 			{
 				// TODO Сделать правильное получение связанных данных
 				if (empty($prefix))
 				{
 					// Определение приставки для полей связанной сущности
-					$prefix = str_replace('ID', '', reset(array_flip($arString)));
+					$prefix = str_replace('ID', '', reset(array_flip($arData)));
 				}
-				$multipleSelected[] = $arString[$prefix . 'VALUE'];
+				$multipleSelected[] = $arData[$prefix . 'VALUE'];
 			}
 		}
 
