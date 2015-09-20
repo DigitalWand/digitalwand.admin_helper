@@ -69,13 +69,15 @@ class StringWidget extends HelperWidget
 		$style = $this->getSettings('STYLE');
 		$size = $this->getSettings('SIZE');
 		$uniqueId = $this->getEditInputHtmlId();
-/*
-		if (!empty($this->data['ID'])) {
+
+		$rsEntityData = null;
+		if (!empty($this->data['ID']))
+		{
 			$entityName = $this->entityName;
-			$entityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]])->fetch();
+			$rsEntityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]]);
 		}
-*/
-				ob_start();
+
+		ob_start();
 		?>
 
 		<div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
@@ -84,8 +86,25 @@ class StringWidget extends HelperWidget
 		<script>
 			var multiple = new MultipleWidgetHelper(
 				'#<?= $uniqueId ?>-field-container',
-				'<input type="text" name="<?= $this->getCode()?>[][VALUE]" style="<?=$style?>" size="<?=$size?>">'
+				'<input type="text" name="<?= $this->getCode()?>[][VALUE]" style="<?=$style?>" size="<?=$size?>" value="#value#">'
 			);
+			<?
+			if ($rsEntityData)
+			{
+				while($arString = $rsEntityData->fetch())
+				{
+					// TODO Написать свой метод получения (или обработки) результатов связанных сущностей и заменить это
+					if (empty($prefix))
+					{
+					// Определение приставки для полей связанной сущности
+					$prefix = str_replace('ID', '', reset(array_flip($arString)));
+					}
+
+					?> multiple.addField({value: '<?= $arString[$prefix . 'VALUE'] ?>'}); <?
+				}
+			}
+			?>
+
 			// TODO Добавление созданных полей
 			multiple.addField();
 		</script>
