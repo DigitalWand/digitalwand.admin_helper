@@ -835,7 +835,7 @@ abstract class HelperWidget
 				 * @private
 				 */
 				_getDeleteButton: function () {
-					return '<input type="button" value="Удалить" class="delete-field-button" style="margin-left: 5px;">';
+					return '<input type="button" value="-" class="delete-field-button" style="margin-left: 5px;">';
 				},
 				/**
 				 * Кнопка добавления
