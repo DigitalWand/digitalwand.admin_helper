@@ -175,7 +175,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $this->list = new \CAdminList($this->getListTableID(), $oSort);
         $this->list->InitFilter($this->arFilterFields);
 
-        if ($this->list->EditAction() AND $this->hasRights()) {
+        if ($this->list->EditAction() AND $this->hasWriteRights()) {
             global $FIELDS;
             foreach ($FIELDS as $id => $fields) {
                 if (!$this->list->IsUpdated($id)) {
@@ -187,7 +187,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             }
         }
 
-        if ($IDs = $this->list->GroupAction() AND $this->hasRights()) {
+        if ($IDs = $this->list->GroupAction() AND $this->hasWriteRights()) {
 
             if ($_REQUEST['action_target'] == 'selected') {
                 $this->setContext(AdminListHelper::OP_GROUP_ACTION);
@@ -318,7 +318,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         $this->contextMenu = array();
 
-        if (!$this->isPopup() && $this->hasRights()) {
+        if (!$this->isPopup() && $this->hasWriteRights()) {
             $this->contextMenu[] = array(
                 'TEXT' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_CREATE_NEW'),
                 'LINK' => static::getEditPageURL($this->additionalUrlParams),
@@ -571,14 +571,15 @@ abstract class AdminListHelper extends AdminBaseHelper
             $viewQueryString = 'module=' . static::getModule() . '&view=' . static::$viewName;
             $query = array_merge($this->additionalUrlParams,
                 array($this->pk() => $data[$this->pk()]));
-            if ($this->hasRights()) {
+            if ($this->hasWriteRights()) {
                 $actions['edit'] = array(
                     "ICON" => "edit",
                     "DEFAULT" => true,
                     "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_EDIT"),
                     "ACTION" => $this->list->ActionRedirect(static::getEditPageURL($query))
                 );
-
+            }
+            if($this->hasDeleteRights()){
                 $actions['delete'] = array(
                     "ICON" => "delete",
                     "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),

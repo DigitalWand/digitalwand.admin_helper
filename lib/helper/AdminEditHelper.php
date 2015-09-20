@@ -239,7 +239,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->menu[] = $returnToList;
 		}
 
-		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasRights())
+		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights())
 		{
 			$this->menu[] = array(
 				"TEXT" => Loc::getMessage('DELETE'),
@@ -401,7 +401,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	protected function editAction()
 	{
 		$this->setContext(AdminEditHelper::OP_EDIT_ACTION_BEFORE);
-		if (!$this->hasRights())
+		if (!$this->hasWriteRights())
 		{
 			$this->addErrors('Недостаточно прав для редактирования данных');
 
