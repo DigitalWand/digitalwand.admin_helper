@@ -456,6 +456,11 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				$widget->processAfterSaveAction();
 			}
 
+			if (!$existing)
+			{
+				LocalRedirect($this->getEditPageURL(['ID' => $result->getId(), 'lang' => LANGUAGE_ID]));
+			}
+
 			return true;
 		}
 
