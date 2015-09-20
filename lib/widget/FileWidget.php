@@ -55,7 +55,7 @@ class FileWidget extends HelperWidget
 		<script>
 			var multiple = new MultipleWidgetHelper(
 				'#<?= $uniqueId ?>-field-container',
-				'<input type="file" name="<?= $this->getCode()?>[][VALUE]" style="<?=$style?>" size="<?=$size?>">'
+				'<input type="file" name="<?= $this->getCode()?>[]" style="<?=$style?>" size="<?=$size?>">'
 			);
 			// TODO Добавление созданных полей
 			multiple.addField();
@@ -100,18 +100,16 @@ class FileWidget extends HelperWidget
 
 	public function processEditAction()
 	{
+		parent::processEditAction();
 		if ($this->getSettings('MULTIPLE'))
 		{
 			if (!empty($_FILES[$this->getCode()]))
 			{
-				foreach ($_FILES[$this->getCode()]['name'] as $key => $arFileName)
+				foreach ($_FILES[$this->getCode()]['name'] as $key => $fileName)
 				{
-					$fileName = $arFileName['VALUE'];
-					$fileTmpPath = $_FILES[$this->getCode()]['tmp_name'][$key]['VALUE'];
-					$fileId = $this->saveFile($fileName, $fileTmpPath);
+					$fileId = $this->saveFile($fileName, $_FILES[$this->getCode()]['tmp_name'][$key]);
 					$this->data['IMAGES'][] = ['VALUE' => $fileId];
-					// TODO Изображения не попадают в модель
-					// TODO В методе saveReferences в add в RelativeDataManager почему-то попадает int
+					// TODO Учитывание пустых VALUE в RelativeManager
 				}
 			}
 		}
@@ -165,13 +163,16 @@ class FileWidget extends HelperWidget
 		$helper = $this->helper;
 		$fileId = \CFile::SaveFile($fileInfo, $helper::$module);
 
-		$code = $this->code;
-		if (isset($this->data[$code]))
+		if (!$this->getSettings('MULTIPLE'))
 		{
-			\CFile::Delete($this->data[$code]);
-		}
+			$code = $this->code;
+			if (isset($this->data[$code]))
+			{
+				\CFile::Delete($this->data[$code]);
+			}
 
-		$this->data[$code] = $fileId;
+			$this->data[$code] = $fileId;
+		}
 
 		return $fileId;
 	}
