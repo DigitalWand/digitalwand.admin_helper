@@ -3,7 +3,7 @@
 namespace DigitalWand\AdminHelper\Model;
 
 use Bitrix\Main\Entity;
-
+use Mos\Main\Db\DataManager;
 // TODO Переименовать и переместить в генератор админки. Реализовать в виде трейта
 // TODO Описать логику работы
 // TODO Решить проблему удаления привязанных полей при удалении сущности
@@ -28,7 +28,7 @@ use Bitrix\Main\Entity;
  * - удаление неиспользуемых данных связей (TODO удалять, только если передан пустой параметр, если же он вообще не передан, не удалять)
  * - TODO полное удаление привязанных данных (опционально)
  */
-trait RelativeDataTrait
+abstract class RelativeDataManager extends DataManager
 {
 	/** @var array Данные для привязанных сущностей */
 	protected static $referencesToSave = [];
