@@ -5,9 +5,7 @@ namespace DigitalWand\AdminHelper\Model;
 use Bitrix\Main\Entity;
 use Mos\Main\Db\DataManager;
 
-// TODO Переименовать и переместить в генератор админки. Реализовать в виде трейта
 // TODO Описать логику работы
-// TODO Решить проблему удаления привязанных полей при удалении сущности
 /**
  * Класс добавляет возможность автоматически управлять данными связанных сущностей
  * Для этого нужно определить связь. После при создании или обновлении можно передавать данные связей
@@ -21,14 +19,38 @@ use Mos\Main\Db\DataManager;
  */
 
 /**
- * Работа со связанными моделям для хранения множественных полей
- * Класс автоматически создает/обновляет/удаляет данные связанных моделей на основе переданных в свойство этой связи данных
+ * Работа со связанными моделямя для хранения множественных полей
+ * Класс автоматически создает/обновляет/удаляет данные связанных моделей на основе переданных связи данных (через свойство)
  * Возможности:
  * - создание
  * - обновление
- * - удаление неиспользуемых данных связей (TODO удалять, только если передан пустой параметр, если же он вообще не передан, не удалять)
- * - TODO полное удаление привязанных данных (опционально)
+ * - удаление (данные связи, для которых не были переданы данные будут удалятся)
+ * - удаление связанных данных при удалении основной сущности
+ * Инструкция:
+ * - создайте таблицу для хранения данных множественных полей
+ * Структура таблицы:
+ * ID, ENTITY (str), ENTITY_ID (int), FIELD (str), VALUE
+ * Поля ENTITY обязательно только если в одной таблице хранятся данные разных сущностей
+ * Поле FIELD обязательно если в одной таблице хранятся данные разных полей
+ * - создайте модель для данной таблицы
+ * - создайте, в классе наследующем RelativeDataManager, связи с преждесозданной моделью
+ * Связь должна быть объявлена по шаблону:
+'FIELD_NAME' => [
+'data_type' => '\Mos\NewsOiv\FieldsTable',
+'reference' => [
+'=this.ID' => 'ref.ENTITY_ID',
+'ref.ENTITY' => new DB\SqlExpression('?s', static::getModelCode()), // Не обязательно, если в таблице хранятся данные одной сущности
+'ref.FIELD' => new DB\SqlExpression('?s', 'FIELD_NAME'), // Не обязательно, если в таблице хранятся данные одного поля
+],
+// 'referenceAutoDelete' => true // Важно: если поставить данный параметр в true, то данные связи будут удалены, если их идентификаторы не переданы
+// Так же этот параметр позволяет удалить все данные этой связи при удалении основной сущности
+// Используйте с осторожностью
+ * - для создания данных связи используйте RelativeDataManager::add([FIELD_NAME => [['VALUE' => 'test'], ['VALUE' => 'test']]]);
+ * - для изменения данных связи используйте RelativeDataManager::add([FIELD_NAME => [['ID' => 'VALUE' => 'test'], ['ID' => 'VALUE' => 'test']]]);
+ * Важно: если вы передали данных для связанного поля, то все связанные записи, ID которых там отсутствовал будут удалены
  */
+// TODO Изменить логику удаления данных. Сделать удаление только
+// если для FIELD_NAME передан __DELETE__ в содержании (для этого нужно доработать \DigitalWand\AdminHelper\Widget\HelperWidget::jsHelper)
 abstract class RelativeDataManager extends DataManager
 {
 	/** @var array Данные для привязанных сущностей */
@@ -61,7 +83,6 @@ abstract class RelativeDataManager extends DataManager
 				// Обрабатываются только связи для которых переданы данные (пустой массив тоже считается)
 				if (isset($entityData[$fieldName]))
 				{
-					// TODO Проверить не удаляются ли связи для которых не переданы данные
 					if (!is_array(reset($entityData[$fieldName])))
 					{
 						$entityData[$fieldName] = [$entityData[$fieldName]];
@@ -159,12 +180,20 @@ abstract class RelativeDataManager extends DataManager
 
 				if (!in_array($referenceData['REFERENCE_ID'], $processedDataIds))
 				{
-					$referenceClass::delete($referenceData['REFERENCE_ID']);
+					// Автоматически удаляются только связи с параметром referenceAutoDelete
+					if (!empty($fieldDetails['referenceAutoDelete']))
+					{
+						$referenceClass::delete($referenceData['REFERENCE_ID']);
+					}
 				}
 			}
 		}
 	}
 
+	/**
+	 * Удаление связанных моделей с параметром referenceAutoDelete
+	 * @param Entity\Event $event
+	 */
 	protected static function deleteReferenceData(Entity\Event $event)
 	{
 		/** @var array $entityData Все данные сущности (ключи учтены) */
@@ -265,7 +294,7 @@ abstract class RelativeDataManager extends DataManager
 	{
 		parent::onBeforeDelete($event);
 
-		// Сбор и обработка данных
+		// Удаление связанных данных
 		static::deleteReferenceData($event);
 	}
 }

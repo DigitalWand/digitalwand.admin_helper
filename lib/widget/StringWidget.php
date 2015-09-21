@@ -74,7 +74,10 @@ class StringWidget extends HelperWidget
 		if (!empty($this->data['ID']))
 		{
 			$entityName = $this->entityName;
-			$rsEntityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]]);
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
 		}
 
 		ob_start();
@@ -91,22 +94,17 @@ class StringWidget extends HelperWidget
 			<?
 			if ($rsEntityData)
 			{
-				while($arData = $rsEntityData->fetch())
+				while($referenceData = $rsEntityData->fetch())
 				{
-					// TODO Написать свой метод получения (или обработки) результатов связанных сущностей и заменить это
-					if (empty($prefix))
-					{
-					// Определение приставки для полей связанной сущности
-					$prefix = str_replace('ID', '', array_keys($arData)[0]);
-					}
-					if (empty($arData[$prefix . 'ID']))
+					if (empty($referenceData['REFERENCE_ID']))
 					{
 						continue;
 					}
 
-					?> multiple.addField({value: '<?= $arData[$prefix . 'VALUE'] ?>',
-						field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[#field_id#][ID]" value="<?= $arData[$prefix . 'ID'] ?>">',
-						field_id: <?= $arData[$prefix . 'ID'] ?>
+					?> multiple.addField({value: '<?= $referenceData['REFERENCE_VALUE'] ?>',
+						field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[#field_id#][ID]"' +
+							' value="<?= $referenceData['REFERENCE_ID'] ?>">',
+						field_id: <?= $referenceData['REFERENCE_ID'] ?>
 					}); <?
 				}
 			}

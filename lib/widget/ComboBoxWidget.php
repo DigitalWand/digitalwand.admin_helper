@@ -32,65 +32,71 @@ class ComboBoxWidget extends HelperWidget
 		if ($multiple && !empty($this->data['ID']))
 		{
 			$entityName = $this->entityName;
-			$rsEntityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]]);
-			while ($arData = $rsEntityData->fetch())
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
+			while ($referenceData = $rsEntityData->fetch())
 			{
-				// TODO Сделать правильное получение связанных данных
-				if (empty($prefix))
+				if (empty($referenceData['REFERENCE_ID']))
 				{
-					// Определение приставки для полей связанной сущности
-					$prefix = str_replace('ID', '', array_keys($arData)[0]);
+					continue;
 				}
-				$multipleSelected[] = $arData[$prefix . 'VALUE'];
+				$multipleSelected[] = $referenceData['REFERENCE_VALUE'];
 			}
 		}
-
-		$name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
-		$result = "<select name='" . $name . ($multiple ? '[]' : null) .
-			"' " . ($multiple ? 'multiple="multiple"' : null) . " style='" . $style . "'>";
-
 		$variants = $this->getVariants();
-
-		if (!$multiple)
+		if (empty($variants))
 		{
-			$variantEmpty = [
-				'' => [
-					'ID' => '',
-					'TITLE' => Loc::getMessage('COMBO_BOX_LIST_EMPTY')
-				]
-			];
-
-			$variants = $variantEmpty + $variants;
+			$result = 'Не удалось получить данные для выбора';
 		}
-
-		$default = $this->getValue();
-		if (is_null($default))
+		else
 		{
-			$default = $this->getSettings('DEFAULT_VARIANT');
-		}
+			$name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
+			$result = "<select name='" . $name . ($multiple ? '[]' : null) .
+				"' " . ($multiple ? 'multiple="multiple"' : null) . " style='" . $style . "'>";
 
-		foreach ($variants as $id => $data)
-		{
-			$name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
-			$selected = false;
-			if ($multiple)
+			if (!$multiple)
 			{
-				if (in_array($id, $multipleSelected))
-				{
-					$selected = true;
-				}
-			}
-			else
-			{
-				if ($id == $default)
-				{
-					$selected = true;
-				}
-			}
-			$result .= "<option value='" . $id . "' " . ($selected ? "selected" : "") . ">" . $name . "</option>";
-		}
+				$variantEmpty = [
+					'' => [
+						'ID' => '',
+						'TITLE' => Loc::getMessage('COMBO_BOX_LIST_EMPTY')
+					]
+				];
 
-		$result .= "</select>";
+				$variants = $variantEmpty + $variants;
+			}
+
+			$default = $this->getValue();
+			if (is_null($default))
+			{
+				$default = $this->getSettings('DEFAULT_VARIANT');
+			}
+
+			foreach ($variants as $id => $data)
+			{
+				$name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
+				$selected = false;
+				if ($multiple)
+				{
+					if (in_array($id, $multipleSelected))
+					{
+						$selected = true;
+					}
+				}
+				else
+				{
+					if ($id == $default)
+					{
+						$selected = true;
+					}
+				}
+				$result .= "<option value='" . $id . "' " . ($selected ? "selected" : "") . ">" . $name . "</option>";
+			}
+
+			$result .= "</select>";
+		}
 
 		return $result;
 	}

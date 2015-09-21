@@ -51,7 +51,10 @@ class FileWidget extends HelperWidget
 		if (!empty($this->data['ID']))
 		{
 			$entityName = $this->entityName;
-			$rsEntityData = $entityName::getList(['select' => [$this->getCode()], 'filter' => ['=ID' => $this->data['ID']]]);
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
 		}
 
 		ob_start();
@@ -78,19 +81,13 @@ class FileWidget extends HelperWidget
 			<?
 			if ($rsEntityData)
 			{
-				while($arData = $rsEntityData->fetch())
+				while($referenceData = $rsEntityData->fetch())
 				{
-					// TODO Написать свой метод получения (или обработки) результатов связанных сущностей и заменить это
-					if (empty($prefix))
-					{
-						// Определение приставки для полей связанной сущности
-						$prefix = str_replace('ID', '', array_keys($arData)[0]);
-					}
-					if (empty($arData[$prefix . 'ID']))
+					if (empty($referenceData['REFERENCE_ID']))
 					{
 						continue;
 					}
-					$fileInfo = \CFile::GetByID($arData[$prefix . 'VALUE'])->fetch();
+					$fileInfo = \CFile::GetByID($referenceData['REFERENCE_VALUE'])->fetch();
 					if ($fileInfo)
 					{
 						$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
@@ -106,7 +103,7 @@ class FileWidget extends HelperWidget
 					?>
 				multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
 				'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][ID]" value="#field_id#">',
-				{field_id: <?= $arData[$prefix . 'ID'] ?>});
+				{field_id: <?= $referenceData['REFERENCE_ID'] ?>});
 			<?
 	   }
 	}
