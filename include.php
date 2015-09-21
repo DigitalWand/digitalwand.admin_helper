@@ -9,6 +9,7 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Helper\AdminBaseHelper' => 'lib/helper/AdminBaseHelper.php',
         'DigitalWand\AdminHelper\Helper\AdminListHelper' => 'lib/helper/AdminListHelper.php',
         'DigitalWand\AdminHelper\Helper\AdminEditHelper' => 'lib/helper/AdminEditHelper.php',
+        'DigitalWand\AdminHelper\Model\RelativeDataTrait' => 'lib/model/relativedatatrait.php',
         'DigitalWand\AdminHelper\Helper\Exception' => 'lib/helper/Exception.php',
 
         'DigitalWand\AdminHelper\Widget\HelperWidget' => 'lib/widget/HelperWidget.php',
