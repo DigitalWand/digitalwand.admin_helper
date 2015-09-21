@@ -181,7 +181,7 @@ abstract class RelativeDataManager extends DataManager
 				if (!in_array($referenceData['REFERENCE_ID'], $processedDataIds))
 				{
 					// Автоматически удаляются только связи с параметром referenceAutoDelete
-					if (!empty($fieldDetails['referenceAutoDelete']))
+					if (!empty($fieldDetails['reference']['referenceAutoDelete']))
 					{
 						$referenceClass::delete($referenceData['REFERENCE_ID']);
 					}
