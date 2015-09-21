@@ -4,6 +4,7 @@ namespace DigitalWand\AdminHelper\Model;
 
 use Bitrix\Main\Entity;
 use Mos\Main\Db\DataManager;
+
 // TODO Переименовать и переместить в генератор админки. Реализовать в виде трейта
 // TODO Описать логику работы
 // TODO Решить проблему удаления привязанных полей при удалении сущности
@@ -20,11 +21,11 @@ use Mos\Main\Db\DataManager;
  */
 
 /**
- * Работа со связанными моделям
- * Основная задача класса - автоматическое управление данными связей используя карту модели
+ * Работа со связанными моделям для хранения множественных полей
+ * Класс автоматически создает/обновляет/удаляет данные связанных моделей на основе переданных в свойство этой связи данных
  * Возможности:
- * - создание данных связей
- * - обновление данных связей
+ * - создание
+ * - обновление
  * - удаление неиспользуемых данных связей (TODO удалять, только если передан пустой параметр, если же он вообще не передан, не удалять)
  * - TODO полное удаление привязанных данных (опционально)
  */
@@ -39,103 +40,75 @@ abstract class RelativeDataManager extends DataManager
 	 */
 	abstract static function getModelCode();
 
+	/**
+	 * Извлечение данных переданных для обработки связанными моделями
+	 * @param Entity\Event $event
+	 * @return Entity\EventResult
+	 */
 	protected static function ejectReferencesData(Entity\Event $event)
 	{
 		$result = new Entity\EventResult;
 		$entityData = $event->getParameter('fields');
 
-		// Получение связей
-		$references = [];
-		foreach (static::getMap() as $field)
-		{
-			if ($field instanceof Entity\ReferenceField)
-			{
-				$references[] = $field;
-			}
-		}
-
-		// Извлечение данных для связей
+		// Извлечение связей для которых переданы данные для последующей обработки
 		static::$referencesToSave = [];
-		foreach ($references as $reference)
+		foreach (static::getMap() as $fieldName => $fieldData)
 		{
-			$referenceName = $reference->getName();
-			// Если для связи переданы данные, извлекаем их и удаляем из сущности, так как битриксу они не нужны
-			if (isset($entityData[$referenceName]))
+			if (is_array($fieldData) && isset($fieldData['reference']))
 			{
-				// Должно быть массивом массивов
-				if (!is_array(reset($entityData[$referenceName])))
+				// Если для связи переданы данные, извлекаем их и удаляем из сущности, так как битриксу они не нужны
+				// Массив переданный связи должен содержать массивы с данными для обработки
+				// Обрабатываются только связи для которых переданы данные (пустой массив тоже считается)
+				if (isset($entityData[$fieldName]))
 				{
-					$entityData[$referenceName] = [$entityData[$referenceName]];
-				}
+					// TODO Проверить не удаляются ли связи для которых не переданы данные
+					if (!is_array(reset($entityData[$fieldName])))
+					{
+						$entityData[$fieldName] = [$entityData[$fieldName]];
+					}
 
-				$result->unsetField($referenceName);
-				static::$referencesToSave[$referenceName] = ['data' => $entityData[$referenceName], 'reference' => $reference];
+					$result->unsetField($fieldName);
+
+					static::$referencesToSave[$fieldName] = ['data' => $entityData[$fieldName], 'reference' => $fieldData];
+				}
 			}
 		}
 
 		return $result;
 	}
 
-	protected static function saveReferences(Entity\Event $event)
+	/**
+	 * Обработка данных переданных для обработки связанными моделями
+	 * @param Entity\Event $event
+	 */
+	protected static function saveReferenceData(Entity\Event $event)
 	{
 		// TODO Транзакции
 		/** @var array $entityData Все данные сущности (ключи учтены) */
 		$entityData = array_merge($event->getParameter('fields'), $event->getParameter('primary'));
 
 		// Сохранение данных для привязанных сущностей
-		foreach (static::$referencesToSave as $fieldName => $field)
+		foreach (static::$referencesToSave as $fieldName => $fieldDetails)
 		{
 			/** @var string $referenceClass DataManager привязанной сущности */
-			$referenceClass = $field['reference']->getRefEntity()->getDataClass();
-			/** @var array[] $referenceDataSet Набор данных для привязанной сущности */
-			$referenceDataSet = $field['data'];
-			/** @var array $referenceConditions Описание связи между сущностями */
-			$referenceConditions = $field['reference']->getReference();
+			$referenceClass = $fieldDetails['reference']['data_type'];
+			/** @var Base $referenceEntity Сущность */
+			$referenceEntity = $referenceClass::getEntity();
+			/** @var array[] $referenceNewDataSet Набор данных для привязанной сущности */
+			$referenceNewDataSet = $fieldDetails['data'];
+			/** @var array $linkingFields Поля по которым связаны сущности (this => ref) */
+			$linkingFields = static::getReferenceConditions($fieldDetails['reference']);
 
-			/**
-			 * @var string $thisFieldCondition Левая часть связи (this)
-			 * @var string $referenceFieldCondition Правая часть связи (ref)
-			 * @var array $referenceConditionFields Название поля текущей сущности => название поля связанной сущности
-			 */
-			$referenceConditionFields = [];
-			// Сбор полей связывающих сущности
-			foreach ($referenceConditions as $thisFieldCondition => $referenceFieldCondition)
+			// Обработка данных связанной модели
+			$processedDataIds = [];
+			foreach ($referenceNewDataSet as $referenceNewData)
 			{
-				// Извлечение названий полей для связи
-				$thisFieldMatch = [];
-				preg_match('/=this\.([A-z]+)/', $thisFieldCondition, $thisFieldMatch);
-				if (empty($thisFieldMatch[1]))
-				{
-					continue;
-				}
-				$refFieldMatch = [];
-				preg_match('/ref\.([A-z]+)/', $referenceFieldCondition, $refFieldMatch);
-				if (empty($refFieldMatch[1]))
-				{
-					continue;
-				}
-
-				/** @var string $thisFieldName Название поля текущей сущности */
-				$thisFieldName = $thisFieldMatch[1];
-				/** @var string $referenceFieldName Название поля зависимой сущности */
-				$referenceFieldName = $refFieldMatch[1];
-
-				$referenceConditionFields[$thisFieldName] = $referenceFieldName;
-			}
-
-			// Создание записей на основе набора данных переданных связи
-			foreach ($referenceDataSet as $referenceNewData)
-			{
-				// Дополнение данными текущей сущности для связи
-				foreach ($referenceConditionFields as $thisField => $referenceField)
+				// Дополнение данных для реализации связи с моделью (в основном заполняет только ID)
+				foreach ($linkingFields as $thisField => $referenceField)
 				{
 					$referenceNewData[$referenceField] = $entityData[$thisField];
 				}
-
-				// TODO Удаление непереданных данных
-				$referenceEntity = $referenceClass::getEntity();
-				$referencePk = $referenceEntity->getPrimary();
-
+				// Дополнение данных для связей хранящих в себе данные разных полей и сущностей
 				if ($referenceEntity->hasField('ENTITY'))
 				{
 					$referenceNewData['ENTITY'] = static::getModelCode();
@@ -145,66 +118,154 @@ abstract class RelativeDataManager extends DataManager
 					$referenceNewData['FIELD'] = $fieldName;
 				}
 
-				$processedDataIds = [];
-				if (empty($referenceNewData[$referencePk]))
+				/* Обработка данных связей
+				 * Если запись без идентификатора - создается
+				 * Если с идентификатором - обновляется
+				 * Если запись существует, но не передана, то удаляется
+				 */
+				if (empty($referenceNewData['ID']))
 				{
-					// Запись без ID, значит новая
+					// Создание данных связи
 					if (!empty($referenceNewData['VALUE']))
 					{
-						$addRefData = $referenceClass::add($referenceNewData);
-						$processedDataIds[] = $addRefData->getId();
+						$referenceAddData = $referenceClass::add($referenceNewData);
+						$processedDataIds[] = $referenceAddData->getId();
 					}
 				}
 				else
 				{
 					// TODO Обновлять только при различии данных
+					// Обновление данных связи
 					// У записи есть ID, значит запись существует и нужно её обновить
 					if (!empty($referenceNewData['VALUE']))
 					{
-						$referenceClass::update($referenceNewData[$referencePk], $referenceNewData);
+						$referenceClass::update($referenceNewData['ID'], $referenceNewData);
 					}
-					$processedDataIds[] = $referenceNewData[$referencePk];
+					$processedDataIds[] = $referenceNewData['ID'];
+				}
+			}
+			// Поиск данных привязанных к текущему полю данной сущности.
+			// Если данные найдены, но в сущность переданы не были, значит удаляем
+			$dbReferenceData = static::getList([
+				'select' => ['REFERENCE_' => $fieldName . '.*'],
+				'filter' => ['=ID' => $entityData['ID']]
+			]);
+			while ($referenceData = $dbReferenceData->fetch())
+			{
+				if (empty($referenceData['REFERENCE_ID']))
+				{
+					continue;
 				}
 
-				$dbReferenceData = static::getList(['select' => [$fieldName], 'filter' => ['=ID' => $entityData['ID']]]);
-				while ($referenceData = $dbReferenceData->fetch())
+				if (!in_array($referenceData['REFERENCE_ID'], $processedDataIds))
 				{
-					// TODO Написать свой метод получения (или обработки) результатов связанных сущностей и заменить это
-					if (empty($prefix))
-					{
-						// Определение приставки для полей связанной сущности
-						$prefix = str_replace('ID', '', array_keys($referenceData)[0]);
-					}
-					if (empty($arData[$prefix . 'ID']))
-					{
-						continue;
-					}
+					$referenceClass::delete($referenceData['REFERENCE_ID']);
 				}
 			}
 		}
+	}
+
+	protected static function deleteReferenceData(Entity\Event $event)
+	{
+		/** @var array $entityData Все данные сущности (ключи учтены) */
+		$entityId = $event->getParameter('primary')['ID'];
+
+		foreach (static::getMap() as $fieldName => $fieldDetails)
+		{
+			// Удаляются только связи с флагом referenceAutoDelete
+			if (!is_array($fieldDetails)
+				|| empty($fieldDetails['reference'])
+				|| empty($fieldDetails['referenceAutoDelete'])
+			)
+			{
+				continue;
+			}
+
+			/** @var string $referenceClass DataManager привязанной сущности */
+			$referenceClass = $fieldDetails['data_type'];
+			// Поиск данных для текущего поля. Если данные найдены, но в сущность переданы не были, значит удаляем
+			$dbReferenceData = static::getList([
+				'select' => ['REFERENCE_' => $fieldName . '.*'],
+				'filter' => ['=ID' => $entityId]
+			]);
+			while ($referenceData = $dbReferenceData->fetch())
+			{
+				if (empty($referenceData['REFERENCE_ID']))
+				{
+					continue;
+				}
+
+				$referenceClass::delete($referenceData['REFERENCE_ID']);
+			}
+		}
+	}
+
+	/**
+	 * Парсинг условий связи
+	 * @param array $referenceField Данные поля из getMap()
+	 * @return array
+	 */
+	protected static function getReferenceConditions($referenceField)
+	{
+		if (empty($referenceField['reference']))
+		{
+			return false;
+		}
+
+		$conditions = [];
+
+		foreach ($referenceField['reference'] as $thisCondition => $refCondition)
+		{
+			$thisFieldMatch = [];
+			$refFieldMatch = [];
+
+			preg_match('/=this\.([A-z]+)/', $thisCondition, $thisFieldMatch);
+			preg_match('/ref\.([A-z]+)/', $refCondition, $refFieldMatch);
+
+			if (empty($thisFieldMatch[1]) || empty($refFieldMatch[1]))
+			{
+				continue;
+			}
+			else
+			{
+				$conditions[$thisFieldMatch[1]] = $refFieldMatch[1];
+			}
+		}
+
+		return $conditions;
 	}
 
 	public static function onBeforeAdd(Entity\Event $event)
 	{
 		parent::onBeforeAdd($event);
 
+		// Сбор данных для обработки
 		return static::ejectReferencesData($event);
 	}
 
 	public static function onAfterAdd(Entity\Event $event)
 	{
-		static::saveReferences($event);
-
 		parent::onAfterAdd($event);
+		// Обработка данных
+		static::saveReferenceData($event);
 	}
 
 	public static function onBeforeUpdate(Entity\Event $event)
 	{
-		$result = static::ejectReferencesData($event);
-		static::saveReferences($event);
-
 		parent::onBeforeUpdate($event);
 
+		// Сбор и обработка данных
+		$result = static::ejectReferencesData($event);
+		static::saveReferenceData($event);
+
 		return $result;
+	}
+
+	public static function onBeforeDelete(Entity\Event $event)
+	{
+		parent::onBeforeDelete($event);
+
+		// Сбор и обработка данных
+		static::deleteReferenceData($event);
 	}
 }
