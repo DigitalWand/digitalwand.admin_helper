@@ -66,7 +66,15 @@ class DateTimeWidget extends HelperWidget
      */
     public function processEditAction()
     {
-		$this->setValue(new \Bitrix\Main\Type\Datetime($this->getValue(), 'd.m.Y H:i:s'));
+        try
+        {
+            $this->setValue(new \Bitrix\Main\Type\Datetime($this->getValue()));
+        }
+        catch(\Exception $e)
+        {
+
+        }
+
 
         if (!$this->checkRequired()) {
             $this->addError('REQUIRED_FIELD_ERROR');
