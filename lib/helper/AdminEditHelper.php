@@ -244,13 +244,14 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->menu[] = array(
 				"TEXT" => Loc::getMessage('DELETE'),
 				"TITLE" => Loc::getMessage('DELETE'),
-				"LINK" => static::getEditPageURL(array_merge($this->additionalUrlParams,
-					array(
-						'ID' => $this->data[$this->pk()],
-						'action' => 'delete',
-						'lang' => LANGUAGE_ID,
-						'restore_query' => 'Y',
-					))),
+				"ONCLICK" => "if(confirm('". Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM'). "')) location.href='".
+					static::getEditPageURL(array_merge($this->additionalUrlParams,
+						array(
+							'ID' => $this->data[$this->pk()],
+							'action' => 'delete',
+							'lang' => LANGUAGE_ID,
+							'restore_query' => 'Y',
+						)))."'",
 			);
 		}
 	}

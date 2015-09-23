@@ -6,3 +6,4 @@ $MESS['VALIDATION_ERROR'] = "Не заполнены обязательные п
 $MESS['VALIDATION_ERROR_FIELDS'] = "Не заполнены обязательные поля:";
 $MESS['DIGITALWAND_ADMIN_HELPER_NEW_ELEMENT'] = "Новый элемент";
 $MESS['DIGITALWAND_ADMIN_HELPER_EDIT_TITLE'] = "Элемент #ID#";
+$MESS['DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM'] = "Удалить запись?";
