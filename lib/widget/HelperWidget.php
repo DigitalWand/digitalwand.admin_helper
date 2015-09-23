@@ -788,6 +788,9 @@ abstract class HelperWidget
 				deleteField: function (field) {
 					console.log('Удаление поля');
 					$(field).remove();
+					if (this.$fieldsContainer.find('> *').size() == 0) {
+						this.addField();
+					}
 				},
 				_init: function () {
 					this.$container.append('<div class="fields-container"></div>');
