@@ -12,6 +12,7 @@ Loc::loadMessages(__FILE__);
  *
  * Доступные опции:
  * <ul>
+ * <li> <b>EDIT_LINK</b> - отображать в виде ссылки на редактирование элемента </li>
  * <li> <b>STYLE</b> - inline-стили для input </li>
  * <li> <b>SIZE</b> - значение атрибута size для input </li>
  * <li> <b>TRANSLIT</b> - true, если поле будет транслитерироваться в символьный код</li>
@@ -101,14 +102,17 @@ class StringWidget extends HelperWidget
 						continue;
 					}
 
-					?> multiple.addField({value: '<?= $referenceData['REFERENCE_VALUE'] ?>',
-						field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[#field_id#][ID]"' +
-							' value="<?= $referenceData['REFERENCE_ID'] ?>">',
-						field_id: <?= $referenceData['REFERENCE_ID'] ?>
-					}); <?
-				}
-			}
-			?>
+					?>
+			multiple.addField({
+				value: '<?= $referenceData['REFERENCE_VALUE'] ?>',
+				field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[#field_id#][ID]"' +
+				' value="<?= $referenceData['REFERENCE_ID'] ?>">',
+				field_id: <?= $referenceData['REFERENCE_ID'] ?>
+			});
+			<?
+						   }
+					   }
+					   ?>
 
 			// TODO Добавление созданных полей
 			multiple.addField();
@@ -127,11 +131,25 @@ class StringWidget extends HelperWidget
 	{
 		if ($this->getSettings('MULTIPLE'))
 		{
-
 		}
 		else
 		{
-			$value = $this->getValue();
+			if ($this->getSettings('EDIT_LINK'))
+			{
+				$entityClass = $this->entityName;
+				$pk = $entityClass::getEntity()->getPrimary();
+
+				$editPageUrl = $this->helper->getEditPageURL([
+					'ID' => $this->data[$pk],
+				]);
+
+				$value = '<a href="' . $editPageUrl . '">' . $this->getValue() . '</a>';
+			}
+			else
+			{
+				$value = $this->getValue();
+			}
+
 			if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))
 			{
 				$row->AddInputField($this->getCode(), array('style' => 'width:90%'));
@@ -150,7 +168,6 @@ class StringWidget extends HelperWidget
 	{
 		if ($this->getSettings('MULTIPLE'))
 		{
-
 		}
 		else
 		{

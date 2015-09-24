@@ -28,31 +28,21 @@ class IblockElementWidget extends NumberWidget
 
 	public function genEditHtml()
 	{
-		$iblockId = (int)$this->getSettings('IBLOCK_ID');
-		$iblockCode = $this->getSettings('IBLOCK_CODE');
+		$iblock = (int)$this->getSettings('IBLOCK_ID');
 		$inputSize = (int)$this->getSettings('INPUT_SIZE');
 		$windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
 		$windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
-
-		if (empty($iblockId) && !empty($iblockCode) && \CModule::IncludeModule('iblock'))
-		{
-			$iblock = \CIBlock::GetList([], ['CODE' => $iblockCode])->fetch();
-			if (!empty($iblock))
-			{
-				$iblockId = $iblock['ID'];
-			}
-		}
 
 		$name = 'FIELDS';
 		$key = $this->getCode();
 
 		$elementId = $this->getValue();
 
-		$iblock['NAME'] = Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
+		$arRes['NAME'] = Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
 		if ($elementId)
 		{
 			$dbRes = \CIBlockElement::GetByID($elementId);
-			$iblock = $dbRes->GetNext();
+			$arRes = $dbRes->GetNext();
 		}
 
 		return '<input name="' . $this->getEditInputName() . '"
@@ -63,8 +53,8 @@ class IblockElementWidget extends NumberWidget
 		'<input type="button"
                     value="..."
                     onClick="jsUtils.OpenWindow(\'/bitrix/admin/iblock_element_search.php?lang=' . LANGUAGE_ID .
-		'&amp;IBLOCK_ID=' . $iblockId . '&amp;n=' . $name . '&amp;k=' . $key . '\', ' . $windowWidth . ', ' . $windowHeight . ');">' .
-		'&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $iblock['NAME'] . '</span>';
+		'&amp;IBLOCK_ID=' . $iblock . '&amp;n=' . $name . '&amp;k=' . $key . '\', ' . $windowWidth . ', ' . $windowHeight . ');">' .
+		'&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $arRes['NAME'] . '</span>';
 	}
 
 	public function getValueReadonly()
@@ -76,7 +66,9 @@ class IblockElementWidget extends NumberWidget
 			$dbRes = \CIBlockElement::GetByID($elementId);
 			$arRes = $dbRes->GetNext();
 
-			return '[' . $elementId . '] ' . $arRes['NAME'];
+			return '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $arRes['IBLOCK_ID']
+			. '&type=' . $arRes['IBLOCK_TYPE_ID'] . '&ID='
+			. $elementId . '&lang=ru">[' . $elementId . '] ' . $arRes['NAME'] . '</a>';
 		}
 	}
 
@@ -89,7 +81,9 @@ class IblockElementWidget extends NumberWidget
 			$dbRes = \CIBlockElement::GetByID($elementId);
 			$arRes = $dbRes->GetNext();
 
-			$strElement = '[' . $elementId . '] ' . $arRes['NAME'];
+			$strElement = '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $arRes['IBLOCK_ID']
+				. '&type=' . $arRes['IBLOCK_TYPE_ID'] . '&ID='
+				. $elementId . '&lang=ru">[' . $elementId . '] ' . $arRes['NAME'] . '</a>';
 		}
 		else
 		{
