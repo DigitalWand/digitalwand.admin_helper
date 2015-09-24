@@ -28,10 +28,10 @@ class IblockElementWidget extends NumberWidget
 
 	public function genEditHtml()
 	{
-		$iblock = (int) $this->getSettings('IBLOCK_ID');
-		$inputSize = (int) $this->getSettings('INPUT_SIZE');
-		$windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
-		$windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
+		$iblock = (int)$this->getSettings('IBLOCK_ID');
+		$inputSize = (int)$this->getSettings('INPUT_SIZE');
+		$windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
+		$windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
 
 		$name = 'FIELDS';
 		$key = $this->getCode();
@@ -39,48 +39,51 @@ class IblockElementWidget extends NumberWidget
 		$elementId = $this->getValue();
 
 		$arRes['NAME'] = Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
-		if($elementId)
+		if ($elementId)
 		{
 			$dbRes = \CIBlockElement::GetByID($elementId);
 			$arRes = $dbRes->GetNext();
 		}
 
-		return '<input name="'.$this->getEditInputName().'"
-                     id="'.$name.'['.$key.']"
-                     value="'.$elementId.'"
-                     size="'.$inputSize.'"
-                     type="text">'.
+		return '<input name="' . $this->getEditInputName() . '"
+                     id="' . $name . '[' . $key . ']"
+                     value="' . $elementId . '"
+                     size="' . $inputSize . '"
+                     type="text">' .
 		'<input type="button"
                     value="..."
-                    onClick="jsUtils.OpenWindow(\'/bitrix/admin/iblock_element_search.php?lang='.LANGUAGE_ID.
-		'&amp;IBLOCK_ID='.$iblock.'&amp;n='.$name.'&amp;k='.$key.'\', '.$windowWidth.', '.$windowHeight.');">'.
-		'&nbsp;<span id="sp_'.md5($name).'_'.$key.'" >'.$arRes['NAME'].'</span>';
+                    onClick="jsUtils.OpenWindow(\'/bitrix/admin/iblock_element_search.php?lang=' . LANGUAGE_ID .
+		'&amp;IBLOCK_ID=' . $iblock . '&amp;n=' . $name . '&amp;k=' . $key . '\', ' . $windowWidth . ', ' . $windowHeight . ');">' .
+		'&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $arRes['NAME'] . '</span>';
 	}
 
 	public function getValueReadonly()
 	{
 		$elementId = $this->getValue();
 
-		if($elementId)
+		if ($elementId)
 		{
 			$dbRes = \CIBlockElement::GetByID($elementId);
 			$arRes = $dbRes->GetNext();
 
-			return '['.$elementId.'] ' . $arRes['NAME'];
+			return '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $arRes['IBLOCK_ID']
+			. '&type=' . $arRes['IBLOCK_TYPE_ID'] . '&ID='
+			. $elementId . '&lang=ru">[' . $elementId . '] ' . $arRes['NAME'] . '</a>';
 		}
 	}
-
 
 	public function genListHTML(&$row, $data)
 	{
 		$elementId = $this->getValue();
 
-		if($elementId)
+		if ($elementId)
 		{
 			$dbRes = \CIBlockElement::GetByID($elementId);
 			$arRes = $dbRes->GetNext();
 
-			$strElement = '['.$elementId.'] ' . $arRes['NAME'];
+			$strElement = '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $arRes['IBLOCK_ID']
+				. '&type=' . $arRes['IBLOCK_TYPE_ID'] . '&ID='
+				. $elementId . '&lang=ru">[' . $elementId . '] ' . $arRes['NAME'] . '</a>';
 		}
 		else
 		{
