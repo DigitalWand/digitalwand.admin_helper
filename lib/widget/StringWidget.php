@@ -65,6 +65,7 @@ class StringWidget extends HelperWidget
                        style="' . $style . '"/>' . $link;
 	}
 
+
 	protected function genMultipleEditHTML()
 	{
 		$style = $this->getSettings('STYLE');
@@ -119,6 +120,34 @@ class StringWidget extends HelperWidget
 		</script>
 		<?
 		return ob_get_clean();
+	}
+
+	protected function getMultipleValueReadonly()
+	{
+		$rsEntityData = null;
+		if (!empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
+		}
+
+		$result = '';
+		if ($rsEntityData)
+		{
+			while($referenceData = $rsEntityData->fetch())
+			{
+				if (empty($referenceData['REFERENCE_VALUE']))
+				{
+					continue;
+				}
+
+				$result .= '<div class="wrap_text" style="margin-bottom: 5px">' . $referenceData['REFERENCE_VALUE'] . '</div>';
+			}
+		}
+		return $result;
 	}
 
 	/**

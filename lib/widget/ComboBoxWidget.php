@@ -129,6 +129,50 @@ class ComboBoxWidget extends HelperWidget
 		return $value;
 	}
 
+	protected function getMultipleValueReadonly()
+	{
+		$rsEntityData = null;
+		if (!empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
+		}
+
+		while ($referenceData = $rsEntityData->fetch())
+		{
+			if (empty($referenceData['REFERENCE_VALUE']))
+			{
+				continue;
+			}
+
+			$multipleSelected[] = $referenceData['REFERENCE_VALUE'];
+		}
+
+		$variants = $this->getVariants();
+		$result = '';
+		if (empty($variants))
+		{
+			$result = 'Не удалось получить данные';
+		}
+		else
+		{
+			foreach($multipleSelected as $selectId)
+			{
+				if(isset($variants[$selectId]))
+				{
+					$result .= '<div class="wrap_text" style="margin-bottom: 5px">' . $variants[$selectId]['TITLE'] .
+						'</div>';
+				}
+
+			}
+		}
+
+		return $result;
+	}
+
 	/**
 	 * Возвращает массив в формате
 	 * <code>
