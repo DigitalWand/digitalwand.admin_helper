@@ -434,7 +434,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		$this->setContext(AdminEditHelper::OP_EDIT_ACTION_BEFORE);
 		if (!$this->hasWriteRights())
 		{
-			$this->addErrors('Недостаточно прав для редактирования данных');
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_WRITE_FORBIDDEN'));
 
 			return false;
 		}

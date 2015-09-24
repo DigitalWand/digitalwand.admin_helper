@@ -740,6 +740,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_EDIT_ACTION);
 
+		if (!$this->hasWriteRights())
+		{
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_WRITE_FORBIDDEN'));
+
+			return;
+		}
+
 		$className = static::getModel();
 		$el = $className::getById($id);
 		if ($el->getSelectedRowsCount() == 0)
