@@ -437,6 +437,20 @@ abstract class AdminBaseHelper
     }
 
     /**
+     * Проверка прав на изменение определенного элемента
+     * @param array $element Массив данных элемента
+     * @return bool
+     */
+    protected function hasWriteRightsElement($element = [])
+    {
+        if (!$this->hasWriteRights()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Выполняется проверка прав на выполнение опреаций удаления элементов
      * @return bool
      * @api
@@ -667,6 +681,11 @@ abstract class AdminBaseHelper
         $widget->setCode($code);
         $widget->setEntityName($this->getModel());
         $widget->setData($data);
+
+        if (!$this->hasWriteRightsElement($data))
+        {
+            $widget->setSetting('READONLY', true);
+        }
 
         return $widget;
     }
