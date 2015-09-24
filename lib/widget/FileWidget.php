@@ -6,7 +6,6 @@ use Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
 
-// TODO Удаление файлов выбранного поля и при удалении всей сущности
 /**
  * Для множественного поля в таблице должен быть столбец FILE_ID
  * Настройки класса:
@@ -87,7 +86,9 @@ class FileWidget extends HelperWidget
 					{
 						continue;
 					}
-					$fileInfo = \CFile::GetByID($referenceData['REFERENCE_VALUE'])->fetch();
+
+					$fileInfo = \CFile::GetFileArray($referenceData['REFERENCE_VALUE']);
+
 					if ($fileInfo)
 					{
 						$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
@@ -101,8 +102,15 @@ class FileWidget extends HelperWidget
 					}
 
 					?>
-				multiple.addFieldHtml('<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
-				'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][ID]" value="#field_id#">',
+
+				<?if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png'|| $fileInfo['CONTENT_TYPE'] == 'image/gif'):?>
+					$htmlStr = '<span style="display: block"><img src="<?=$fileInfo['SRC']?>" alt="<?=$fileInfo['ORIGINAL_NAME']?>" width="100" height="100"></span>';
+				<?endif?>
+
+				$htmlStr = $htmlStr + '<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
+				'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][ID]" value="#field_id#">';
+
+				multiple.addFieldHtml($htmlStr,
 				{field_id: <?= $referenceData['REFERENCE_ID'] ?>});
 			<?
 	   }

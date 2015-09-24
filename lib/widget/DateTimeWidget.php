@@ -11,23 +11,7 @@ class DateTimeWidget extends HelperWidget
      */
     protected function genEditHTML()
     {
-        ob_start();
-        global $APPLICATION;
-        $APPLICATION->IncludeComponent("bitrix:main.calendar", "",
-			array(
-				"SHOW_INPUT" => "Y",
-				"FORM_NAME" => "",
-				"INPUT_NAME" => $this->getEditInputName(),
-				"INPUT_VALUE" => ConvertTimeStamp(strtotime($this->getValue()), "FULL"),
-				"INPUT_VALUE_FINISH" => "",
-				"SHOW_TIME" => "Y",
-				"HIDE_TIMEBAR" => "N"
-			)
-		);
-        $html = ob_get_contents();
-        ob_end_clean();
-
-        return $html;
+        return \CAdminCalendar::CalendarDate($this->getEditInputName(), ConvertTimeStamp(strtotime($this->getValue()), "FULL"), 10, true);
     }
 
     /**

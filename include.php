@@ -25,5 +25,6 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Widget\IblockElementWidget' => 'lib/widget/IblockElementWidget.php',
         'DigitalWand\AdminHelper\Widget\UrlWidget' => 'lib/widget/UrlWidget.php',
         'DigitalWand\AdminHelper\Widget\VisualEditorWidget' => 'lib/widget/VisualEditorWidget.php',
+        'DigitalWand\AdminHelper\Widget\UserWidget' => 'lib/widget/UserWidget.php',
     )
 );
