@@ -239,11 +239,28 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->menu[] = $returnToList;
 		}
 
-		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights())
+		$arSubMenu = [];
+
+		if (isset($this->data[$this->pk()]) && $this->hasWriteRights())
 		{
-			$this->menu[] = array(
-				"TEXT" => Loc::getMessage('DELETE'),
-				"TITLE" => Loc::getMessage('DELETE'),
+			$arSubMenu[] = array(
+				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ADD_ELEMENT'),
+				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ADD_ELEMENT'),
+				"LINK" => static::getEditPageURL(array_merge($this->additionalUrlParams,
+						array(
+							'action' => 'add',
+							'lang' => LANGUAGE_ID,
+							'restore_query' => 'Y',
+						))),
+				'ICON' => 'edit'
+			);
+		}
+
+		if( $showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights() )
+		{
+			$arSubMenu[] = array(
+				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_DELETE_ELEMENT'),
+				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_DELETE_ELEMENT'),
 				"ONCLICK" => "if(confirm('". Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM'). "')) location.href='".
 					static::getEditPageURL(array_merge($this->additionalUrlParams,
 						array(
@@ -252,8 +269,21 @@ abstract class AdminEditHelper extends AdminBaseHelper
 							'lang' => LANGUAGE_ID,
 							'restore_query' => 'Y',
 						)))."'",
+				'ICON' => 'delete'
 			);
 		}
+
+		if(count($arSubMenu))
+		{
+			$this->menu[] = array("SEPARATOR"=>"Y");
+			$this->menu[] = array(
+				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACTIONS'),
+				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACTIONS'),
+				"MENU" => $arSubMenu,
+				'ICON' => 'btn_new'
+			);
+		}
+
 	}
 
 	/**
