@@ -244,14 +244,14 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->menu[] = array(
 				"TEXT" => Loc::getMessage('DELETE'),
 				"TITLE" => Loc::getMessage('DELETE'),
-				"ONCLICK" => "if(confirm('". Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM'). "')) location.href='".
+				"ONCLICK" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM') . "')) location.href='" .
 					static::getEditPageURL(array_merge($this->additionalUrlParams,
 						array(
 							'ID' => $this->data[$this->pk()],
 							'action' => 'delete',
 							'lang' => LANGUAGE_ID,
 							'restore_query' => 'Y',
-						)))."'",
+						))) . "'",
 			);
 		}
 	}
@@ -444,6 +444,11 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				$result = $this->saveElement();
 			}
 
+			if (!$result)
+			{
+				return false;
+			}
+
 			if (!$result->isSuccess())
 			{
 				$this->addErrors($result->getErrorMessages());
@@ -520,12 +525,18 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
 	 *
 	 * @param $id
-	 * @return \Bitrix\Main\Entity\DeleteResult
+	 * @return bool|\Bitrix\Main\Entity\DeleteResult
 	 * @throws \Exception
 	 * @api
 	 */
 	protected function deleteElement($id)
 	{
+		if (!$this->hasDeleteRights())
+		{
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_FORBIDDEN'));
+			return false;
+		}
+
 		$className = static::getModel();
 		$result = $className::delete($id);
 
