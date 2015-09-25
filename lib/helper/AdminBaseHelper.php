@@ -407,11 +407,41 @@ abstract class AdminBaseHelper
     }
 
     /**
-     * Выполняется проверка прав на выполнение опреаций редактирования элементов
+     * Выполняется проверка прав на доступ к сущности
      * @return bool
      * @api
      */
     protected function hasRights()
+    {
+        return true;
+    }
+
+    /**
+     * Выполняется проверка прав на выполнение операций чтения элементов
+     * @return bool
+     * @api
+     */
+    protected function hasReadRights()
+    {
+        return true;
+    }
+
+    /**
+     * Выполняется проверка прав на выполнение операций редактирования элементов
+     * @return bool
+     * @api
+     */
+    protected function hasWriteRights()
+    {
+        return true;
+    }
+
+    /**
+     * Выполняется проверка прав на выполнение опреаций удаления элементов
+     * @return bool
+     * @api
+     */
+    protected function hasDeleteRights()
     {
         return true;
     }
