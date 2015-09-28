@@ -239,11 +239,28 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->menu[] = $returnToList;
 		}
 
-		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights())
+		$arSubMenu = [];
+
+		if (isset($this->data[$this->pk()]) && $this->hasWriteRights())
 		{
-			$this->menu[] = array(
-				"TEXT" => Loc::getMessage('DELETE'),
-				"TITLE" => Loc::getMessage('DELETE'),
+			$arSubMenu[] = array(
+				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ADD_ELEMENT'),
+				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ADD_ELEMENT'),
+				"LINK" => static::getEditPageURL(array_merge($this->additionalUrlParams,
+						array(
+							'action' => 'add',
+							'lang' => LANGUAGE_ID,
+							'restore_query' => 'Y',
+						))),
+				'ICON' => 'edit'
+			);
+		}
+
+		if( $showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights() )
+		{
+			$arSubMenu[] = array(
+				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_DELETE_ELEMENT'),
+				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_DELETE_ELEMENT'),
 				"ONCLICK" => "if(confirm('". Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM'). "')) location.href='".
 					static::getEditPageURL(array_merge($this->additionalUrlParams,
 						array(
@@ -252,8 +269,21 @@ abstract class AdminEditHelper extends AdminBaseHelper
 							'lang' => LANGUAGE_ID,
 							'restore_query' => 'Y',
 						)))."'",
+				'ICON' => 'delete'
 			);
 		}
+
+		if(count($arSubMenu))
+		{
+			$this->menu[] = array("SEPARATOR"=>"Y");
+			$this->menu[] = array(
+				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACTIONS'),
+				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACTIONS'),
+				"MENU" => $arSubMenu,
+				'ICON' => 'btn_new'
+			);
+		}
+
 	}
 
 	/**
@@ -404,7 +434,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		$this->setContext(AdminEditHelper::OP_EDIT_ACTION_BEFORE);
 		if (!$this->hasWriteRights())
 		{
-			$this->addErrors('Недостаточно прав для редактирования данных');
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_WRITE_FORBIDDEN'));
 
 			return false;
 		}
@@ -444,12 +474,18 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				$result = $this->saveElement();
 			}
 
-			if (!$result->isSuccess())
+			if ($result)
 			{
-				$this->addErrors($result->getErrorMessages());
+				if (!$result->isSuccess())
+				{
+					$this->addErrors($result->getErrorMessages());
 
+					return false;
+				}
+			} else {
 				return false;
 			}
+			
 			foreach ($allWidgets as $widget)
 			{
 				/** @var HelperWidget $widget */
@@ -520,12 +556,18 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
 	 *
 	 * @param $id
-	 * @return \Bitrix\Main\Entity\DeleteResult
+	 * @return bool|\Bitrix\Main\Entity\DeleteResult
 	 * @throws \Exception
 	 * @api
 	 */
 	protected function deleteElement($id)
 	{
+		if (!$this->hasDeleteRights())
+		{
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_FORBIDDEN'));
+			return false;
+		}
+
 		$className = static::getModel();
 		$result = $className::delete($id);
 
