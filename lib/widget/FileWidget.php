@@ -12,40 +12,66 @@ Loc::loadMessages(__FILE__);
  * <ul>
  * <li><b>DESCRIPTION_FIELD</b> - bool нужно ли поле описания</li>
  * <li><b>MULTIPLE</b> - bool является ли поле множественным</li>
+ * <li><b>SHOW_IMAGE</b> - может принимать значение - Y/N</li>
  * </ul>
  */
 class FileWidget extends HelperWidget
 {
+
+	static protected $defaults = array(
+		'IMAGE' => 'N',
+		'DESCRIPTION_FIELD' => false
+	);
+
 	/**
 	 * Генерирует HTML для редактирования поля
 	 * @return mixed
 	 */
 	protected function genEditHTML()
 	{
-		return \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
-			array(
-				"IMAGE" => "N",
-				"PATH" => "Y",
-				"FILE_SIZE" => "Y",
-				"ALLOW_UPLOAD" => "I",
-			), array(
-				'upload' => true,
-				'medialib' => false,
-				'file_dialog' => false,
-				'cloud' => false,
-				'del' => true,
-				'description' => false,
-			)
-		);
+		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') == 'Y')
+		{
+			$str = \Bitrix\Main\UI\FileInput::createInstance(array(
+				"name" => $this->getEditInputName('_FILE'),
+				"description" => $this->getSettings('DESCRIPTION_FIELD'),
+				"upload" => true,
+				"allowUpload" => "I",
+				"medialib" => true,
+				"fileDialog" => true,
+				"cloud" => true,
+				"delete" => true,
+				"maxCount" => 1
+			))->show($this->getValue());
+		}
+		else
+		{
+			$str = \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
+				array(
+					"IMAGE" => $this->getSettings('IMAGE'),
+					"PATH" => "Y",
+					"FILE_SIZE" => "Y",
+					"ALLOW_UPLOAD" => "I",
+				), array(
+					'upload' => true,
+					'medialib' => false,
+					'file_dialog' => true,
+					'cloud' => false,
+					'del' => true,
+					'description' => $this->getSettings('DESCRIPTION_FIELD'),
+				)
+			);
+		}
+
+		if($this->getValue())
+		{
+			$str .= '<input type="hidden" name="' .$this->getEditInputName(). '" value=' . $this->getValue() .'>';
+		}
+
+		return $str;
 	}
 
 	protected function genMultipleEditHTML()
 	{
-		$style = $this->getSettings('STYLE');
-		$size = $this->getSettings('SIZE');
-		$descriptionField = $this->getSettings('DESCRIPTION_FIELD');
-		$uniqueId = $this->getEditInputHtmlId();
-
 		$rsEntityData = null;
 		if (!empty($this->data['ID']))
 		{
@@ -56,71 +82,62 @@ class FileWidget extends HelperWidget
 			]);
 		}
 
-		ob_start();
-		// TODO Рефакторинг
-		?>
+		$inputName = array();
 
-		<div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
-		</div>
+		$name = $this->code;
 
-		<script>
-			var fileInputTemplate = '<span class="adm-input-file"><span>Выбрать файл</span>' +
-				'<input type="file" name="<?= $this->getCode() ?>[#field_id#]" style="<?= $style ?>" size="<?= $size ?>"' +
-				' class="adm-designed-file" onchange="BXHotKeys.OnFileInputChange(this);"></span>';
-
-			<? if ($descriptionField) { ?>
-			fileInputTemplate = fileInputTemplate + '<input type="text" name="<?= $this->getCode() ?>[#field_id#][DESCRIPTION]"' +
-				' style="margin-left: 5px;" placeholder="Описание">';
-			<? } ?>
-
-			var multiple = new MultipleWidgetHelper(
-				'#<?= $uniqueId ?>-field-container',
-				fileInputTemplate);
-
-			<?
-			if ($rsEntityData)
+		if ($rsEntityData)
+		{
+			while($referenceData = $rsEntityData->fetch())
 			{
-				while($referenceData = $rsEntityData->fetch())
-				{
-					if (empty($referenceData['REFERENCE_ID']))
-					{
-						continue;
-					}
+				$inputName[$name."[".$referenceData['REFERENCE_ID']."]"] = $referenceData['REFERENCE_VALUE'];
+				$inputHidden[$referenceData['REFERENCE_ID']] = $referenceData['REFERENCE_VALUE'];
+			}
+		}
 
-					$fileInfo = \CFile::GetFileArray($referenceData['REFERENCE_VALUE']);
+		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') == 'Y')
+		{
+			$str = \Bitrix\Main\UI\FileInput::createInstance(array(
+				"name" => $name . "[n#IND#]",
+				"description" => $this->getSettings('DESCRIPTION_FIELD'),
+				"upload" => true,
+				"allowUpload" => "I",
+				"medialib" => true,
+				"fileDialog" => true,
+				"cloud" => true,
+				"delete" => true,
+			))->show($inputName);
+		}
+		else
+		{
+			$str = \CFileInput::ShowMultiple($inputName, $name . "[n#IND#]",
+				array(
+					"IMAGE" => $this->getSettings('IMAGE'),
+					"PATH" => "Y",
+					"FILE_SIZE" => "Y",
+					"DIMENSIONS" => "Y",
+					"IMAGE_POPUP" => "Y",
+				), false, array(
+					'upload' => true,
+					'medialib' => true,
+					'file_dialog' => true,
+					'cloud' => true,
+					'del' => true,
+					'description' => $this->getSettings('DESCRIPTION_FIELD'),
+				)
+			);
+		}
 
-					if ($fileInfo)
-					{
-						$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
-						if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
-							$fileInfoHtml .= ' - '.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').'...';
-						}
-					}
-					else
-					{
-						$fileInfoHtml = 'Файл не найден';
-					}
+		foreach($inputHidden as $key => $input)
+		{
+			if(!empty($input))
+			{
+				$str .= '<input type="hidden" name="' .$name .'[' .$key. '][ID]" value=' . $key .'>
+					<input type="hidden" name="' .$name .'[' .$key. '][VALUE]" value=' . $input .'>';
+			}
+		}
 
-					?>
-
-				<?if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png'|| $fileInfo['CONTENT_TYPE'] == 'image/gif'):?>
-					$htmlStr = '<span style="display: block"><img src="<?=$fileInfo['SRC']?>" alt="<?=$fileInfo['ORIGINAL_NAME']?>" width="100" height="100"></span>';
-				<?endif?>
-
-				$htmlStr = $htmlStr + '<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
-				'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][ID]" value="#field_id#">';
-
-				multiple.addFieldHtml($htmlStr,
-				{field_id: <?= $referenceData['REFERENCE_ID'] ?>});
-			<?
-	   }
-	}
-	?>
-
-			multiple.addField();
-		</script>
-		<?
-		return ob_get_clean();
+		return $str;
 	}
 
 	/**
@@ -174,17 +191,27 @@ class FileWidget extends HelperWidget
 				{
 					if (empty($fileName)
 						|| empty($_FILES[$this->getCode()]['tmp_name'][$key])
-						|| !empty($_FILES[$this->getCode()]['error'][$key])) {
+						|| !empty($_FILES[$this->getCode()]['error'][$key]))
+					{
+						if (isset($_REQUEST[$this->getCode().'_del'][$key]))
+						{
+							unset($this->data[$this->getCode()][$key]);
+						}
+						elseif($this->data[$this->getCode()][$key]['VALUE'])
+						{
+							\CFile::UpdateDesc($this->data[$this->getCode()][$key]['VALUE'],
+								$_REQUEST[$this->getCode().'_descr'][$key]);
+						}
 						continue;
 					}
 
 					$description = null;
 
-					if (isset($this->data[$this->getCode()][$key]['DESCRIPTION']))
+					if (isset($_REQUEST[$this->getCode().'_descr'][$key]))
 					{
-						$description = $this->data[$this->getCode()][$key]['DESCRIPTION'];
-						unset($this->data[$this->getCode()][$key]['DESCRIPTION']);
+						$description = $_REQUEST[$this->getCode().'_descr'][$key];
 					}
+
 					if (empty($this->data[$this->getCode()][$key]))
 					{
 						unset($this->data[$this->getCode()][$key]);
@@ -205,24 +232,34 @@ class FileWidget extends HelperWidget
 		}
 		else
 		{
-			if (isset($_REQUEST['FIELDS_del'][$this->code . '_FILE']) AND $_REQUEST['FIELDS_del'][$this->code . '_FILE'] == 'Y')
+			if (empty($_FILES['FIELDS']['name'][$this->code . '_FILE'])
+				|| empty($_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'])
+				|| !empty($_FILES['FIELDS']['error'][$this->code . '_FILE']))
 			{
-				\CFile::Delete(intval($this->data[$this->code]));
-				$this->data[$this->code] = 0;
+				if (isset($_REQUEST['FIELDS_del'][$this->code . '_FILE']) AND $_REQUEST['FIELDS_del'][$this->code . '_FILE'] == 'Y')
+				{
+					\CFile::Delete(intval($this->data[$this->code]));
+					$this->data[$this->code] = 0;
+				}
+				elseif($this->data[$this->code] && isset($_REQUEST['FIELDS_descr'][$this->code . '_FILE']))
+				{
+					\CFile::UpdateDesc($this->data[$this->code],
+						$_REQUEST['FIELDS_descr'][$this->code . '_FILE']);
+				}
+				return false;
 			}
-			else if (isset($_REQUEST['FIELDS']['IMAGE_ID_FILE']))
+
+			$description = null;
+
+			if (isset($_REQUEST['FIELDS_descr'][$this->code . '_FILE']))
 			{
-				$name = $_FILES['FIELDS']['name'][$this->code . '_FILE'];
-				$path = $_REQUEST['FIELDS']['IMAGE_ID_FILE'];
-				$this->saveFile($name, $path);
+				$description = $_REQUEST['FIELDS_descr'][$this->code . '_FILE'];
 			}
-			else
-			{
-				$name = $_FILES['FIELDS']['name'][$this->code . '_FILE'];
-				$path = $_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'];
-				$type = $_FILES['FIELDS']['type'][$this->code . '_FILE'];
-				$this->saveFile($name, $path, $type);
-			}
+
+			$name = $_FILES['FIELDS']['name'][$this->code . '_FILE'];
+			$path = $_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'];
+			$type = $_FILES['FIELDS']['type'][$this->code . '_FILE'];
+			$this->saveFile($name, $path, $type, $description);
 		}
 	}
 
@@ -256,6 +293,8 @@ class FileWidget extends HelperWidget
 
 		/** @var AdminBaseHelper $model */
 		$helper = $this->helper;
+		$fileInfo['MODULE_ID'] = $helper::$module;
+
 		$fileId = \CFile::SaveFile($fileInfo, $helper::$module);
 
 		if (!$this->getSettings('MULTIPLE'))
