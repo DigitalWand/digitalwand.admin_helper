@@ -12,7 +12,7 @@ Loc::loadMessages(__FILE__);
  * <ul>
  * <li><b>DESCRIPTION_FIELD</b> - bool нужно ли поле описания</li>
  * <li><b>MULTIPLE</b> - bool является ли поле множественным</li>
- * <li><b>SHOW_IMAGE</b> - может принимать значение - Y/N</li>
+ * <li><b>IMAGE</b> - bool отображать ли изображение файла</li>
  * </ul>
  */
 class FileWidget extends HelperWidget
@@ -29,7 +29,7 @@ class FileWidget extends HelperWidget
 	 */
 	protected function genEditHTML()
 	{
-		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true)
+		if (class_exists('\Bitrix\Main\UI\FileInput', true))
 		{
 			$str = \Bitrix\Main\UI\FileInput::createInstance(array(
 				"name" => $this->getEditInputName('_FILE'),
@@ -95,7 +95,7 @@ class FileWidget extends HelperWidget
 			}
 		}
 
-		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true)
+		if (class_exists('\Bitrix\Main\UI\FileInput', true))
 		{
 			$str = \Bitrix\Main\UI\FileInput::createInstance(array(
 				"name" => $name . "[n#IND#]",
@@ -185,6 +185,26 @@ class FileWidget extends HelperWidget
 		parent::processEditAction();
 		if ($this->getSettings('MULTIPLE'))
 		{
+			if(class_exists('\Bitrix\Main\UI\FileInput', true))
+			{
+				foreach($this->data[$this->code] as $key => $value)
+				{
+					if($value['name'] || $value['tmp_name'])
+					{
+						$_FILES[$this->code]['name'][$key] = $value['name'];
+						$_FILES[$this->code]['type'][$key] = $value['type'];
+						$_FILES[$this->code]['tmp_name'][$key] = $value['tmp_name'];
+						$_FILES[$this->code]['error'][$key] = $value['error'];
+						$_FILES[$this->code]['size'][$key] = $value['size'];
+						unset($this->data[$this->code][$key]);
+					}
+				}
+				if(!count($this->data[$this->code]))
+				{
+					unset($this->data[$this->code]);
+				}
+			}
+
 			if (!empty($_FILES[$this->getCode()]))
 			{
 				foreach ($_FILES[$this->getCode()]['name'] as $key => $fileName)
@@ -221,7 +241,7 @@ class FileWidget extends HelperWidget
 
 					if ($fileId)
 					{
-						$this->data[$this->getCode()][] = ['VALUE' => $fileId];
+						$this->data[$this->getCode()][] = array('VALUE' => $fileId);
 					}
 					else
 					{
@@ -232,6 +252,16 @@ class FileWidget extends HelperWidget
 		}
 		else
 		{
+			if(class_exists('\Bitrix\Main\UI\FileInput', true))
+			{
+				$_FILES['FIELDS']['name'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['name'];
+				$_FILES['FIELDS']['type'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['type'];
+				$_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['tmp_name'];
+				$_FILES['FIELDS']['error'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['error'];
+				$_FILES['FIELDS']['size'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['size'];
+				unset($this->data[$this->code . '_FILE']);
+			}
+
 			if (empty($_FILES['FIELDS']['name'][$this->code . '_FILE'])
 				|| empty($_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'])
 				|| !empty($_FILES['FIELDS']['error'][$this->code . '_FILE']))
@@ -259,6 +289,7 @@ class FileWidget extends HelperWidget
 			$name = $_FILES['FIELDS']['name'][$this->code . '_FILE'];
 			$path = $_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'];
 			$type = $_FILES['FIELDS']['type'][$this->code . '_FILE'];
+
 			$this->saveFile($name, $path, $type, $description);
 		}
 	}
