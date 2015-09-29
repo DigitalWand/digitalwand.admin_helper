@@ -19,7 +19,7 @@ class FileWidget extends HelperWidget
 {
 
 	static protected $defaults = array(
-		'IMAGE' => 'N',
+		'IMAGE' => false,
 		'DESCRIPTION_FIELD' => false
 	);
 
@@ -29,7 +29,7 @@ class FileWidget extends HelperWidget
 	 */
 	protected function genEditHTML()
 	{
-		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') == 'Y')
+		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true)
 		{
 			$str = \Bitrix\Main\UI\FileInput::createInstance(array(
 				"name" => $this->getEditInputName('_FILE'),
@@ -47,7 +47,7 @@ class FileWidget extends HelperWidget
 		{
 			$str = \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
 				array(
-					"IMAGE" => $this->getSettings('IMAGE'),
+					"IMAGE" => $this->getSettings('IMAGE') === true ? 'Y': 'N',
 					"PATH" => "Y",
 					"FILE_SIZE" => "Y",
 					"ALLOW_UPLOAD" => "I",
@@ -95,7 +95,7 @@ class FileWidget extends HelperWidget
 			}
 		}
 
-		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') == 'Y')
+		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true)
 		{
 			$str = \Bitrix\Main\UI\FileInput::createInstance(array(
 				"name" => $name . "[n#IND#]",
@@ -112,7 +112,7 @@ class FileWidget extends HelperWidget
 		{
 			$str = \CFileInput::ShowMultiple($inputName, $name . "[n#IND#]",
 				array(
-					"IMAGE" => $this->getSettings('IMAGE'),
+					"IMAGE" => $this->getSettings('IMAGE') === true ? 'Y': 'N',
 					"PATH" => "Y",
 					"FILE_SIZE" => "Y",
 					"DIMENSIONS" => "Y",
