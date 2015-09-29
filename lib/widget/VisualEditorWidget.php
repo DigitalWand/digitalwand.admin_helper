@@ -180,6 +180,24 @@ class VisualEditorWidget extends TextAreaWidget
 		return $this->data[$this->code];
 	}
 
+    public function genListHTML(&$row, $data)
+    {
+        $text = trim(strip_tags($data[$this->code]));
+
+        if (strlen($text) > self::LIST_TEXT_SIZE && !$this->isExcelView()) {
+            $pos = false;
+            $pos = $pos === false ? stripos($text, " ", self::LIST_TEXT_SIZE) : $pos;
+            $pos = $pos === false ? stripos($text, "\n", self::LIST_TEXT_SIZE) : $pos;
+            $pos = $pos === false ? stripos($text, "</", self::LIST_TEXT_SIZE) : $pos;
+            $pos = $pos === false ? 300 : $pos;
+            $text = substr($text, 0, $pos) . " ...";
+        }
+
+        $text = preg_replace('/<.+>/mU', '', $text);
+
+        $row->AddViewField($this->code, $text);
+    }
+
 	/**
 	 * Название класса без неймспейса
 	 * @return string

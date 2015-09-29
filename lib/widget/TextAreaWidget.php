@@ -62,7 +62,5 @@ class TextAreaWidget extends StringWidget
 		$text = preg_replace('/<.+>/mU', '', $text);
 
         $row->AddViewField($this->code, $text);
-
     }
-
 }
