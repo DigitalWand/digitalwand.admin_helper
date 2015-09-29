@@ -11,6 +11,9 @@ class VisualEditorWidget extends TextAreaWidget
 			'EDITOR'
 		),
 		'DEFAULT_EDITOR' => 'EDITOR',
+		'LIGHT_EDITOR_MODE' => 'N',
+		'LIGHT_EDITOR_TOOLBAR_CONFIG_SET' => 'FULL', // SIMPLE
+		'LIGHT_EDITOR_TOOLBAR_CONFIG' => false,
 	];
 
 	protected function genEditHTML()
@@ -50,53 +53,122 @@ class VisualEditorWidget extends TextAreaWidget
 				$this->data[$this->code] = $_REQUEST[$bxCode];
 			}
 
-
-			\CFileMan::AddHTMLEditorFrame(
-				$bxCode,
-				$this->data[$this->code],
-				$bxCodeType,
-				$this->data[$codeType],
-				array(
-					'width' => $this->getSettings('WIDTH'),
-					'height' => $this->getSettings('HEIGHT'),
-				)
-			);
-
-			$defaultEditors = array("text" => "text", "html" => "html", "editor" => "editor");
-			$editors = $this->getSettings('EDITORS');
-			$defaultEditor = strtolower($this->getSettings('DEFAULT_EDITOR'));
-
-			$contentType = $this->data[$codeType];
-			$defaultEditor = isset($contentType) && $contentType == "text" ? "text" : $defaultEditor;
-			$defaultEditor = isset($contentType) && $contentType == "html" ? "editor" : $defaultEditor;
-
-
-			if (count($editors) > 1)
+			if($this->getSettings('LIGHT_EDITOR_MODE')=='Y')
 			{
-				foreach ($editors as &$editor)
+				/**
+				 * Облегченная версия редактора
+				 */
+				global $APPLICATION;
+				$lightEditorToolbarSets = [
+					'FULL' => [
+						'Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat',
+						'CreateLink', 'DeleteLink', 'Image', 'Video',
+						'BackColor', 'ForeColor',
+						'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyFull',
+						'InsertOrderedList', 'InsertUnorderedList', 'Outdent', 'Indent',
+						'StyleList', 'HeaderList',
+						'FontList', 'FontSizeList'
+					],
+					'SIMPLE' => [
+						'Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat',
+						'CreateLink', 'DeleteLink',
+						'Video',
+						'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyFull',
+						'InsertOrderedList', 'InsertUnorderedList', 'Outdent', 'Indent',
+						'FontList', 'FontSizeList',
+					]
+				];
+
+				$lightEditorToolbarConfig = $this->getSettings('LIGHT_EDITOR_TOOLBAR_CONFIG');
+
+				if( !is_array($lightEditorToolbarConfig) )
 				{
-					$editor = strtolower($editor);
-					if (isset($defaultEditors[$editor]))
+					$lightEditorToolbarSet = $this->getSettings('LIGHT_EDITOR_TOOLBAR_CONFIG_SET');
+					if( isset($lightEditorToolbarSets[$lightEditorToolbarSet]) )
 					{
-						unset($defaultEditors[$editor]);
+						$lightEditorToolbarConfig = $lightEditorToolbarSets[$lightEditorToolbarSet];
+					}
+					else
+					{
+						$lightEditorToolbarConfig = $lightEditorToolbarSets['FULL'];
 					}
 				}
-			}
 
-			$script = '<script type="text/javascript">';
-			$script .= '$(document).ready(function() {';
-			foreach ($defaultEditors as $editor)
+				$APPLICATION->IncludeComponent("bitrix:fileman.light_editor","",[
+						"CONTENT" => $this->data[$this->code],
+						"INPUT_NAME" => $bxCode,
+						"INPUT_ID" => $bxCode,
+						"WIDTH" => $this->getSettings('WIDTH'),
+						"HEIGHT" => $this->getSettings('HEIGHT'),
+						"RESIZABLE" => "N",
+						"AUTO_RESIZE" => "N",
+						"VIDEO_ALLOW_VIDEO" => "Y",
+						"VIDEO_MAX_WIDTH" => $this->getSettings('WIDTH'),
+						"VIDEO_MAX_HEIGHT" => $this->getSettings('HEIGHT'),
+						"VIDEO_BUFFER" => "20",
+						"VIDEO_LOGO" => "",
+						"VIDEO_WMODE" => "transparent",
+						"VIDEO_WINDOWLESS" => "Y",
+						"VIDEO_SKIN" => "/bitrix/components/bitrix/player/mediaplayer/skins/bitrix.swf",
+						"USE_FILE_DIALOGS" => "Y",
+						"ID" => 'LIGHT_EDITOR_'.$bxCode,
+						"JS_OBJ_NAME" => $bxCode,
+						'TOOLBAR_CONFIG' => $lightEditorToolbarConfig
+					]
+				);
+			}
+			else
 			{
-				$script .= '$("#bxed_' . $bxCode . '_' . $editor . '").parent().hide();';
+				/**
+				 * Полная версия редактора
+				 */
+				\CFileMan::AddHTMLEditorFrame(
+					$bxCode,
+					$this->data[$this->code],
+					$bxCodeType,
+					$this->data[$codeType],
+					array(
+						'width' => $this->getSettings('WIDTH'),
+						'height' => $this->getSettings('HEIGHT'),
+					)
+				);
+
+				$defaultEditors = array("text" => "text", "html" => "html", "editor" => "editor");
+				$editors = $this->getSettings('EDITORS');
+				$defaultEditor = strtolower($this->getSettings('DEFAULT_EDITOR'));
+
+				$contentType = $this->data[$codeType];
+				$defaultEditor = isset($contentType) && $contentType == "text" ? "text" : $defaultEditor;
+				$defaultEditor = isset($contentType) && $contentType == "html" ? "editor" : $defaultEditor;
+
+
+				if (count($editors) > 1)
+				{
+					foreach ($editors as &$editor)
+					{
+						$editor = strtolower($editor);
+						if (isset($defaultEditors[$editor]))
+						{
+							unset($defaultEditors[$editor]);
+						}
+					}
+				}
+
+				$script = '<script type="text/javascript">';
+				$script .= '$(document).ready(function() {';
+				foreach ($defaultEditors as $editor)
+				{
+					$script .= '$("#bxed_' . $bxCode . '_' . $editor . '").parent().hide();';
+				}
+
+				$script .= '$("#bxed_' . $bxCode . '_' . $defaultEditor . '").click();';
+				$script .= 'setTimeout(function() {$("#bxed_' . $bxCode . '_' . $defaultEditor . '").click(); }, 500);';
+
+				$script .= "});";
+				$script .= '</script>';
+
+				echo $script;
 			}
-
-			$script .= '$("#bxed_' . $bxCode . '_' . $defaultEditor . '").click();';
-			$script .= 'setTimeout(function() {$("#bxed_' . $bxCode . '_' . $defaultEditor . '").click(); }, 500);';
-
-			$script .= "});";
-			$script .= '</script>';
-
-			echo $script;
 
 			$html = ob_get_clean();
 
