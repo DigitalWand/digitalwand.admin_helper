@@ -12,8 +12,8 @@ class VisualEditorWidget extends TextAreaWidget
 		),
 		'DEFAULT_EDITOR' => 'EDITOR',
 		'LIGHT_EDITOR_MODE' => 'N',
-		'LIGHT_EDITOR_TOOLBAR_CONFIG_SET' => 'FULL', // SIMPLE
-		'LIGHT_EDITOR_TOOLBAR_CONFIG' => false,
+		'EDITOR_TOOLBAR_CONFIG_SET' => 'FULL', // SIMPLE
+		'EDITOR_TOOLBAR_CONFIG' => false,
 	];
 
 	protected function genEditHTML()
@@ -53,47 +53,46 @@ class VisualEditorWidget extends TextAreaWidget
 				$this->data[$this->code] = $_REQUEST[$bxCode];
 			}
 
+			$editorToolbarSets = [
+				'FULL' => [
+					'Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat',
+					'CreateLink', 'DeleteLink', 'Image', 'Video',
+					'BackColor', 'ForeColor',
+					'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyFull',
+					'InsertOrderedList', 'InsertUnorderedList', 'Outdent', 'Indent',
+					'StyleList', 'HeaderList',
+					'FontList', 'FontSizeList'
+				],
+				'SIMPLE' => [
+					'Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat',
+					'CreateLink', 'DeleteLink',
+					'Video',
+					'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyFull',
+					'InsertOrderedList', 'InsertUnorderedList', 'Outdent', 'Indent',
+					'FontList', 'FontSizeList',
+				]
+			];
+
 			if($this->getSettings('LIGHT_EDITOR_MODE')=='Y')
 			{
 				/**
 				 * Облегченная версия редактора
 				 */
 				global $APPLICATION;
-				$lightEditorToolbarSets = [
-					'FULL' => [
-						'Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat',
-						'CreateLink', 'DeleteLink', 'Image', 'Video',
-						'BackColor', 'ForeColor',
-						'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyFull',
-						'InsertOrderedList', 'InsertUnorderedList', 'Outdent', 'Indent',
-						'StyleList', 'HeaderList',
-						'FontList', 'FontSizeList'
-					],
-					'SIMPLE' => [
-						'Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat',
-						'CreateLink', 'DeleteLink',
-						'Video',
-						'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyFull',
-						'InsertOrderedList', 'InsertUnorderedList', 'Outdent', 'Indent',
-						'FontList', 'FontSizeList',
-					]
-				];
+				$editorToolbarConfig = $this->getSettings('EDITOR_TOOLBAR_CONFIG');
 
-				$lightEditorToolbarConfig = $this->getSettings('LIGHT_EDITOR_TOOLBAR_CONFIG');
-
-				if( !is_array($lightEditorToolbarConfig) )
+				if( !is_array($editorToolbarConfig) )
 				{
-					$lightEditorToolbarSet = $this->getSettings('LIGHT_EDITOR_TOOLBAR_CONFIG_SET');
-					if( isset($lightEditorToolbarSets[$lightEditorToolbarSet]) )
+					$editorToolbarSet = $this->getSettings('EDITOR_TOOLBAR_CONFIG_SET');
+					if( isset($editorToolbarSets[$editorToolbarSet]) )
 					{
-						$lightEditorToolbarConfig = $lightEditorToolbarSets[$lightEditorToolbarSet];
+						$editorToolbarConfig = $editorToolbarSets[$editorToolbarSet];
 					}
 					else
 					{
-						$lightEditorToolbarConfig = $lightEditorToolbarSets['FULL'];
+						$editorToolbarConfig = $editorToolbarSets['FULL'];
 					}
 				}
-
 				$APPLICATION->IncludeComponent("bitrix:fileman.light_editor","",[
 						"CONTENT" => $this->data[$this->code],
 						"INPUT_NAME" => $bxCode,
@@ -113,7 +112,7 @@ class VisualEditorWidget extends TextAreaWidget
 						"USE_FILE_DIALOGS" => "Y",
 						"ID" => 'LIGHT_EDITOR_'.$bxCode,
 						"JS_OBJ_NAME" => $bxCode,
-						'TOOLBAR_CONFIG' => $lightEditorToolbarConfig
+						'TOOLBAR_CONFIG' => $editorToolbarConfig
 					]
 				);
 			}
