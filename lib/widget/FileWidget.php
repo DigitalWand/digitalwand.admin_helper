@@ -215,6 +215,7 @@ class FileWidget extends HelperWidget
 					{
 						if (isset($_REQUEST[$this->getCode().'_del'][$key]))
 						{
+							\CFile::Delete(intval($this->data[$this->getCode()][$key]['VALUE']));
 							unset($this->data[$this->getCode()][$key]);
 						}
 						elseif($this->data[$this->getCode()][$key]['VALUE'])
