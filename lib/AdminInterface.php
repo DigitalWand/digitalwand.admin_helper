@@ -39,7 +39,8 @@ abstract class AdminInterface
     /**
      * Регистрируем поля и табы в AdminBaseHelper::setInterfaceSettings
      */
-    public static function register(){
+    public static function register()
+    {
         $fieldsAndTabs = array('FIELDS'=>array(),'TABS'=>array());
         $tabsWithFields = static::getFields();
         /**
