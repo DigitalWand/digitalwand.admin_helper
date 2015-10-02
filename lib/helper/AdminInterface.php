@@ -1,8 +1,6 @@
 <?php
 
-namespace DigitalWand\AdminHelper;
-
-use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
+namespace DigitalWand\AdminHelper\Helper;
 
 /**
  * Class BaseAdminInterface
@@ -10,7 +8,6 @@ use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
  */
 abstract class AdminInterface
 {
-
     /**
      * Имя модуля для которого описывается интерфейс
      * @return string
@@ -41,21 +38,19 @@ abstract class AdminInterface
      */
     public static function register()
     {
-        $fieldsAndTabs = array('FIELDS'=>array(),'TABS'=>array());
+        $fieldsAndTabs = array('FIELDS' => array(), 'TABS' => array());
         $tabsWithFields = static::getFields();
         /**
          * Приводим формат [таб => имя, поля] к формату [табы, поля]
          */
-        foreach($tabsWithFields as $tabCode => $tab)
-        {
+        foreach ($tabsWithFields as $tabCode => $tab) {
             $fieldsAndTabs['TABS'][$tabCode] = $tab['NAME'];
-            foreach($tab['FIELDS'] as $fieldCode => $field)
-            {
+            foreach ($tab['FIELDS'] as $fieldCode => $field) {
                 $field['TAB'] = $tabCode;
                 $fieldsAndTabs['FIELDS'][$fieldCode] = $field;
             }
         }
-        AdminBaseHelper::setInterfaceSettings( $fieldsAndTabs, static::getHelpers(), static::getModuleName());
+        AdminBaseHelper::setInterfaceSettings($fieldsAndTabs, static::getHelpers(), static::getModuleName());
     }
 
 }

@@ -5,8 +5,8 @@ use Bitrix\Main\Loader;
 Loader::registerAutoLoadClasses('digitalwand.admin_helper',
     array(
         'DigitalWand\AdminHelper\EventHandlers' => 'lib/EventHandlers.php',
-        'DigitalWand\AdminHelper\AdminInterface' => 'lib/AdminInterface.php',
 
+        'DigitalWand\AdminHelper\Helper\AdminInterface' => 'lib/helper/AdminInterface.php',
         'DigitalWand\AdminHelper\Helper\AdminBaseHelper' => 'lib/helper/AdminBaseHelper.php',
         'DigitalWand\AdminHelper\Helper\AdminListHelper' => 'lib/helper/AdminListHelper.php',
         'DigitalWand\AdminHelper\Helper\AdminEditHelper' => 'lib/helper/AdminEditHelper.php',
