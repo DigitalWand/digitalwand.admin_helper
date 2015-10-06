@@ -108,30 +108,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	static protected $tablePrefix = "digitalwand_admin_helper_";
 
-	/**
-	 * @var array
-	 * Массив с настройками контекстного меню.
-	 */
-	protected $contextMenu = array();
-
-	/**
-	 * @var array массив со списком групповых действий над таблицей.
-	 * Ключ - код действия. Знаение - перевод.
-	 * @see \CAdminList::AddGroupActionTable()
-	 */
-	protected $groupActionsList = array();
 
 	/**
 	 * @var array
 	 * @see \CAdminList::AddGroupActionTable()
 	 */
 	protected $groupActionsParams = array();
-
-	/**
-	 * @var array
-	 * @see \CAdminList::AddFooter();
-	 */
-	protected $footer = array();
 
 	/**
 	 * @var string
@@ -161,8 +143,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$this->restoreLastGetQuery();
 		$this->prepareAdminVariables();
-		$this->addContextMenu();
-		$this->addGroupActions();
 
 		if (isset($_REQUEST['action']))
 		{
@@ -308,19 +288,17 @@ abstract class AdminListHelper extends AdminBaseHelper
 	/**
 	 * Подготавливает массив с настройками футера таблицы Bitrix
 	 * @param \CAdminResult $res - результат выборки данных
+	 * @see \CAdminList::AddFooter()
+	 * @return array[]
 	 */
-	protected function addFooter($res)
+	protected function getFooter($res)
 	{
-		$this->footer = array(
-			array(
-				"title" => Loc::getMessage("MAIN_ADMIN_LIST_SELECTED"),
-				"value" => $res->SelectedRowsCount(),
-			),
-			array(
+		return array(
+			static::getButton('MAIN_ADMIN_LIST_SELECTED', array("value" => $res->SelectedRowsCount())),
+			static::getButton('MAIN_ADMIN_LIST_CHECKED', array("value" => $res->SelectedRowsCount()),array(
 				"counter" => true,
-				"title" => Loc::getMessage("MAIN_ADMIN_LIST_CHECKED"),
 				"value" => "0",
-			),
+			)),
 		);
 	}
 
@@ -330,35 +308,35 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @api
 	 * @see $contextMenu
 	 */
-	protected function addContextMenu()
+	protected function getContextMenu()
 	{
-		$this->contextMenu = array();
-
+		$contextMenu = array();
 		if (!$this->isPopup() && $this->hasWriteRights())
 		{
-			$this->contextMenu[] = array(
-				'TEXT' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_CREATE_NEW'),
+			$contextMenu[] = static::getButton('LIST_CREATE_NEW',array(
 				'LINK' => static::getEditPageURL($this->additionalUrlParams),
-				'TITLE' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_CREATE_NEW'),
 				'ICON' => 'btn_new'
-			);
+			));
 		}
+		return $contextMenu;
 	}
 
 	/**
-	 * Подготавливает массив с настройками групповых действий над списком
-	 * @see $groupActionsList
+	 * Возвращает массив с настройками групповых действий над списком
 	 * @api
+	 * @return array
 	 */
-	protected function addGroupActions()
+	protected function getGroupActions()
 	{
+		$result = array();
 		if (!$this->isPopup())
 		{
 			if ($this->hasDeleteRights())
 			{
-				$this->groupActionsList = array('delete' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"));
+				$result = array('delete' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"));
 			}
 		}
+		return $result;
 	}
 
 	/**
@@ -416,7 +394,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @see AdminListHelper::addRow();
 	 * @see HelperWidget::changeGetListOptions();
 	 */
-	public function getData($sort)
+	public function buildList($sort)
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
@@ -461,7 +439,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		// Поля для селекта (множественные поля отфильтрованы)
 		$listSelect = array_flip($listSelect);
-		$res = $this->getList($className, $this->arFilter, $listSelect, $sort, $raw);
+		$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
 
 		$res = new \CAdminResult($res, $this->getListTableID());
 		$res->NavStart();
@@ -471,20 +449,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 		while ($data = $res->NavNext(false))
 		{
 			$this->modifyRowData($data);
-			list($link, $name) = $this->addRow($data);
+			list($link, $name) = $this->getRow($data);
 			$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 			foreach ($this->fields as $code => $settings)
 			{
 				$this->addRowCell($row, $code, $data);
 			}
-			$actions = $this->addRowActions($data);
-			$row->AddActions($actions);
+			$row->AddActions( $this->getRowActions($data) );
 		}
 
-		$this->addFooter($res);
-		$this->list->AddFooter($this->footer);
-		$this->list->AddGroupActionTable($this->groupActionsList, $this->groupActionsParams);
-		$this->list->AddAdminContextMenu($this->contextMenu);
+		$this->list->AddFooter( $this->getFooter($res) );
+		$this->list->AddGroupActionTable($this->getGroupActions(), $this->groupActionsParams);
+		$this->list->AddAdminContextMenu( $this->getContextMenu() );
 
 		$this->list->BeginPrologContent();
 		echo $this->prologHtml;
@@ -510,7 +486,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 *
 	 * @return Result
 	 */
-	protected function getList($className, $filter, $select, $sort, $raw)
+	protected function getData($className, $filter, $select, $sort, $raw)
 	{
 		$parameters = array(
 			'filter' => $filter,
@@ -540,7 +516,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @return array возвращает ссылку на детальную страницу и её название
 	 * @api
 	 */
-	protected function addRow($data)
+	protected function getRow($data)
 	{
 		if ($this->isPopup())
 		{
@@ -598,7 +574,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param $data - данные текущей строки
 	 * @return array
 	 */
-	protected function addRowActions($data)
+	protected function getRowActions($data)
 	{
 		$actions = array();
 

@@ -53,7 +53,7 @@ if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper')) {
     $helperType = 'list';
     /** @var AdminListHelper $adminHelper */
     $adminHelper = new $helper($fields, $isPopup);
-    $adminHelper->getData(array($by => $order));
+    $adminHelper->buildList(array($by => $order));
 
 } else {
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';

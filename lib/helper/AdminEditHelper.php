@@ -203,8 +203,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Заполняет верхнее меню страницы
-	 * По-умолчанию добавляет две кнопки:
+	 * Возвращает верхнее меню страницы
+	 * По-умолчанию две кнопки:
 	 * <ul>
 	 * <li> Возврат в список</li>
 	 * <li> Удаление элемента</li>
@@ -217,35 +217,24 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * @see AdminEditHelper::$menu
 	 * @see AdminEditHelper::customActions()
 	 * @api
+	 * @return array
 	 */
-	protected function fillMenu($showDeleteButton = true)
+	protected function getMenu($showDeleteButton = true)
 	{
-		$returnToList = array(
-			"TEXT" => Loc::getMessage('RETURN_TO_LIST'),
-			"TITLE" => Loc::getMessage('RETURN_TO_LIST'),
-			"LINK" => $this->getListPageURL(array_merge($this->additionalUrlParams,
-				array(
-					'restore_query' => 'Y'
-				))),
-			"ICON" => "btn_list",
+		$menu = array(
+			static::getButton('RETURN_TO_LIST', array(
+				"LINK" => $this->getListPageURL(array_merge($this->additionalUrlParams,
+					array('restore_query' => 'Y')
+				)),
+				"ICON" => "btn_list",
+			))
 		);
-
-		if (!empty($this->menu))
-		{
-			array_unshift($this->menu, $returnToList);
-		}
-		else
-		{
-			$this->menu[] = $returnToList;
-		}
 
 		$arSubMenu = [];
 
 		if (isset($this->data[$this->pk()]) && $this->hasWriteRights())
 		{
-			$arSubMenu[] = array(
-				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ADD_ELEMENT'),
-				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ADD_ELEMENT'),
+			$arSubMenu[] = static::getButton('ADD_ELEMENT',array(
 				"LINK" => static::getEditPageURL(array_merge($this->additionalUrlParams,
 						array(
 							'action' => 'add',
@@ -253,14 +242,12 @@ abstract class AdminEditHelper extends AdminBaseHelper
 							'restore_query' => 'Y',
 						))),
 				'ICON' => 'edit'
-			);
+			));
 		}
 
 		if( $showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights() )
 		{
-			$arSubMenu[] = array(
-				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_DELETE_ELEMENT'),
-				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_DELETE_ELEMENT'),
+			$arSubMenu[] = static::getButton('DELETE_ELEMENT',array(
 				"ONCLICK" => "if(confirm('". Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM'). "')) location.href='".
 					static::getEditPageURL(array_merge($this->additionalUrlParams,
 						array(
@@ -270,20 +257,18 @@ abstract class AdminEditHelper extends AdminBaseHelper
 							'restore_query' => 'Y',
 						)))."'",
 				'ICON' => 'delete'
-			);
+			));
 		}
 
 		if(count($arSubMenu))
 		{
-			$this->menu[] = array("SEPARATOR"=>"Y");
-			$this->menu[] = array(
-				"TEXT" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACTIONS'),
-				"TITLE" => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACTIONS'),
+			$menu[] = array("SEPARATOR"=>"Y");
+			$menu[] = static::getButton('ACTIONS',array(
 				"MENU" => $arSubMenu,
 				'ICON' => 'btn_new'
-			);
+			));
 		}
-
+		return $menu;
 	}
 
 	/**
@@ -292,8 +277,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	public function show()
 	{
-		$this->fillMenu();
-		$context = new \CAdminContextMenu($this->menu);
+		$context = new \CAdminContextMenu($this->getMenu());
 		$context->Show();
 
 		$this->tabControl->BeginPrologContent();

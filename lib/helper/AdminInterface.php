@@ -26,18 +26,23 @@ abstract class AdminInterface
      */
     abstract public static function getHelpers();
 
+    /**
+     * Описание кнопок интерфейса, false - набор по умолчанию
+     * @return array|bool
+     */
     public static function getButtons()
     {
-        /**
-         * Описание кнопок
-         */
+        return false;
     }
 
     /**
-     * Регистрируем поля и табы в AdminBaseHelper::setInterfaceSettings
+     * Регистрируем поля, табы и кнопки в AdminBaseHelper::setInterfaceSettings
      */
     public static function register()
     {
+        /**
+         * Поля и табы
+         */
         $fieldsAndTabs = array('FIELDS' => array(), 'TABS' => array());
         $tabsWithFields = static::getFields();
         /**
@@ -50,7 +55,19 @@ abstract class AdminInterface
                 $fieldsAndTabs['FIELDS'][$fieldCode] = $field;
             }
         }
+
+        /**
+         * Регистрируем настройки хелперов
+         */
         AdminBaseHelper::setInterfaceSettings($fieldsAndTabs, static::getHelpers(), static::getModuleName());
+
+        /**
+         * Привязываем хелперы к классу интерфейса
+         */
+        foreach(static::getHelpers() as $helperClass)
+        {
+            $helperClass::setInterfaceClass(get_called_class());
+        }
     }
 
 }
