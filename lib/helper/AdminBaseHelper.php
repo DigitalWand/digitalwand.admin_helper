@@ -113,7 +113,7 @@ abstract class AdminBaseHelper
      * @var array
      * Привязка класса интерфеса к классу хелпера
      */
-    static protected $interfaceClass;
+    static protected $interfaceClass=array();
 
     /**
      * @var array
@@ -264,7 +264,7 @@ abstract class AdminBaseHelper
      */
     static public function setInterfaceClass($class)
     {
-        static::$interfaceClass = $class;
+        static::$interfaceClass[get_called_class()] = $class;
     }
 
     /**
@@ -273,14 +273,15 @@ abstract class AdminBaseHelper
      */
     static public function getInterfaceClass()
     {
-        return static::$interfaceClass;
+        return static::$interfaceClass[get_called_class()];
     }
 
     static protected function getButton($code, $params, $keys = array('name','TEXT'))
     {
 
-        $interfaceClass = static::$interfaceClass;
         $class = '\\'.ltrim(get_called_class(),'\\');
+
+        $interfaceClass = static::getInterfaceClass();
 
         if($interfaceClass)
         {

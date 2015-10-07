@@ -67,6 +67,7 @@ abstract class AdminInterface
         foreach(static::getHelpers() as $helperClass)
         {
             $helperClass::setInterfaceClass(get_called_class());
+
         }
     }
 
