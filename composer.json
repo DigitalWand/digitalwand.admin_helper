@@ -2,6 +2,7 @@
   "name": "digitalwand/digitalwand.admin_helper",
   "description": "API for custom admin interface in Bitrix.",
   "type": "bitrix-module",
+  "license": "MIT",
   "keywords": [
     "bitrix",
     "admin",
@@ -26,7 +27,8 @@
     "installer-name": "digitalwand.admin_helper"
   },
   "require": {
-    "php": ">=5.3.0"
+    "php": ">=5.3.0",
+    "composer/installers": "~1",
   },
   "minimum-stability": "dev"
 }
