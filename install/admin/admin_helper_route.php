@@ -1,3 +1,3 @@
 <?
-require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/digitalwand.admin_helper/admin/route.php");
+require_once($_SERVER["DOCUMENT_ROOT"]."/local/modules/digitalwand.admin_helper/admin/route.php");
 ?>
