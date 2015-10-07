@@ -192,10 +192,11 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				//TODO: элемент не найден
 			}
 
-			if (isset($_REQUEST['action']))
+			if (isset($_REQUEST['action'])||isset($_REQUEST['action_button']))
 			{
-				$this->customActions($_REQUEST['action'],
-					$this->data[$this->pk()]);
+				$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
+				$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
+				$this->customActions($action, $id);
 			}
 		}
 

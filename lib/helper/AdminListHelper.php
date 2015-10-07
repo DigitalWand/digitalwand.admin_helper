@@ -144,10 +144,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->restoreLastGetQuery();
 		$this->prepareAdminVariables();
 
-		if (isset($_REQUEST['action']))
+		if (isset($_REQUEST['action'])||isset($_REQUEST['action_button']))
 		{
 			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
-			$this->customActions($_REQUEST['action'], $id);
+			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
+			$this->customActions($action, $id);
 		}
 
 		$className = static::getModel();
