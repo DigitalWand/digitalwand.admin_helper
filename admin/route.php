@@ -37,7 +37,9 @@ if (!$module OR !$view OR !Loader::IncludeModule($module)) {
  */
 $interfaceNameParts = explode('.', $module);
 $helperNameParts = explode('_', $view);
-$entityName = array_shift($helperNameParts);
+$helperType = array_pop($helperNameParts);
+$entityName = array_pop($helperNameParts);
+$interfaceNameParts = array_merge($interfaceNameParts, $helperNameParts);
 $interfaceNameParts[]=$entityName;
 $interfaceNameParts[]= $entityName.'AdminInterface';
 foreach($interfaceNameParts as $i => $v)
