@@ -84,6 +84,7 @@ abstract class AdminBaseHelper
      * @var string
      * Назвние модуля данной модели.
      * При наследовании класса необходимо указать нзвание модуля, в котором он находится.
+     * А можно и не указывать, в этому случае он определится автоматически по namespace класса
      * Используется для избежания конфликтов между именами представлений.
      *
      * @api
@@ -93,8 +94,10 @@ abstract class AdminBaseHelper
     /**
      * @var string
      * Название представления.
-     * При наследовании класса необходимо указать название представления. Оно будет использовано при построении URL к
-     * данному разделу админки. Не должно содержать пробелов и других символов, требующих преобразований для
+     * При наследовании класса необходимо указать название представления.
+     * А можно и не указывать, в этому случае оно определится автоматически по namespace класса.
+     * Оно будет использовано при построении URL к данному разделу админки.
+     * Не должно содержать пробелов и других символов, требующих преобразований для
      * адресной строки браузера.
      *
      * @api
@@ -138,7 +141,7 @@ abstract class AdminBaseHelper
      * $viewName представления, отвечающего за страницу списка. Необходимо указывать только для классов, уналедованных
      * от AdminEditHelper.
      *
-     * @see AdminBaseHelper::$viewName
+     * @see AdminBaseHelper::getViewName()
      * @see AdminBaseHelper::getListPageUrl
      * @see AdminEditHelper
      * @api
@@ -162,7 +165,7 @@ abstract class AdminBaseHelper
      * $viewName представления, отвечающего за страницу редактирования/просмотра элемента. Необходимо указывать только
      *     для классов, уналедованных от AdminListHelper.
      *
-     * @see AdminBaseHelper::$viewName
+     * @see AdminBaseHelper::getViewName()
      * @see AdminBaseHelper::getEditPageUrl
      * @see AdminListHelper
      * @api
@@ -225,7 +228,7 @@ abstract class AdminBaseHelper
     static public function getInterfaceSettings($viewName = '')
     {
         if (empty($viewName)) {
-            $viewName = static::$viewName;
+            $viewName = static::getViewName();
         }
         return self::$interfaceSettings[static::getModule()][$viewName]['interface'];
     }
@@ -278,11 +281,11 @@ abstract class AdminBaseHelper
             return false;
         }
 
-        if (isset(self::$interfaceSettings[$module][static::$viewName])) {
+        if (isset(self::$interfaceSettings[$module][static::getViewName()])) {
             return false;
         }
 
-        self::$interfaceSettings[$module][static::$viewName] = array(
+        self::$interfaceSettings[$module][static::getViewName()] = array(
             'helper' => get_called_class(),
             'interface' => $interfaceSettings
         );
@@ -324,6 +327,45 @@ abstract class AdminBaseHelper
      */
     public static function getViewName()
     {
+        /**
+         * Пытаемся автоматически определить текущее представление при его отсутствии
+         */
+        if(empty(static::$viewName))
+        {
+            /**
+             * Разбираем имя класса
+             */
+            $className = get_called_class();
+            $classNameParts = explode('\\',trim($className,'\\'));
+            /**
+             * Определяем имя сущности и формируем из нее имя класса
+             */
+            if(count($classNameParts)>2)
+            {
+                /**
+                 * Название класса без namespace
+                 */
+                $classCaption = array_pop($classNameParts);
+                /**
+                 * Приставка Helper, тоже не нужна
+                 */
+                array_pop($classNameParts);
+                /**
+                 * Имя сущности 3-е слева в названии класса
+                 */
+                $entityName = array_pop($classNameParts);
+                /**
+                 * Тип хелпера из названия класса
+                 */
+                $viewType = str_replace(array($entityName, 'Helper'), '', $classCaption);
+
+                if($entityName && $viewType)
+                {
+                    static::$viewName = strtolower($entityName).'_'.strtolower($viewType);
+                }
+
+            }
+        }
         return static::$viewName;
     }
 
@@ -620,7 +662,7 @@ abstract class AdminBaseHelper
      */
     static public function getEditPageURL($params = array())
     {
-        $viewName = isset(static::$editViewName) ? static::$editViewName : static::$viewName;
+        $viewName = isset(static::$editViewName) ? static::$editViewName : static::getViewName();
         if (!isset($viewName)) {
             $query = "?lang=" . LANGUAGE_ID . '&' . http_build_query($params);
             if (is_subclass_of(get_called_class(), 'AdminEditHelper')) {
@@ -642,7 +684,7 @@ abstract class AdminBaseHelper
      */
     static public function getListPageURL($params = array())
     {
-        $viewName = isset(static::$listViewName) ? static::$listViewName : static::$viewName;
+        $viewName = isset(static::$listViewName) ? static::$listViewName : static::getViewName();
 
         return static::getViewURL($viewName, static::$listPageUrl, $params);
     }
