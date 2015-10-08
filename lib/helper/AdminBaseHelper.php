@@ -89,10 +89,10 @@ abstract class AdminBaseHelper
      *
      * @api
      */
-    static public $module = '';
+    static public $module = array();
 
     /**
-     * @var string
+     * @var string[]
      * Название представления.
      * При наследовании класса необходимо указать название представления.
      * А можно и не указывать, в этому случае оно определится автоматически по namespace класса.
@@ -102,7 +102,7 @@ abstract class AdminBaseHelper
      *
      * @api
      */
-    static protected $viewName;
+    static protected $viewName = [];
 
     /**
      * @var array
@@ -321,7 +321,11 @@ abstract class AdminBaseHelper
      */
     static public function registerInterfaceSettings($module, $interfaceSettings)
     {
-        if (empty($module)) {
+        if(!is_array(static::$module))
+        {
+            static::$module = $module;
+        }
+        elseif (empty($module)) {
             $module = static::getModule();
             if(empty($module))
             {
@@ -330,7 +334,7 @@ abstract class AdminBaseHelper
         }
         else
         {
-            static::$module = $module;
+            static::$module[ get_called_class() ] = $module;
         }
 
 
@@ -385,14 +389,21 @@ abstract class AdminBaseHelper
     public static function getViewName()
     {
         /**
-         * Пытаемся автоматически определить текущее представление при его отсутствии
+         * Возвращаем имя представление если оно определено в дочернем классе
          */
-        if(empty(static::$viewName))
+        if(!is_array(static::$viewName))
+        {
+            return static::$viewName;
+        }
+        $className = get_called_class();
+        /**
+         * Пытаемся автоматически определить текущее представление при его отсутствии в дочернем классе
+         */
+        if( !isset(static::$viewName[$className]))
         {
             /**
              * Разбираем имя класса
              */
-            $className = get_called_class();
             $classNameParts = explode('\\',trim($className,'\\'));
             /**
              * Определяем имя сущности и формируем из нее имя класса
@@ -418,12 +429,12 @@ abstract class AdminBaseHelper
 
                 if($entityName && $viewType)
                 {
-                    static::$viewName = strtolower($entityName).'_'.strtolower($viewType);
+                    static::$viewName[$className] = strtolower($entityName).'_'.strtolower($viewType);
                 }
 
             }
         }
-        return static::$viewName;
+        return static::$viewName[$className];
     }
 
     /**
@@ -447,15 +458,19 @@ abstract class AdminBaseHelper
      */
     static public function getModule()
     {
+        if(!is_array(static::$module))
+        {
+            return static::$module;
+        }
+        $className = get_called_class();
         /**
          * Пытаемся автоматически определить название модуля при его отсутствии
          */
-        if(!static::$module)
+        if(!isset(static::$module[$className]))
         {
             /**
              * Разбираем имя класса
              */
-            $className = get_called_class();
             $classNameParts = explode('\\',trim($className,'\\'));
             /**
              * Получаем список модулей
@@ -476,12 +491,12 @@ abstract class AdminBaseHelper
                 $moduleName = implode('.', $moduleNameParts);
                 if(isset($modules[$moduleName]))
                 {
-                    static::$module = $moduleName;
+                    static::$module[$className] = $moduleName;
                     break;
                 }
             }
         }
-        return static::$module;
+        return static::$module[$className];
     }
 
     /**
@@ -719,33 +734,17 @@ abstract class AdminBaseHelper
      */
     static public function getEditPageURL($params = array())
     {
-
-        if(!isset(static::$editViewName))
+        $editHelperClass = str_replace('List','Edit',get_called_class());
+        if(class_exists($editHelperClass))
         {
-            $editHelperClass = str_replace('List','Edit',get_called_class());
-            if(class_exists($editHelperClass))
-            {
-                $viewName = $editHelperClass::getViewName();
-            }
-            else
-            {
-                $viewName = false;
-            }
+            $viewName = $editHelperClass::getViewName();
         }
         else
         {
             $viewName = static::$editViewName;
         }
-        if (!isset($viewName)) {
-            $query = "?lang=" . LANGUAGE_ID . '&' . http_build_query($params);
-            if (is_subclass_of(get_called_class(), 'AdminEditHelper')) {
-                return $query;
-            } else {
-                return static::$editPageUrl . $query;
-            }
-        }
 
-        return static::getViewURL($viewName, static::$editPageUrl, $params);
+        return $editHelperClass::getViewURL($viewName, static::$editPageUrl, $params);
     }
 
 
@@ -757,7 +756,15 @@ abstract class AdminBaseHelper
      */
     static public function getListPageURL($params = array())
     {
-        $viewName = isset(static::$listViewName) ? static::$listViewName : static::getViewName();
+        $listHelperClass = str_replace('Edit','List',get_called_class());
+        if(class_exists($listHelperClass))
+        {
+            $viewName = $listHelperClass::getViewName();
+        }
+        else
+        {
+            $viewName = static::$listViewName;
+        }
 
         return static::getViewURL($viewName, static::$listPageUrl, $params);
     }
