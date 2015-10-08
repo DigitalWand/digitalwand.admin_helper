@@ -662,7 +662,23 @@ abstract class AdminBaseHelper
      */
     static public function getEditPageURL($params = array())
     {
-        $viewName = isset(static::$editViewName) ? static::$editViewName : static::getViewName();
+
+        if(!isset(static::$editViewName))
+        {
+            $editHelperClass = str_replace('List','Edit',get_called_class());
+            if(class_exists($editHelperClass))
+            {
+                $viewName = $editHelperClass::getViewName();
+            }
+            else
+            {
+                $viewName = false;
+            }
+        }
+        else
+        {
+            $viewName = static::$editViewName;
+        }
         if (!isset($viewName)) {
             $query = "?lang=" . LANGUAGE_ID . '&' . http_build_query($params);
             if (is_subclass_of(get_called_class(), 'AdminEditHelper')) {
