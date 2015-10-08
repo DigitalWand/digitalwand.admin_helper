@@ -102,7 +102,7 @@ abstract class AdminBaseHelper
      *
      * @api
      */
-    static protected $viewName = [];
+    static protected $viewName = array();
 
     /**
      * @var array
