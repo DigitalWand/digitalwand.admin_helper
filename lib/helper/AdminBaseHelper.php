@@ -262,9 +262,17 @@ abstract class AdminBaseHelper
     static public function registerInterfaceSettings($module, $interfaceSettings)
     {
         if (empty($module)) {
-            return false;
+            $module = static::getModule();
+            if(empty($module))
+            {
+                return false;
+            }
         }
-        self::$module = $module;
+        else
+        {
+            static::$module = $module;
+        }
+
 
         if (empty($interfaceSettings)) {
             return false;
@@ -340,6 +348,40 @@ abstract class AdminBaseHelper
      */
     static public function getModule()
     {
+        /**
+         * Пытаемся автоматически определить название модуля при его отсутствии
+         */
+        if(!static::$module)
+        {
+            /**
+             * Разбираем имя класса
+             */
+            $className = get_called_class();
+            $classNameParts = explode('\\',trim($className,'\\'));
+            /**
+             * Получаем список модулей
+             */
+            $rsResult = \CModule::getList();
+            $modules = array();
+            while($arModule = $rsResult->Fetch())
+            {
+                $modules[$arModule['ID']] = $arModule['ID'];
+            }
+            /**
+             * Составляем имя модуля из имени класса по частям слева направо и проверяем есть ли такой модуль
+             */
+            $moduleNameParts = array();
+            while(count($classNameParts))
+            {
+                $moduleNameParts[] = strtolower( array_shift($classNameParts) );
+                $moduleName = implode('.', $moduleNameParts);
+                if(isset($modules[$moduleName]))
+                {
+                    static::$module = $moduleName;
+                    break;
+                }
+            }
+        }
         return static::$module;
     }
 
