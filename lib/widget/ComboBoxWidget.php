@@ -1,5 +1,6 @@
 <?php
-use DigitalWand\AdminHelper\Widget\HelperWidget;
+
+namespace DigitalWand\AdminHelper\Widget;
 
 /**
  * Class ComboBoxWidget Выпадающий список
