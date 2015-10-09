@@ -64,15 +64,15 @@ class ComboBoxWidget extends HelperWidget
     protected function getVariants()
     {
         $variants = $this->getSettings('VARIANTS');
-        if (is_array($variants) AND !empty($variants)) {
-            return $this->formatVariants($variants);
-
-        } else if (is_callable($variants)) {
-            $var = $variants();
+        if (is_callable($variants)) {
+            $var = call_user_func($variants);
             if (is_array($var)) {
                 return $this->formatVariants($var);
             }
+        } else if (is_array($variants) AND !empty($variants)) {
+            return $this->formatVariants($variants);
         }
+
         return array();
     }
 
@@ -98,7 +98,7 @@ class ComboBoxWidget extends HelperWidget
     /**
      * Генерирует HTML для поля в списке
      * @see AdminListHelper::addRowCell();
-     * @param CAdminListRow $row
+     * @param \CAdminListRow $row
      * @param array $data - данные текущей строки
      * @return mixed
      */
