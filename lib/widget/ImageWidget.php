@@ -48,7 +48,7 @@ class ImageWidget extends FileWidget
     /**
      * Генерирует HTML для поля в списке
      * @see AdminListHelper::addRowCell();
-     * @param CAdminListRow $row
+     * @param \CAdminListRow $row
      * @param array $data - данные текущей строки
      * @return mixed
      */
@@ -79,5 +79,46 @@ class ImageWidget extends FileWidget
         return \CFile::ResizeImageGet($id, $size, BX_RESIZE_IMAGE_EXACT, true, $filters, false, $quality);
 
     }
+
+    protected function saveFile($name, $path, $type = false)
+    {
+        if (!$path)
+        {
+            return false;
+        }
+
+        $fileInfo = \CFile::MakeFileArray(
+            $path,
+            $type
+        );
+
+
+        if(!$fileInfo) return false;
+
+        if (stripos($fileInfo['type'], "image") === false)
+        {
+            $this->addError('FILE_FIELD_TYPE_ERROR');
+            return false;
+        }
+
+        $fileInfo["name"] = $name;
+
+        /** @var AdminBaseHelper $model */
+        $helper = $this->helper;
+        $fileId = \CFile::SaveFile($fileInfo, $helper::$module);
+
+        $code = $this->code;
+        if(isset($this->data[$code])) {
+            \CFile::Delete($this->data[$code]);
+        }
+
+        if($this->getSettings('MULTIPLE')){
+
+        }
+
+        $this->data[$code] = $fileId;
+        return true;
+    }
+
 
 }

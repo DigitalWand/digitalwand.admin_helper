@@ -8,6 +8,11 @@ Loc::loadMessages(__FILE__);
 
 class FileWidget extends HelperWidget
 {
+    static protected $defaults = array(
+        'EDIT_IN_LIST' => false,
+        'FILTER' => false
+    );
+
     /**
      * Генерирует HTML для редактирования поля
      * @return mixed
@@ -100,12 +105,6 @@ class FileWidget extends HelperWidget
 
 
         if(!$fileInfo) return false;
-        
-        if (stripos($fileInfo['type'], "image") === false)
-        {
-            $this->addError('FILE_FIELD_TYPE_ERROR');
-            return false;
-        }
 
         $fileInfo["name"] = $name;
         
