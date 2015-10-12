@@ -33,28 +33,56 @@ class UrlWidget extends StringWidget
      */
     public function genListHTML(&$row, $data)
     {
-        $urlText = htmlspecialchars($data[$this->getCode()]);
-        if (strlen($urlText) > $this->getSettings('MAX_URL_LEN'))
-        {
-            $urlText = substr($urlText, 0, $this->getSettings('MAX_URL_LEN'));
-        }
-        $href = '<a href="' . $data[$this->getCode()] . '" target="_blank">' . $urlText . '</a>';
+        $value = $this->getValue();
         if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))
         {
             $row->AddInputField($this->getCode(), ['style' => 'width:90%']);
         }
-        $row->AddViewField($this->getCode(), $href);
+        $row->AddViewField($this->getCode(), $value);
+    }
+
+    /**
+     * Возвращает текущее значение, хранимое в поле виджета
+     * Если такого поля нет, возвращает null
+     *
+     * @return mixed|null
+     */
+    public function getValue()
+    {
+        $code = $this->getCode();
+        $value = isset($this->data[$code]) ? $this->data[$code] : null;
+
+        if($value !== null)
+        {
+            $urlText = htmlspecialchars($value);
+            if (strlen($urlText) > $this->getSettings('MAX_URL_LEN'))
+            {
+                $urlText = substr($urlText, 0, $this->getSettings('MAX_URL_LEN'));
+            }
+            if(($this->getSettings('READONLY') && $this->getCurrentViewType() == static::EDIT_HELPER) || $this->getCurrentViewType() == static::LIST_HELPER)
+            {
+                $value = '<a href="' . $value . '" target="_blank">' . $urlText . '</a>';
+            }
+            else
+            {
+                $value = $urlText;
+            }
+        }
+
+        return $value;
     }
 
     public function processEditAction()
     {
         $value = $this->getValue();
+
         if (
             $this->getSettings('PROTOCOL_REQUIRED')
             && !empty($value)
             && preg_match('/^https?:\/\//', $value) == 0
         )
         {
+
             $this->addError('PROTOCOL_REQUIRED');
         }
 
