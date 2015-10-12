@@ -111,6 +111,12 @@ abstract class AdminBaseHelper
 
     /**
      * @var array
+     * Привязка класса интерфеса к классу хелпера
+     */
+    static protected $interfaceClass=array();
+
+    /**
+     * @var array
      * Хранит список отображаемых полей и настройки их отображения
      * @see AdminBaseHelper::setInterfaceSettings()
      */
@@ -249,6 +255,57 @@ abstract class AdminBaseHelper
         }
 
         return true;
+    }
+
+
+    /**
+     * Привязка класса интерфеса к хелперам
+     * @param $class
+     */
+    static public function setInterfaceClass($class)
+    {
+        static::$interfaceClass[get_called_class()] = $class;
+    }
+
+    /**
+     * Возвращает класс интерфейса к которому привязан хелпер
+     * @return array
+     */
+    static public function getInterfaceClass()
+    {
+        return static::$interfaceClass[get_called_class()];
+    }
+
+    static protected function getButton($code, $params, $keys = array('name','TEXT'))
+    {
+
+        $class = '\\'.ltrim(get_called_class(),'\\');
+
+        $interfaceClass = static::getInterfaceClass();
+
+        if($interfaceClass)
+        {
+            $buttons = $interfaceClass::getButtons();
+
+            if(is_array($buttons) && isset($buttons[$class]) && isset($buttons[$class][$code]))
+            {
+                if($buttons[$class][$code]['VISIBLE']=='N')
+                {
+                    return false;
+                }
+                $params = array_merge($params,$buttons[$class][$code]);
+                return $params;
+            }
+        }
+        /**
+         * Значения по умолчанию из настроек модуля
+         */
+        $text = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_'.$code);
+        foreach($keys as $key)
+        {
+            $params[$key] = $text;
+        }
+        return $params;
     }
 
     /**
