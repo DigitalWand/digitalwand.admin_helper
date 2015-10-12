@@ -6,11 +6,11 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 /**
- * Class CheckboxWidget
+ * Class CheckBoxWidget
  * Виджет "галочка"
  *
  */
-class CheckboxWidget extends HelperWidget
+class CheckBoxWidget extends HelperWidget
 {
     /**
      * Типы чекбоксов
