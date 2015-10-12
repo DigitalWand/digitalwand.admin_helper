@@ -32,6 +32,31 @@ if (!$module OR !$view OR !Loader::IncludeModule($module)) {
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
 
+/**
+ * Пытаемся определить имя класса админского интерфейса
+ */
+$interfaceNameParts = explode('.', $module);
+$helperNameParts = explode('_', $view);
+$helperType = array_pop($helperNameParts);
+$entityName = array_pop($helperNameParts);
+$interfaceNameParts = array_merge($interfaceNameParts, $helperNameParts);
+$interfaceNameParts[]=$entityName;
+$interfaceNameParts[]= $entityName.'AdminInterface';
+foreach($interfaceNameParts as $i => $v)
+{
+    $interfaceNameParts[$i] = ucfirst($v);
+}
+$interfaceNameClass = implode('\\',$interfaceNameParts);
+
+/**
+ * Регистрируем класс интерфейса если он существует
+ */
+if(class_exists($interfaceNameClass))
+{
+    $interfaceNameClass::register();
+}
+
+
 list($helper, $interface) = AdminBaseHelper::getGlobalInterfaceSettings($module, $view);
 
 if (!$helper OR !$interface) {
