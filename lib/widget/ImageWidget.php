@@ -13,7 +13,8 @@ class ImageWidget extends FileWidget
         'LIST_WIDTH' => 100,
         'LIST_HEIGHT' => 100,
         'LIST_FILTERS' => false,
-        'LIST_QUALITY' => 80
+        'LIST_QUALITY' => 80,
+        'FILTER' => false
     );
     /**
      * Генерирует HTML для редактирования поля

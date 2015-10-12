@@ -250,6 +250,8 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->fields as $code => $settings) {
 
             $widget = $this->createWidgetForField($code);
+            $settings = $widget->getSettings();
+
             if ((isset($settings['FILTER']) AND $settings['FILTER'] != false) OR !isset($settings['FILTER'])) {
 
                 $this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_FILTER);

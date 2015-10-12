@@ -81,13 +81,13 @@ abstract class HelperWidget
      * @var array $settings
      * Настройки виджета для данной модели
      */
-    protected $settings;
+    protected $settings = array();
 
     /**
      * @var array
-     * Настройки "по-умолчанию" для модели
+     * Настройки "по-умолчанию" для виджета
      */
-    static protected $defaults;
+    static protected $defaults = array();
 
     /**
      * @var DataManager
@@ -425,6 +425,7 @@ abstract class HelperWidget
         }
         unset($interface['FIELDS'][$code]['WIDGET']);
         $this->settings = array_merge($this->settings, $interface['FIELDS'][$code]);
+        $this->settings = array_merge(static::$defaults, $this->settings);
         $this->setDefaultValue();
 
         return true;
