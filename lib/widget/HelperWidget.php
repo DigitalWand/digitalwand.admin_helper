@@ -467,7 +467,9 @@ abstract class HelperWidget
     {
         $this->data = &$data;
         //FIXME: нелепый оверхэд ради того, чтобы можно было централизованно преобразовывать значение при записи
-        $this->setValue($data[$this->getCode()]);
+        if(isset($data[$this->getCode()])){
+            $this->setValue($data[$this->getCode()]);
+        }
     }
 
     /**
