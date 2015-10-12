@@ -25,7 +25,8 @@ class TextAreaWidget extends StringWidget
 
     static protected $defaults = array(
         'COLS' => 65,
-        'ROWS' => 5
+        'ROWS' => 5,
+        'EDIT_IN_LIST' => false
     );
 
     /**
@@ -48,18 +49,23 @@ class TextAreaWidget extends StringWidget
      */
     public function genListHTML(&$row, $data)
     {
-        $text = $data[$this->code];
+        $text = $this->getValue();
 
-        if (strlen($text) > self::LIST_TEXT_SIZE && !$this->isExcelView()) {
-            $pos = false;
-            $pos = $pos === false ? stripos($text, " ", self::LIST_TEXT_SIZE) : $pos;
-            $pos = $pos === false ? stripos($text, "\n", self::LIST_TEXT_SIZE) : $pos;
-            $pos = $pos === false ? stripos($text, "</", self::LIST_TEXT_SIZE) : $pos;
-            $pos = $pos === false ? 300 : $pos;
-            $text = substr($text, 0, $pos) . " ...";
+        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
+            $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
+
+        } else {
+            if (strlen($text) > self::LIST_TEXT_SIZE && !$this->isExcelView()) {
+                $pos = false;
+                $pos = $pos === false ? stripos($text, " ", self::LIST_TEXT_SIZE) : $pos;
+                $pos = $pos === false ? stripos($text, "\n", self::LIST_TEXT_SIZE) : $pos;
+                $pos = $pos === false ? stripos($text, "</", self::LIST_TEXT_SIZE) : $pos;
+                $pos = $pos === false ? 300 : $pos;
+                $text = substr($text, 0, $pos) . " ...";
+            }
+
+            $row->AddViewField($this->code, $text);
         }
-
-        $row->AddViewField($this->code, $text);
 
     }
 

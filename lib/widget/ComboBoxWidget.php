@@ -13,6 +13,10 @@ namespace DigitalWand\AdminHelper\Widget;
  */
 class ComboBoxWidget extends HelperWidget
 {
+    static protected $defaults = array(
+        'EDIT_IN_LIST' => true
+    );
+
     /**
      * Генерирует HTML для редактирования поля
      * @see AdminEditHelper::showField();
@@ -31,9 +35,7 @@ class ComboBoxWidget extends HelperWidget
             $default = $this->getSettings('DEFAULT_VARIANT');
         }
 
-        foreach ($variants as $id => $data) {
-            $name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
-
+        foreach ($variants as $id => $name) {
             $result .= "<option value='" . $id . "' " . ($id == $default ? "selected" : "") . ">" . $name . "</option>";
         }
 
@@ -45,7 +47,7 @@ class ComboBoxWidget extends HelperWidget
     protected function getValueReadonly()
     {
         $variants = $this->getVariants();
-        $value = $variants[$this->getValue()]['TITLE'];
+        $value = $variants[$this->getValue()];
         return $value;
     }
 
@@ -67,32 +69,13 @@ class ComboBoxWidget extends HelperWidget
         if (is_callable($variants)) {
             $var = call_user_func($variants);
             if (is_array($var)) {
-                return $this->formatVariants($var);
+                return $var;
             }
         } else if (is_array($variants) AND !empty($variants)) {
-            return $this->formatVariants($variants);
+            return $variants;
         }
 
         return array();
-    }
-
-    /**
-     * Приводит варианты к нужному формату, если они заданы в виде одномерного массива.
-     * @param $variants
-     * @return array
-     */
-    protected function formatVariants($variants)
-    {
-        $formatted = array();
-        foreach ($variants as $id => $data) {
-            if (!is_array($data)) {
-                $formatted[$id] = array(
-                    'ID' => $id,
-                    'TITLE' => $data
-                );
-            }
-        }
-        return $formatted;
     }
 
     /**
@@ -104,8 +87,9 @@ class ComboBoxWidget extends HelperWidget
      */
     public function genListHTML(&$row, $data)
     {
-        if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY']) {
-            $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
+        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
+            $variants = $this->getVariants();
+            $row->AddSelectField($this->getCode(), $variants, array('style' => 'width:90%'));
 
         } else {
             $row->AddViewField($this->getCode(), $this->getValueReadonly());
