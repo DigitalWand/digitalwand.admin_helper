@@ -54,6 +54,10 @@ class OrmElementWidget extends NumberWidget
                 $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
                 Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
         }
+        else
+        {
+            $elementId = '';
+        }
 
         return '<input name="' . $this->getEditInputName() . '"
                      id="' . $name . '[' . $key . ']"

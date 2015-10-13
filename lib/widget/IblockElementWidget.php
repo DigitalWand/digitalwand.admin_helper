@@ -37,13 +37,18 @@ class IblockElementWidget extends NumberWidget
 		$key = $this->getCode();
 
 		$elementId = $this->getValue();
-
-		$arRes['NAME'] = Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
-		if ($elementId)
+        
+		if (!empty($elementId))
 		{
 			$dbRes = \CIBlockElement::GetByID($elementId);
-			$arRes = $dbRes->GetNext();
+			if(!$arRes = $dbRes->GetNext()){
+                $arRes['NAME'] = Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
+            }
 		}
+        else
+        {
+            $elementId = '';
+        }
 
 		return '<input name="' . $this->getEditInputName() . '"
                      id="' . $name . '[' . $key . ']"
@@ -61,7 +66,7 @@ class IblockElementWidget extends NumberWidget
 	{
 		$elementId = $this->getValue();
 
-		if ($elementId)
+		if (!empty($elementId))
 		{
 			$dbRes = \CIBlockElement::GetByID($elementId);
 			$arRes = $dbRes->GetNext();
@@ -76,7 +81,7 @@ class IblockElementWidget extends NumberWidget
 	{
 		$elementId = $this->getValue();
 
-		if ($elementId)
+		if (!empty($elementId))
 		{
 			$dbRes = \CIBlockElement::GetByID($elementId);
 			$arRes = $dbRes->GetNext();
