@@ -38,6 +38,8 @@ if (!$helper OR !$interface) {
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
 
+$fieldPopupResultName = preg_replace("/[^a-zA-Z0-9_:\\[\\]]/", "", $_REQUEST['n']);
+$fieldPopupResultIndex = preg_replace("/[^a-zA-Z0-9_:]/", "", $_REQUEST['k']);
 $isPopup = isset($_REQUEST['popup']) AND $_REQUEST['popup'] == 'Y';
 $fields = isset($interface['FIELDS']) ? $interface['FIELDS'] :array();
 $tabs = isset($interface['TABS']) ? $interface['TABS'] :array();
@@ -52,7 +54,7 @@ if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper')) {
 } else if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper')) {
     $helperType = 'list';
     /** @var AdminListHelper $adminHelper */
-    $adminHelper = new $helper($fields, $isPopup);
+    $adminHelper = new $helper($fields, $isPopup, $fieldPopupResultName, $fieldPopupResultIndex);
     $adminHelper->getData(array($by => $order));
 
 } else {
