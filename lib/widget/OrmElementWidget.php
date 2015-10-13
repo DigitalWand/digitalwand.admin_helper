@@ -64,6 +64,7 @@ class OrmElementWidget extends NumberWidget
                     value="..."
                     onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=' . LANGUAGE_ID
         . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
+        . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
         . '&amp;n=' . $name . '&amp;k=' . $key . '\', ' . $windowWidth . ', ' . $windowHeight . ');">' .
         '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $elementName . '</span>';
     }
@@ -104,6 +105,7 @@ class OrmElementWidget extends NumberWidget
                 'value="..."' +
                 'onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=<?=LANGUAGE_ID?>' +
                 '&amp;module=<?=$module?>&amp;view=<?=$view?>&amp;popup=Y' +
+                '&amp;eltitle=<?=$this->getSettings('TITLE_FIELD_NAME')?>' +
                 '&amp;n=<?=$name?>&amp;k=#field_id#\', <?=$windowWidth?>, <?=$windowHeight?>);">' +
                 '&nbsp;<span id="sp_<?=md5($name)?>_#field_id#" >#element_title#</span>'
             );

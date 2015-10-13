@@ -59,6 +59,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected $fieldPopupResultIndex = '';
 
+    /**
+     * @var string
+     * Название столбца, в котором хранится название элемента
+     */
+    protected $fieldPopupResultElTitle = '';
+
 	/**
 	 * @var string
 	 * Название функции, вызываемой при даблклике на строке списка, в случае, если список выводится в режиме
@@ -146,15 +152,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 *
 	 * @param array $fields
 	 * @param bool $isPopup
-	 * @param string $fieldPopupResultName
-	 * @param string $fieldPopupResultIndex
 	 * @throws \Bitrix\Main\ArgumentException
 	 */
-	public function __construct($fields, $isPopup = false, $fieldPopupResultName = '', $fieldPopupResultIndex = '')
+	public function __construct($fields, $isPopup = false)
 	{
 		$this->isPopup = $isPopup;
-		$this->fieldPopupResultName = $fieldPopupResultName;
-		$this->fieldPopupResultIndex = $fieldPopupResultIndex;
+
+		if ($this->isPopup)
+		{
+			$this->fieldPopupResultName = preg_replace("/[^a-zA-Z0-9_:\\[\\]]/", "", $_REQUEST['n']);
+			$this->fieldPopupResultIndex = preg_replace("/[^a-zA-Z0-9_:]/", "", $_REQUEST['k']);
+			$this->fieldPopupResultElTitle = $_REQUEST['eltitle'];
+		}
 
 		parent::__construct($fields);
 
@@ -658,7 +667,7 @@ abstract class AdminListHelper extends AdminBaseHelper
                 if(!span)
                     span = window.opener.document.getElementById("' . $this->fieldPopupResultName . '_link");
                 if(span)
-                    span.innerHTML = data.TITLE;
+                    span.innerHTML = data["' . $this->fieldPopupResultElTitle . '"];
                 window.close();
             }
         </script>';
