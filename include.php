@@ -14,7 +14,7 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Helper\Exception' => 'lib/helper/Exception.php',
 
         'DigitalWand\AdminHelper\Widget\HelperWidget' => 'lib/widget/HelperWidget.php',
-        'DigitalWand\AdminHelper\Widget\CheckboxWidget' => 'lib/widget/CheckboxWidget.php',
+        'DigitalWand\AdminHelper\Widget\CheckBoxWidget' => 'lib/widget/CheckBoxWidget.php',
         'DigitalWand\AdminHelper\Widget\StringWidget' => 'lib/widget/StringWidget.php',
         'DigitalWand\AdminHelper\Widget\NumberWidget' => 'lib/widget/NumberWidget.php',
         'DigitalWand\AdminHelper\Widget\ImageWidget' => 'lib/widget/ImageWidget.php',
