@@ -199,9 +199,27 @@ class CheckBoxWidget extends HelperWidget
      */
     public function getCheckboxType()
     {
+        $fieldType = '';
         $entity = $this->getEntityName();
         $entityMap = $entity::getMap();
-        $fieldType = $entityMap[$this->getCode()]['data_type'];
+        $columnName = $this->getCode();
+
+        if (!isset($entityMap[$columnName]))
+        {
+            foreach ($entityMap as $field)
+            {
+                if ($field->getColumnName() === $columnName)
+                {
+                    $fieldType = $field->getDataType();
+                    break;
+                }
+            }
+        }
+        else
+        {
+            $fieldType = $entityMap[$columnName]['data_type'];
+        }
+
         return $fieldType;
     }
 }
