@@ -831,6 +831,7 @@ abstract class AdminBaseHelper
         $widget->setCode($code);
         $widget->setEntityName($this->getModel());
         $widget->setData($data);
+        $widget->setDefaultValue();
 
         return $widget;
     }
