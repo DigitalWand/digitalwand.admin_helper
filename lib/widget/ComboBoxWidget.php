@@ -45,6 +45,12 @@ class ComboBoxWidget extends HelperWidget
 				$multipleSelected[] = $referenceData['REFERENCE_VALUE'];
 			}
 		}
+
+		if($multiple && $this->data[$this->code])
+		{
+			$multipleSelected = $this->data[$this->code];
+		}
+
 		$variants = $this->getVariants();
 		if (empty($variants))
 		{
@@ -114,6 +120,8 @@ class ComboBoxWidget extends HelperWidget
 				$this->data[$this->getCode()][] = ['VALUE' => $sphereKey];
 			}
 		}
+
+		parent::processEditAction();
 	}
 
 	protected function genMultipleEditHTML()
