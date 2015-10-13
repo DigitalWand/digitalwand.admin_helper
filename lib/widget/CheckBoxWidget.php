@@ -52,7 +52,8 @@ class CheckBoxWidget extends HelperWidget
                 // Сравниваем со строковым значением
                 $checked = $this->getValue() == self::TYPE_STRING_YES ? 'checked' : '';
                 // Получаем результирующее html представление
-                $html = '<input type="checkbox" name="'.$this->getEditInputName().'" value="'.self::TYPE_STRING_YES.'" '.$checked.' />';
+                $html = '<input type="hidden" name="'.$this->getEditInputName().'" value="'.self::TYPE_STRING_NO.'" />';
+                $html .= '<input type="checkbox" name="'.$this->getEditInputName().'" value="'.self::TYPE_STRING_YES.'" '.$checked.' />';
 
                 break;
             }
@@ -61,7 +62,8 @@ class CheckBoxWidget extends HelperWidget
             // Сравниваем со строковым значением
             $checked = $this->getValue() == self::TYPE_INT_YES ? 'checked' : '';
             // Получаем результирующее html представление
-            $html = '<input type="checkbox" name="'.$this->getEditInputName().'" value="'.self::TYPE_INT_YES.'" '.$checked.' />';
+            $html = '<input type="hidden" name="'.$this->getEditInputName().'" value="'.self::TYPE_INT_NO.'" />';
+            $html .= '<input type="checkbox" name="'.$this->getEditInputName().'" value="'.self::TYPE_INT_YES.'" '.$checked.' />';
 
             break;
         }
