@@ -49,6 +49,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * @var string
+	 * Название поля, в котором хранится результат выбора во всплывающем окне
+	 */
+	protected $fieldPopupResultName = '';
+
+	/**
+	 * @var string
+	 * Уникальный индекс поля, в котором хранится результат выбора во всплывающем окне
+	 */
+	protected $fieldPopupResultIndex = '';
+
+	/**
+	 * @var string
 	 * Название функции, вызываемой при даблклике на строке списка, в случае, если список выводится в режиме
 	 *     всплывающего окна
 	 */
@@ -134,11 +146,16 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 *
 	 * @param array $fields
 	 * @param bool $isPopup
+	 * @param string $fieldPopupResultName
+	 * @param string $fieldPopupResultIndex
 	 * @throws \Bitrix\Main\ArgumentException
 	 */
-	public function __construct($fields, $isPopup = false)
+	public function __construct($fields, $isPopup = false, $fieldPopupResultName = '', $fieldPopupResultIndex = '')
 	{
 		$this->isPopup = $isPopup;
+		$this->fieldPopupResultName = $fieldPopupResultName;
+		$this->fieldPopupResultIndex = $fieldPopupResultIndex;
+
 		parent::__construct($fields);
 
 		$this->restoreLastGetQuery();
@@ -619,16 +636,30 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Функция определяет js-функцию для двойонго клика по строке.
-	 * Вызывается в том случае, елси окно открыто в режиме попапа.
-	 * По-умолчанию выводится  скрипт-заглушка.
+	 * Вызывается в том случае, если окно открыто в режиме попапа.
 	 * @api
 	 */
 	protected function genPopupActionJS()
 	{
-		//Тестовый пример. Необходимо переопределить!
 		$this->popupClickFunctionCode = '<script>
-            function selectRow(data){
-                console.log(data);
+            function ' . $this->popupClickFunctionName . '(data){
+                var input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '[' . $this->fieldPopupResultIndex . ']");
+                if(!input)
+                    input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '");
+                if(input)
+                {
+                    input.value = data.ID;
+                    if (window.opener.BX)
+                        window.opener.BX.fireEvent(input, "change");
+                }
+                var span = window.opener.document.getElementById("sp_' . md5($this->fieldPopupResultName) . '_' . $this->fieldPopupResultIndex . '");
+                if(!span)
+                    span = window.opener.document.getElementById("sp_' . $this->fieldPopupResultName . '");
+                if(!span)
+                    span = window.opener.document.getElementById("' . $this->fieldPopupResultName . '_link");
+                if(span)
+                    span.innerHTML = data.TITLE;
+                window.close();
             }
         </script>';
 	}
