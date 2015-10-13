@@ -264,7 +264,7 @@ class OrmElementWidget extends NumberWidget
         else
         {
             $value = $this->getValue();
-            if (!is_null($value))
+            if (!empty($value))
             {
                 $valueList[$value] = $value;
             }
