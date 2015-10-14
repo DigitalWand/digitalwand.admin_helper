@@ -379,43 +379,52 @@ abstract class AdminListHelper extends AdminBaseHelper
 		{
 			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
 		}
+
+		/**
+		 * Если задан для разделов добавляем кнопку создать раздел и
+		 * кнопку на уровень вверх если это не корневой раздел
+		 */
+		if(!empty(static::$hasSections) || isset($_REQUEST['ID']))
+		{
+			if($_REQUEST['ID'])
+			{
+				$params = $this->additionalUrlParams;
+				$sectionModel = static::$sectionModel;
+				$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
+				if(isset($section[$sectionModel::getSectionField()]))
+				{
+					if($this->isPopup())
+					{
+						$params = array_merge($_GET);
+					}
+					$params['ID'] = $section[$sectionModel::getSectionField()];
+					unset($params['SECTION_ID']);
+					$contextMenu[] = static::getButton('LIST_SECTION_UP', array(
+						'LINK' => static::getListPageURL($params),
+						'ICON' => 'btn_list'
+					));
+				}
+			}
+		}
+
+		/**
+		 * Добавляем кнопку создать элемент и создать раздел
+		 */
 		if (!$this->isPopup() && $this->hasWriteRights())
 		{
-			/**
-			 * Если задан для разделов добавляем кнопку создать раздел и
-			 * кнопку на уровень вверх если это не корневой раздел
-			 */
-			if(!empty(static::$hasSections))
+			$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
+				'LINK' => static::getEditPageURL($this->additionalUrlParams),
+				'ICON' => 'btn_new'
+			));
+			if(static::$hasSections)
 			{
-				if(isset($_REQUEST['ID']) && $_REQUEST['ID'])
-				{
-					$params = $this->additionalUrlParams;
-					$sectionModel = static::$sectionModel;
-					$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
-					if(isset($section['PARENT_ID']))
-					{
-						$params['ID'] = $section['PARENT_ID'];
-						unset($params['SECTION_ID']);
-						$contextMenu[] = static::getButton('LIST_SECTION_UP', array(
-							'LINK' => static::getListPageURL($params),
-							'ICON' => 'btn_list'
-						));
-					}
-				}
 				$contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
 					'LINK' => static::getSectionsEditPageURL($this->additionalUrlParams),
 					'ICON' => 'btn_new'
 				));
 			}
-
-			/**
-			 * Добавляем кнопку создать элемент
-			 */
-			$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
-				'LINK' => static::getEditPageURL($this->additionalUrlParams),
-				'ICON' => 'btn_new'
-			));
 		}
+
 		return $contextMenu;
 	}
 
