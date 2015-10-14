@@ -375,6 +375,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getContextMenu()
 	{
 		$contextMenu = array();
+		if(static::$hasSections)
+		{
+			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
+		}
 		if (!$this->isPopup() && $this->hasWriteRights())
 		{
 			$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
