@@ -59,6 +59,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected $fieldPopupResultIndex = '';
 
+	protected $sectionFields = array();
+
     /**
      * @var string
      * Название столбца, в котором хранится название элемента
@@ -320,6 +322,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$arSectionsHeaders = array();
 		$sectionsInterfaceSettings = static::getInterfaceSettings(static::$sectionsEditViewName);
+		$this->sectionFields = $sectionsInterfaceSettings['FIELDS'];
 		foreach($sectionsInterfaceSettings['FIELDS'] as $code => $settings)
 		{
 			if(isset($settings['HEADER']) && $settings['HEADER'] == true)
@@ -330,6 +333,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 					"sort" => $code,
 					"default" => true
 				);
+			}
+			unset($settings['WIDGET']);
+			foreach($settings as $c => $v)
+			{
+				$sectionsInterfaceSettings['FIELDS'][$code]['WIDGET']->setSetting($c, $v);
 			}
 		}
 		return $arSectionsHeaders;
@@ -417,6 +425,15 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$className = $_REQUEST['model'];
 		}
 
+		if (!isset($_REQUEST['model-section']))
+		{
+			$sectionClassName = static::$sectionModel;
+		}
+		else
+		{
+			$sectionClassName = $_REQUEST['model-section'];
+		}
+
 		if ($action == 'delete')
 		{
 			if ($this->hasDeleteRights())
@@ -424,6 +441,21 @@ abstract class AdminListHelper extends AdminBaseHelper
 				foreach ($IDs as $id)
 				{
 					$className::delete($id);
+				}
+			}
+			else
+			{
+				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
+			}
+		}
+
+		if ($action == 'delete-section')
+		{
+			if ($this->hasDeleteRights())
+			{
+				foreach ($IDs as $id)
+				{
+					$sectionClassName::delete($id);
 				}
 			}
 			else
@@ -461,7 +493,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
-		if(static::$hasSections)
+		if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
 		{
 			/**
 			 * Добавляем столбцы разделов если они используются
@@ -472,17 +504,21 @@ abstract class AdminListHelper extends AdminBaseHelper
 			 */
 			$sectionsModel = static::$sectionModel;
 			$res  = $sectionsModel::getList();
+			$fields = $this->fields;
+			$this->fields = $this->sectionFields;
 			while($data = $res->Fetch())
 			{
 				$this->modifyRowData($data);
-				list($link, $name) = $this->getRow($data);
-				$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
+				list($link, $name) = $this->getRow($data, 'getListPageUrl');
+
+				$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
 				foreach ($this->fields as $code => $settings)
 				{
 					$this->addRowCell($row, $code, $data);
 				}
-				$row->AddActions( $this->getRowActions($data) );
+				$row->AddActions( $this->getRowActions($data, true) );
 			}
+			$this->fields = $fields;
 		}
 
 		$className = static::getModel();
@@ -597,10 +633,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 	/**
 	 * Настройки строки таблицы
 	 * @param array $data данные текущей строки БД
+	 * @param string $method метод через который идет получение ссылки
 	 * @return array возвращает ссылку на детальную страницу и её название
 	 * @api
 	 */
-	protected function getRow($data)
+	protected function getRow($data, $method = 'getEditPageURL')
 	{
 		if ($this->isPopup())
 		{
@@ -613,7 +650,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				static::pk() => $data[static::pk()]
 			));
 
-			return array(static::getEditPageURL($query));
+			return array(static::$method($query));
 		}
 	}
 
@@ -656,9 +693,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 *
 	 * @api
 	 * @param $data - данные текущей строки
+	 * @param $section - признак списка для раздела
 	 * @return array
 	 */
-	protected function getRowActions($data)
+	protected function getRowActions($data, $section = false)
 	{
 		$actions = array();
 
@@ -683,7 +721,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					"ICON" => "edit",
 					"DEFAULT" => true,
 					"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_EDIT"),
-					"ACTION" => $this->list->ActionRedirect(static::getEditPageURL($query))
+					"ACTION" => $this->list->ActionRedirect($section?static::getSectionsEditPageURL($query):static::getEditPageURL($query))
 				);
 			}
 			if ($this->hasDeleteRights())
@@ -692,7 +730,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					"ICON" => "delete",
 					"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),
 					"ACTION" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
-							"delete", $viewQueryString)
+							$section?"delete-section":"delete", $viewQueryString)
 				);
 			}
 		}
