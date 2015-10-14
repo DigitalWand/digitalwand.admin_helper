@@ -312,6 +312,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 		{
 			$this->arFilter = $arFilter;
 		}
+
+		if(static::$hasSections)
+		{
+			$model = $this->getModel();
+			$this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
+		}
 	}
 
 	/**
@@ -503,7 +509,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			 * Добавляем разделы в выборку если не первая страница
 			 */
 			$sectionsModel = static::$sectionModel;
-			$res  = $sectionsModel::getList();
+			$res  = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
 			$fields = $this->fields;
 			$this->fields = $this->sectionFields;
 			while($data = $res->Fetch())
