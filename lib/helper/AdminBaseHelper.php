@@ -200,6 +200,9 @@ abstract class AdminBaseHelper
 	 */
 	static protected $sectionsEditViewName;
 
+	// TODO Описать
+	static protected $sectionModel = null;
+
 	/**
 	 * @var array
 	 * Дополнительные параметры URL, которые будут добавлены к параметрам по-умолчанию, генерируемым автоматически
