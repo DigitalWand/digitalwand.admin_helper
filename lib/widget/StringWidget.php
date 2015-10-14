@@ -142,16 +142,16 @@ class StringWidget extends HelperWidget
 
 				if($this->getSettings('SECTION_LINK'))
 				{
-					$pageUrl = $this->helper->getListPageURL([
-						'ID' => $this->data[$pk],
-					]);
+					$params = $this->helper->isPopup() ? $_GET : array();
+					$params['ID'] = $this->data[$pk];
+					$pageUrl = $this->helper->getListPageURL($params);
 					$value = '<span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span>';
 				}
 				else
 				{
-					$pageUrl = $this->helper->getEditPageURL([
-						'ID' => $this->data[$pk],
-					]);
+					$pageUrl = $this->helper->getEditPageURL(array(
+						'ID' => $this->data[$pk]
+					));
 				}
 
 				$value .= '<a href="' . $pageUrl . '">' . $this->getValue() . '</a>';
