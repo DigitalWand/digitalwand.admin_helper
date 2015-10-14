@@ -475,7 +475,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			} else {
 				return false;
 			}
-			
+
+			$this->data[$this->pk()] = $result->getId();
 			foreach ($allWidgets as $widget)
 			{
 				/** @var HelperWidget $widget */
