@@ -179,6 +179,30 @@ abstract class AdminBaseHelper
     static protected $editViewName;
 
     /**
+     * @var string
+     * Позволяет непосредственно указать адрес страницы просмотра/редактирования раздела. Полезно, в случае, если
+     * такая станица реализована без использования данного модуля. В случае, если поле определено для класса,
+     * роутинг не используется.
+     *
+     * @see AdminBaseHelper::getEditPageUrl
+     * @api
+     */
+    static protected $sectionsEditPageUrl;
+
+
+    /**
+     * @var string
+     * $viewName представления, отвечающего за страницу редактирования/просмотра раздела. Необходимо указывать только
+     *     для классов, уналедованных от AdminListHelper.
+     *
+     * @see AdminBaseHelper::getViewName()
+     * @see AdminBaseHelper::getEditPageUrl
+     * @see AdminListHelper
+     * @api
+     */
+    static protected $sectionsEditViewName;
+
+    /**
      * @var array
      * Дополнительные параметры URL, которые будут добавлены к параметрам по-умолчанию, генерируемым автоматически
      * @api
@@ -190,6 +214,12 @@ abstract class AdminBaseHelper
      *     производится.
      */
     protected $context = '';
+
+    /**
+     * Флаг использования разделов, необходимо переопределять в дочернем классе
+     * @var bool
+     */
+    static protected $hasSections = false;
 
     /**
      * @param array $fields список используемых полей и виджетов для них
@@ -737,14 +767,31 @@ abstract class AdminBaseHelper
         $editHelperClass = str_replace('List','Edit',get_called_class());
         if(class_exists($editHelperClass))
         {
-            $viewName = $editHelperClass::getViewName();
+            return $editHelperClass::getViewURL($editHelperClass::getViewName() , static::$editPageUrl, $params);
         }
         else
         {
-            $viewName = static::$editViewName;
+            return static::getViewURL(static::$editViewName , static::$editPageUrl, $params);
         }
+    }
 
-        return $editHelperClass::getViewURL($viewName, static::$editPageUrl, $params);
+    /**
+     * Возвращает URL страницы редактирования класса данного представления
+     * @param array $params
+     * @return string
+     * @api
+     */
+    static public function getSectionsEditPageURL($params = array())
+    {
+        $sectionEditHelperClass = str_replace('List','SectionsEdit',get_called_class());
+        if(class_exists($sectionEditHelperClass))
+        {
+            return $sectionEditHelperClass::getViewURL($sectionEditHelperClass::getViewName(), static::$sectionsEditPageUrl, $params);
+        }
+        else
+        {
+            return static::getViewURL(static::$sectionsEditViewName, static::$sectionsEditPageUrl, $params);
+        }
     }
 
 
@@ -759,14 +806,12 @@ abstract class AdminBaseHelper
         $listHelperClass = str_replace('Edit','List',get_called_class());
         if(class_exists($listHelperClass))
         {
-            $viewName = $listHelperClass::getViewName();
+            return $listHelperClass::getViewURL($listHelperClass::getViewName(), static::$listPageUrl, $params);
         }
         else
         {
-            $viewName = static::$listViewName;
+            return static::getViewURL(static::$listViewName, static::$listPageUrl, $params);
         }
-
-        return static::getViewURL($viewName, static::$listPageUrl, $params);
     }
 
     /**

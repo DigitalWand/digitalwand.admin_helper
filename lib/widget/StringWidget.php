@@ -134,16 +134,27 @@ class StringWidget extends HelperWidget
 		}
 		else
 		{
-			if ($this->getSettings('EDIT_LINK'))
+			if ($this->getSettings('EDIT_LINK') || $this->getSettings('SECTION_LINK'))
 			{
 				$entityClass = $this->entityName;
 				$pk = $entityClass::getEntity()->getPrimary();
+				$value = '';
 
-				$editPageUrl = $this->helper->getEditPageURL([
-					'ID' => $this->data[$pk],
-				]);
+				if($this->getSettings('SECTION_LINK'))
+				{
+					$pageUrl = $this->helper->getListPageURL([
+						'ID' => $this->data[$pk],
+					]);
+					$value = '<span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span>';
+				}
+				else
+				{
+					$pageUrl = $this->helper->getEditPageURL([
+						'ID' => $this->data[$pk],
+					]);
+				}
 
-				$value = '<a href="' . $editPageUrl . '">' . $this->getValue() . '</a>';
+				$value .= '<a href="' . $pageUrl . '">' . $this->getValue() . '</a>';
 			}
 			else
 			{

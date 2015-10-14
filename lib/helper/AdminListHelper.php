@@ -59,6 +59,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected $fieldPopupResultIndex = '';
 
+	protected $sectionFields = array();
+
     /**
      * @var string
      * Название столбца, в котором хранится название элемента
@@ -310,6 +312,41 @@ abstract class AdminListHelper extends AdminBaseHelper
 		{
 			$this->arFilter = $arFilter;
 		}
+
+		if(static::$hasSections)
+		{
+			$model = $this->getModel();
+			$this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
+		}
+	}
+
+	/**
+	 * Возвращает список столбцов для разделов
+	 * @return array
+	 */
+	public function getSectionsHeader()
+	{
+		$arSectionsHeaders = array();
+		$sectionsInterfaceSettings = static::getInterfaceSettings(static::$sectionsEditViewName);
+		$this->sectionFields = $sectionsInterfaceSettings['FIELDS'];
+		foreach($sectionsInterfaceSettings['FIELDS'] as $code => $settings)
+		{
+			if(isset($settings['HEADER']) && $settings['HEADER'] == true)
+			{
+				$arSectionsHeaders[] = array(
+					"id" => $code,
+					"content" => $settings['TITLE'],
+					"sort" => $code,
+					"default" => true
+				);
+			}
+			unset($settings['WIDGET']);
+			foreach($settings as $c => $v)
+			{
+				$sectionsInterfaceSettings['FIELDS'][$code]['WIDGET']->setSetting($c, $v);
+			}
+		}
+		return $arSectionsHeaders;
 	}
 
 	/**
@@ -338,12 +375,25 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getContextMenu()
 	{
 		$contextMenu = array();
+		if(static::$hasSections)
+		{
+			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
+		}
 		if (!$this->isPopup() && $this->hasWriteRights())
 		{
-			$contextMenu[] = static::getButton('LIST_CREATE_NEW',array(
+			$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
 				'LINK' => static::getEditPageURL($this->additionalUrlParams),
 				'ICON' => 'btn_new'
 			));
+			/**
+			 * Если задан для разделов добавляем кнопку создать раздел
+			 */
+			if(!empty(static::$hasSections)){
+				$contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
+					'LINK' => static::getSectionsEditPageURL($this->additionalUrlParams),
+					'ICON' => 'btn_new'
+				));
+			}
 		}
 		return $contextMenu;
 	}
@@ -385,6 +435,15 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$className = $_REQUEST['model'];
 		}
 
+		if (!isset($_REQUEST['model-section']))
+		{
+			$sectionClassName = static::$sectionModel;
+		}
+		else
+		{
+			$sectionClassName = $_REQUEST['model-section'];
+		}
+
 		if ($action == 'delete')
 		{
 			if ($this->hasDeleteRights())
@@ -392,6 +451,21 @@ abstract class AdminListHelper extends AdminBaseHelper
 				foreach ($IDs as $id)
 				{
 					$className::delete($id);
+				}
+			}
+			else
+			{
+				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
+			}
+		}
+
+		if ($action == 'delete-section')
+		{
+			if ($this->hasDeleteRights())
+			{
+				foreach ($IDs as $id)
+				{
+					$sectionClassName::delete($id);
 				}
 			}
 			else
@@ -426,7 +500,36 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
 		$this->list->AddHeaders($this->arHeader);
+
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
+
+		if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
+		{
+			/**
+			 * Добавляем столбцы разделов если они используются
+			 */
+			$this->list->AddHeaders($this->getSectionsHeader());
+			/**
+			 * Добавляем разделы в выборку если не первая страница
+			 */
+			$sectionsModel = static::$sectionModel;
+			$res  = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
+			$fields = $this->fields;
+			$this->fields = $this->sectionFields;
+			while($data = $res->Fetch())
+			{
+				$this->modifyRowData($data);
+				list($link, $name) = $this->getRow($data, 'getListPageUrl');
+
+				$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
+				foreach ($this->fields as $code => $settings)
+				{
+					$this->addRowCell($row, $code, $data);
+				}
+				$row->AddActions( $this->getRowActions($data, true) );
+			}
+			$this->fields = $fields;
+		}
 
 		$className = static::getModel();
 		$visibleColumns[] = static::pk();
@@ -540,10 +643,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 	/**
 	 * Настройки строки таблицы
 	 * @param array $data данные текущей строки БД
+	 * @param string $method метод через который идет получение ссылки
 	 * @return array возвращает ссылку на детальную страницу и её название
 	 * @api
 	 */
-	protected function getRow($data)
+	protected function getRow($data, $method = 'getEditPageURL')
 	{
 		if ($this->isPopup())
 		{
@@ -556,7 +660,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				static::pk() => $data[static::pk()]
 			));
 
-			return array(static::getEditPageURL($query));
+			return array(static::$method($query));
 		}
 	}
 
@@ -599,9 +703,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 *
 	 * @api
 	 * @param $data - данные текущей строки
+	 * @param $section - признак списка для раздела
 	 * @return array
 	 */
-	protected function getRowActions($data)
+	protected function getRowActions($data, $section = false)
 	{
 		$actions = array();
 
@@ -626,7 +731,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					"ICON" => "edit",
 					"DEFAULT" => true,
 					"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_EDIT"),
-					"ACTION" => $this->list->ActionRedirect(static::getEditPageURL($query))
+					"ACTION" => $this->list->ActionRedirect($section?static::getSectionsEditPageURL($query):static::getEditPageURL($query))
 				);
 			}
 			if ($this->hasDeleteRights())
@@ -635,7 +740,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					"ICON" => "delete",
 					"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),
 					"ACTION" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
-							"delete", $viewQueryString)
+							$section?"delete-section":"delete", $viewQueryString)
 				);
 			}
 		}
