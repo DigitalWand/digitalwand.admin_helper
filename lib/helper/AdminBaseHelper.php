@@ -796,7 +796,7 @@ abstract class AdminBaseHelper
 	static public function getEditPageURL($params = array())
 	{
 		$editHelperClass = str_replace('List', 'Edit', get_called_class());
-		if (class_exists($editHelperClass))
+		if (empty(static::$editViewName) && class_exists($editHelperClass))
 		{
 			return $editHelperClass::getViewURL($editHelperClass::getViewName(), static::$editPageUrl, $params);
 		}
@@ -815,7 +815,7 @@ abstract class AdminBaseHelper
 	static public function getSectionsEditPageURL($params = array())
 	{
 		$sectionEditHelperClass = str_replace('List', 'SectionsEdit', get_called_class());
-		if (class_exists($sectionEditHelperClass))
+		if (empty(static::$sectionsEditViewName) && class_exists($sectionEditHelperClass))
 		{
 			return $sectionEditHelperClass::getViewURL($sectionEditHelperClass::getViewName(), static::$sectionsEditPageUrl, $params);
 		}
@@ -834,7 +834,7 @@ abstract class AdminBaseHelper
 	static public function getListPageURL($params = array())
 	{
 		$listHelperClass = str_replace('Edit', 'List', get_called_class());
-		if (class_exists($listHelperClass))
+		if (empty(static::$listViewName) && class_exists($listHelperClass))
 		{
 			return $listHelperClass::getViewURL($listHelperClass::getViewName(), static::$listPageUrl, $params);
 		}
