@@ -499,10 +499,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
-		$this->list->AddHeaders($this->arHeader);
-
-		$visibleColumns = $this->list->GetVisibleHeaderColumns();
-
 		if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
 		{
 			/**
@@ -529,6 +525,19 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$row->AddActions( $this->getRowActions($data, true) );
 			}
 			$this->fields = $fields;
+			$sectionsVisibleColumns = $this->list->GetVisibleHeaderColumns();
+		}
+
+
+
+
+		$this->list->AddHeaders($this->arHeader);
+
+		$visibleColumns = $this->list->GetVisibleHeaderColumns();
+
+		if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
+		{
+			$visibleColumns = array_diff($sectionsVisibleColumns, $visibleColumns);
 		}
 
 		$className = static::getModel();
