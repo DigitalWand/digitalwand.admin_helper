@@ -42,6 +42,7 @@ class OrmElementWidget extends NumberWidget
         $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
         $module = $this->getSettings('MODULE_NAME');
         $view = $this->getSettings('LIST_VIEW_NAME');
+        $additionalUrlParams = htmlentities($this->getSettings('ADDITIONAL_URL_PARAMS'));
 
         $name = 'FIELDS';
         $key = $this->getCode();
@@ -69,7 +70,7 @@ class OrmElementWidget extends NumberWidget
                     onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=' . LANGUAGE_ID
         . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
         . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
-        . '&amp;n=' . $name . '&amp;k=' . $key . '\', ' . $windowWidth . ', ' . $windowHeight . ');">' .
+        . '&amp;n=' . $name . '&amp;k=' . $key . $additionalUrlParams.'\', ' . $windowWidth . ', ' . $windowHeight .');">' .
         '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $elementName . '</span>';
     }
 
@@ -197,51 +198,6 @@ class OrmElementWidget extends NumberWidget
         else
         {
             $strElement = static::getValueReadonly();
-        }
-
-        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))
-        {
-            $inputSize = (int)$this->getSettings('INPUT_SIZE');
-            $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
-            $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
-            $module = $this->getSettings('MODULE_NAME');
-            $view = $this->getSettings('LIST_VIEW_NAME');
-
-            $inputName = $this->getEditableListInputName();
-
-            if ($this->getSettings('MULTIPLE'))
-            {
-                $strEditElement = '';
-            }
-            else
-            {
-                $entityData = $this->getOrmElementData();
-                if (!empty($entityData))
-                {
-                    $elementId = $entityData['ID'];
-                    $elementName = $entityData[$this->getSettings('TITLE_FIELD_NAME')] ?
-                        $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
-                        Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
-                }
-                else
-                {
-                    $elementId = '';
-                }
-
-                $strEditElement = '<input name="' . $inputName . '"
-                             id="' . $inputName . '"
-                             value="' . $elementId . '"
-                             size="' . $inputSize . '"
-                             type="text">' .
-                    '<input type="button"
-                            value="..."
-                            onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=' . LANGUAGE_ID
-                    . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
-                    . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
-                    . '&amp;n=' . $inputName . '\', ' . $windowWidth . ', ' . $windowHeight . ');">' .
-                    '&nbsp;<span id="sp_' . $inputName. '" >' . $elementName . '</span>';
-            }
-            $row->AddEditField($this->getCode(), $strEditElement);
         }
         $row->AddViewField($this->getCode(), $strElement);
     }
