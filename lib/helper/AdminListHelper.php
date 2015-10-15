@@ -391,19 +391,23 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$params = $this->additionalUrlParams;
 				$sectionModel = static::$sectionModel;
 				$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
-				if(isset($section[$sectionModel::getSectionField()]))
+				if($this->isPopup())
 				{
-					if($this->isPopup())
-					{
-						$params = array_merge($_GET);
-					}
-					$params['ID'] = $section[$sectionModel::getSectionField()];
-					unset($params['SECTION_ID']);
-					$contextMenu[] = static::getButton('LIST_SECTION_UP', array(
-						'LINK' => static::getListPageURL($params),
-						'ICON' => 'btn_list'
-					));
+					$params = array_merge($_GET);
 				}
+				if($section[$sectionModel::getSectionField()])
+				{
+					$params['ID'] = $section[$sectionModel::getSectionField()];
+				}
+				else
+				{
+					unset($params['ID']);
+				}
+				unset($params['SECTION_ID']);
+				$contextMenu[] = static::getButton('LIST_SECTION_UP', array(
+					'LINK' => static::getListPageURL($params),
+					'ICON' => 'btn_list'
+				));
 			}
 		}
 
