@@ -486,9 +486,25 @@ abstract class AdminListHelper extends AdminBaseHelper
 		{
 			if ($this->hasDeleteRights())
 			{
+				if(isset(static::$sectionModel))
+				{
+					$element = $className::getById($IDs[0])->Fetch();
+					$params = $_GET;
+					unset($params['action']);
+					unset($params['action_button']);
+					unset($params['ID']);
+					if($element[$className::getSectionField()])
+					{
+						$params['ID'] = $element[$className::getSectionField()];
+					}
+				}
 				foreach ($IDs as $id)
 				{
 					$className::delete($id);
+				}
+				if(isset(static::$sectionModel))
+				{
+					LocalRedirect(static::getListPageURL($params));
 				}
 			}
 			else
@@ -501,10 +517,20 @@ abstract class AdminListHelper extends AdminBaseHelper
 		{
 			if ($this->hasDeleteRights())
 			{
+				$section = $sectionClassName::getById($IDs[0])->Fetch();
+				$params = $_GET;
+				unset($params['action']);
+				unset($params['action_button']);
+				unset($params['ID']);
+				if($section[$sectionClassName::getSectionField()])
+				{
+					$params['ID'] = $section[$sectionClassName::getSectionField()];
+				}
 				foreach ($IDs as $id)
 				{
 					$sectionClassName::delete($id);
 				}
+				LocalRedirect(static::getListPageURL($params));
 			}
 			else
 			{
