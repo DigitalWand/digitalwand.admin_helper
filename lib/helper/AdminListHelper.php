@@ -389,20 +389,24 @@ abstract class AdminListHelper extends AdminBaseHelper
 			if($_REQUEST['ID'])
 			{
 				$params = $this->additionalUrlParams;
-				$sectionModel = static::$sectionModel;
-				$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
-				if($this->isPopup())
+				if(isset(static::$sectionModel))
 				{
-					$params = array_merge($_GET);
+					$sectionModel = static::$sectionModel;
+					$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
+					if($this->isPopup())
+					{
+						$params = array_merge($_GET);
+					}
+					if($section[$sectionModel::getSectionField()])
+					{
+						$params['ID'] = $section[$sectionModel::getSectionField()];
+					}
+					else
+					{
+						unset($params['ID']);
+					}
 				}
-				if($section[$sectionModel::getSectionField()])
-				{
-					$params['ID'] = $section[$sectionModel::getSectionField()];
-				}
-				else
-				{
-					unset($params['ID']);
-				}
+
 				unset($params['SECTION_ID']);
 				$contextMenu[] = static::getButton('LIST_SECTION_UP', array(
 					'LINK' => static::getListPageURL($params),
@@ -769,7 +773,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		else
 		{
-			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::$viewName;
+			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName();
 			$query = array_merge($this->additionalUrlParams,
 				array($this->pk() => $data[$this->pk()]));
 			if ($this->hasWriteRights())
