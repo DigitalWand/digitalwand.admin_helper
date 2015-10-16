@@ -136,6 +136,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected $groupActionsParams = array();
 
 	/**
+	 * Текущие параметры пагинации,
+	 * требуются для составления смешанного списка разделов и элементов
+	 * @var array
+	 */
+	protected $navParams = array();
+
+	/**
 	 * @var string
 	 * HTML верхней части таблицы
 	 * @api
@@ -249,6 +256,15 @@ abstract class AdminListHelper extends AdminBaseHelper
 		{
 			$this->genPopupActionJS();
 		}
+
+		/**
+		 * Получаем параметры навигации
+		 */
+		$navUniqSettings = array('sNavID' => $this->getListTableID());
+		$this->navParams = array(
+			'nPageSize' => \CAdminResult::GetNavSize($navUniqSettings),
+			'navParams' => \CAdminResult::GetNavParams($navUniqSettings)
+		);
 	}
 
 	/**
@@ -563,32 +579,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
-		if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
+		if(static::$hasSections)
 		{
 			/**
 			 * Добавляем столбцы разделов если они используются
 			 */
 			$this->list->AddHeaders($this->getSectionsHeader());
-			/**
-			 * Добавляем разделы в выборку если не первая страница
-			 */
-			$sectionsModel = static::$sectionModel;
-			$res  = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
-			$fields = $this->fields;
-			$this->fields = $this->sectionFields;
-			while($data = $res->Fetch())
-			{
-				$this->modifyRowData($data);
-				list($link, $name) = $this->getRow($data, 'getListPageUrl');
-
-				$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
-				foreach ($this->fields as $code => $settings)
-				{
-					$this->addRowCell($row, $code, $data);
-				}
-				$row->AddActions( $this->getRowActions($data, true) );
-			}
-			$this->fields = $fields;
 			$sectionsVisibleColumns = $this->list->GetVisibleHeaderColumns();
 		}
 
@@ -596,7 +592,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
-		if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
+		/**
+		 * Убираем столбцы разделов из $visibleColumns
+		 */
+		if(static::$hasSections)
 		{
 			foreach($visibleColumns as $k => $v)
 			{
@@ -646,23 +645,76 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		// Поля для селекта (множественные поля отфильтрованы)
 		$listSelect = array_flip($listSelect);
-		$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
 
-		$res = new \CAdminResult($res, $this->getListTableID());
-		$res->NavStart();
-
-		$this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
-
-		while ($data = $res->NavNext(false))
+		/**
+		 * Вывод разделов и элементов в одном списке
+		 */
+		if(static::$hasSections)
 		{
-			$this->modifyRowData($data);
-			list($link, $name) = $this->getRow($data);
-			$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
-			foreach ($this->fields as $code => $settings)
+			/**
+			 * Получаем данные
+			 */
+			$mixedData = $this->getMixedData($sectionsVisibleColumns, $visibleColumns, $sort, $raw);
+
+			/**
+			 * Создаем CDbResult и заполняем его данными через InitFromArray
+			 */
+
+			/**
+			 * Инициализируем CAdminResult
+			 */
+
+			/**
+			 * Если запрос с ограничением делаем customNavStart
+			 */
+
+			/**
+			 * Если запрос без ограничения делаем обычный NavStart
+			 */
+
+			/**
+			 * Добавляем данные в CAdminResult
+			 */
+//			$fields = $this->fields;
+//			$this->fields = $this->sectionFields;
+//			$sectionsModel = static::$sectionModel;
+//			$res  = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
+//			while($data = $res->Fetch())
+//			{
+//				$this->modifyRowData($data);
+//				list($link, $name) = $this->getRow($data, 'getListPageUrl');
+//
+//				$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
+//				foreach ($this->fields as $code => $settings)
+//				{
+//					$this->addRowCell($row, $code, $data);
+//				}
+//				$row->AddActions( $this->getRowActions($data, true) );
+//			}
+//			$this->fields = $fields;
+
+
+		}
+		/**
+		 * Обычный вывод элементов без использования разделов
+		 */
+		else
+		{
+			$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
+			$res = new \CAdminResult($res, $this->getListTableID());
+			$res->NavStart();
+			$this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
+			while ($data = $res->NavNext(false))
 			{
-				$this->addRowCell($row, $code, $data);
+				$this->modifyRowData($data);
+				list($link, $name) = $this->getRow($data);
+				$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
+				foreach ($this->fields as $code => $settings)
+				{
+					$this->addRowCell($row, $code, $data);
+				}
+				$row->AddActions( $this->getRowActions($data) );
 			}
-			$row->AddActions( $this->getRowActions($data) );
 		}
 
 		$this->list->AddFooter( $this->getFooter($res) );
@@ -1027,5 +1079,29 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
 		$_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
+	}
+
+	protected function getMixedData($sectionsVisibleColumns, $visibleColumns, $sort, $raw)
+	{
+		$raw['SELECT'] = array_unique($raw['SELECT']);
+		$sectionsModel = static::$sectionModel;
+		$sectionFilter = array($sectionsModel::getSectionField() => $_REQUEST['ID']);
+		$sectionSort = array();
+		foreach($sort as $field => $direction)
+		{
+			if(in_array($field, $sectionsVisibleColumns))
+			{
+				$sectionSort[$field] = $direction;
+			}
+		}
+
+		$res  = $sectionsModel::getList(array(
+			'filter' => $sectionFilter,
+			'select' => $sectionsVisibleColumns,
+			'order' => $sectionSort,
+			'limit' => $sectionLimit
+		));
+
+		var_dump($this->navParams);
 	}
 }
