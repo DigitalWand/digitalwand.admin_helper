@@ -77,7 +77,7 @@ class CheckboxWidget extends HelperWidget
     public function getValue()
     {
         $rawValue = parent::getValue();
-        if (!in_array($rawValue, array('Y', 'N'))) {
+        if (!is_string($rawValue)) {
             return $this->toString($rawValue);
         }
 
@@ -92,5 +92,13 @@ class CheckboxWidget extends HelperWidget
     public static function toString($boolValue)
     {
         return $boolValue ? 'Y' : 'N';
+    }
+
+    public function processEditAction()
+    {
+        parent::processEditAction();
+        if(!isset($this->data[$this->getCode()])){
+            $this->data[$this->getCode()] = 'N';
+        }
     }
 }
