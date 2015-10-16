@@ -77,7 +77,7 @@ class CheckboxWidget extends HelperWidget
     public function getValue()
     {
         $rawValue = parent::getValue();
-        if (!is_string($rawValue)) {
+        if (!in_array($rawValue, array('Y', 'N'))) {
             return $this->toString($rawValue);
         }
 
