@@ -143,6 +143,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected $navParams = array();
 
 	/**
+	 * Количество элементов смешанном списке
+	 * @see AdminListHelper::CustomNavStart
+	 * @var int
+	 */
+	protected $totalRowsCount = 0;
+
+	/**
 	 * @var string
 	 * HTML верхней части таблицы
 	 * @api
@@ -251,15 +258,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 			$this->groupActions($IDs, $_REQUEST['action']);
 		}
-
 		if ($this->isPopup())
 		{
 			$this->genPopupActionJS();
 		}
-
-		/**
-		 * Получаем параметры навигации
-		 */
+		// Получаем параметры навигации
 		$navUniqSettings = array('sNavID' => $this->getListTableID());
 		$this->navParams = array(
 			'nPageSize' => \CAdminResult::GetNavSize($navUniqSettings),
@@ -579,23 +582,17 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
-		if(static::$hasSections)
+		if(static::$hasSections) // Добавляем столбцы разделов если они используются
 		{
-			/**
-			 * Добавляем столбцы разделов если они используются
-			 */
 			$this->list->AddHeaders($this->getSectionsHeader());
 			$sectionsVisibleColumns = $this->list->GetVisibleHeaderColumns();
 		}
 
 		$this->list->AddHeaders($this->arHeader);
-
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
-		/**
-		 * Убираем столбцы разделов из $visibleColumns
-		 */
-		if(static::$hasSections)
+
+		if(static::$hasSections) // Убираем столбцы разделов из $visibleColumns
 		{
 			foreach($visibleColumns as $k => $v)
 			{
@@ -646,59 +643,32 @@ abstract class AdminListHelper extends AdminBaseHelper
 		// Поля для селекта (множественные поля отфильтрованы)
 		$listSelect = array_flip($listSelect);
 
-		/**
-		 * Вывод разделов и элементов в одном списке
-		 */
-		if(static::$hasSections)
+		if(static::$hasSections) // Вывод разделов и элементов в одном списке
 		{
-			/**
-			 * Получаем данные
-			 */
 			$mixedData = $this->getMixedData($sectionsVisibleColumns, $visibleColumns, $sort, $raw);
-
-			/**
-			 * Создаем CDbResult и заполняем его данными через InitFromArray
-			 */
-
-			/**
-			 * Инициализируем CAdminResult
-			 */
-
-			/**
-			 * Если запрос с ограничением делаем customNavStart
-			 */
-
-			/**
-			 * Если запрос без ограничения делаем обычный NavStart
-			 */
-
-			/**
-			 * Добавляем данные в CAdminResult
-			 */
-//			$fields = $this->fields;
-//			$this->fields = $this->sectionFields;
-//			$sectionsModel = static::$sectionModel;
-//			$res  = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
-//			while($data = $res->Fetch())
-//			{
-//				$this->modifyRowData($data);
-//				list($link, $name) = $this->getRow($data, 'getListPageUrl');
-//
-//				$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
-//				foreach ($this->fields as $code => $settings)
-//				{
-//					$this->addRowCell($row, $code, $data);
-//				}
-//				$row->AddActions( $this->getRowActions($data, true) );
-//			}
-//			$this->fields = $fields;
-
+			$res = new \CDbResult;
+			$res->InitFromArray($mixedData);
+			$res = new \CAdminResult($res, $this->getListTableID());
+			$res->nSelectedCount = $this->totalRowsCount;
+			$this->customNavStart($res);
+			$this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
+			while ($data = $res->NavNext(false))
+			{
+				$this->modifyRowData($data);
+				list($link, $name) = $this->getRow($data, 'getListPageUrl');
+				$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
+				foreach ($this->sectionFields as $code => $settings)
+				{
+					if(in_array($code, $sectionsVisibleColumns))
+					{
+						$this->addRowSectionCell($row, $code, $data);
+					}
+				}
+				$row->AddActions( $this->getRowActions($data, true) );
+			}
 
 		}
-		/**
-		 * Обычный вывод элементов без использования разделов
-		 */
-		else
+		else // Обычный вывод элементов без использования разделов
 		{
 			$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
 			$res = new \CAdminResult($res, $this->getListTableID());
@@ -810,11 +780,42 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param \CAdminListRow $row
 	 * @param $code - сивольный код поля
 	 * @param $data - данные текущей строки
+	 * @throws Exception
 	 * @see HelperWidget::genListHTML()
 	 */
 	protected function addRowCell($row, $code, $data)
 	{
 		$widget = $this->createWidgetForField($code, $data);
+		$this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
+		$widget->genListHTML($row, $data);
+	}
+
+	/**
+	 * Для каждой ячейки(раздела) таблицы создаёт виджет соответствующего типа.
+	 * Виджет подготавливает необходимый HTML для списка
+	 *
+	 * @param \CAdminListRow $row
+	 * @param $code - сивольный код поля
+	 * @param $data - данные текущей строки
+	 * @throws Exception
+	 * @see HelperWidget::genListHTML()
+	 */
+	protected function addRowSectionCell($row, $code, $data)
+	{
+		if (!isset($this->sectionFields[$code]['WIDGET']))
+		{
+			$error = str_replace('#CODE#', $code, 'Can\'t create widget for the code "#CODE#"');
+			throw new Exception($error, Exception::CODE_NO_WIDGET);
+		}
+
+		/** @var HelperWidget $widget */
+		$widget = $this->sectionFields[$code]['WIDGET'];
+
+		$widget->setHelper($this);
+		$widget->setCode($code);
+		$widget->setData($data);
+		$widget->setEntityName($this->getSectionModel());
+
 		$this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
 		$widget->genListHTML($row, $data);
 	}
@@ -1084,9 +1085,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getMixedData($sectionsVisibleColumns, $visibleColumns, $sort, $raw)
 	{
 		$raw['SELECT'] = array_unique($raw['SELECT']);
-		$sectionsModel = static::$sectionModel;
-		$sectionFilter = array($sectionsModel::getSectionField() => $_REQUEST['ID']);
+		$sectionModel = static::$sectionModel;
+		$sectionFilter = array($sectionModel::getSectionField() => $_REQUEST['ID']);
 		$sectionSort = array();
+		$sectionData = array();
+		$limitData = $this->getLimits();
+
+		$this->totalRowsCount = $sectionModel::getCount($sectionFilter);
 		foreach($sort as $field => $direction)
 		{
 			if(in_array($field, $sectionsVisibleColumns))
@@ -1094,14 +1099,89 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$sectionSort[$field] = $direction;
 			}
 		}
-
-		$res  = $sectionsModel::getList(array(
+		$res  = $sectionModel::getList(array(
 			'filter' => $sectionFilter,
 			'select' => $sectionsVisibleColumns,
 			'order' => $sectionSort,
-			'limit' => $sectionLimit
+			'limit' => $limitData[1],
+			'offset' => $limitData[0],
 		));
+		while($arSection = $res->Fetch())
+		{
+			$arSection['IS_SECTION'] = true;
+			$sectionData[] = $arSection;
+		}
 
-		var_dump($this->navParams);
+		$elementModel = static::getModel();
+		$this->totalRowsCount += $elementModel::getCount($this->arFilter);
+
+		if (!empty($sectionData)) {
+			$offset = $limitData[0];
+			$limit = $limitData[1];
+			$pageSize = $this->navParams['nPageSize'];
+			$ints = ceil($this->totalRowsCount/$pageSize);
+			if($offset<=$ints*$pageSize)
+			{
+				return $sectionData;
+			}
+		}
+
+
+
 	}
+
+	protected function getLimits()
+	{
+		if ($this->navParams['navParams']['SHOW_ALL']) {
+			return array();
+		} else {
+			if (!intval($this->navParams['navParams']['PAGEN']) OR !isset($this->navParams['navParams']['PAGEN'])) {
+				$this->navParams['navParams']['PAGEN'] = 1;
+			}
+			$from = $this->navParams['nPageSize'] * ((int)$this->navParams['navParams']['PAGEN'] - 1);
+			return [$from, $this->navParams['nPageSize']];
+		}
+	}
+
+	/**
+	 * Выполняет CDBResult::NavNext с той разницей, что общее количество элементов берется не из count($arResult),
+	 * а из нашего параметра, полученного из SQL-запроса.
+	 * array_slice также не делается.
+	 *
+	 * @param CAdminResult $res
+	 */
+	protected function customNavStart(&$res)
+	{
+		$res->NavStart($this->navParams['nPageSize'],
+			$this->navParams['navParams']['SHOW_ALL'],
+			(int)$this->navParams['navParams']['PAGEN']
+		);
+
+		$res->NavRecordCount = $this->totalRowsCount;
+		if ($res->NavRecordCount < 1)
+			return;
+
+		if ($res->NavShowAll)
+			$res->NavPageSize = $res->NavRecordCount;
+
+		$res->NavPageCount = floor($res->NavRecordCount / $res->NavPageSize);
+		if ($res->NavRecordCount % $res->NavPageSize > 0)
+			$res->NavPageCount++;
+
+		$res->NavPageNomer =
+			($res->PAGEN < 1 || $res->PAGEN > $res->NavPageCount
+				?
+				(\CPageOption::GetOptionString("main", "nav_page_in_session", "Y") != "Y"
+				|| $_SESSION[$res->SESS_PAGEN] < 1
+				|| $_SESSION[$res->SESS_PAGEN] > $res->NavPageCount
+					?
+					1
+					:
+					$_SESSION[$res->SESS_PAGEN]
+				)
+				:
+				$res->PAGEN
+			);
+	}
+
 }

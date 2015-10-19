@@ -492,6 +492,20 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+	 * @return \Bitrix\Main\Entity\DataManager|string Возвращает имя класса используемой модели
+	 * Возвращает имя класса используемой модели раздела
+	 *
+	 * @throws \Bitrix\Main\ArgumentException
+	 * @throws \Bitrix\Main\SystemException
+	 * @throws \Exception
+	 * @api
+	 */
+	public static function getSectionModel()
+	{
+		return static::getHLEntity(static::$sectionModel);
+	}
+
+	/**
 	 * Возвращает имя модуля
 	 * @return string
 	 * @api
