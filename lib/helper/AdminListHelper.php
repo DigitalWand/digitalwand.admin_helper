@@ -655,16 +655,30 @@ abstract class AdminListHelper extends AdminBaseHelper
 			while ($data = $res->NavNext(false))
 			{
 				$this->modifyRowData($data);
-				list($link, $name) = $this->getRow($data, 'getListPageUrl');
-				$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
-				foreach ($this->sectionFields as $code => $settings)
+				if($data['IS_SECTION']) // для разделов своя обработка
 				{
-					if(in_array($code, $sectionsVisibleColumns))
+					list($link, $name) = $this->getRow($data, 'getListPageUrl');
+					$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
+					foreach ($this->sectionFields as $code => $settings)
 					{
-						$this->addRowSectionCell($row, $code, $data);
+						if(in_array($code, $sectionsVisibleColumns))
+						{
+							$this->addRowSectionCell($row, $code, $data);
+						}
 					}
+					$row->AddActions( $this->getRowActions($data, true) );
 				}
-				$row->AddActions( $this->getRowActions($data, true) );
+				else // для элементов своя
+				{
+					$this->modifyRowData($data);
+					list($link, $name) = $this->getRow($data);
+					$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
+					foreach ($this->fields as $code => $settings)
+					{
+						$this->addRowCell($row, $code, $data);
+					}
+					$row->AddActions( $this->getRowActions($data) );
+				}
 			}
 
 		}
@@ -1082,15 +1096,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
 	}
 
-	protected function getMixedData($sectionsVisibleColumns, $visibleColumns, $sort, $raw)
+	protected function getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw)
 	{
+		$returnData = array();
 		$raw['SELECT'] = array_unique($raw['SELECT']);
 		$sectionModel = static::$sectionModel;
 		$sectionFilter = array($sectionModel::getSectionField() => $_REQUEST['ID']);
 		$sectionSort = array();
-		$sectionData = array();
 		$limitData = $this->getLimits();
-
 		$this->totalRowsCount = $sectionModel::getCount($sectionFilter);
 		foreach($sort as $field => $direction)
 		{
@@ -1109,27 +1122,60 @@ abstract class AdminListHelper extends AdminBaseHelper
 		while($arSection = $res->Fetch())
 		{
 			$arSection['IS_SECTION'] = true;
-			$sectionData[] = $arSection;
+			$returnData[] = $arSection;
+		}
+		// расчитываем offset и limit для элементов
+		if(count($returnData)>0)
+		{
+			$elementOffset = 0;
+		}
+		else
+		{
+			$elementOffset = $limitData[0] - $this->totalRowsCount;
+		}
+		$elementLimit = $limitData[1] - count($returnData);
+		$elementModel = static::$model;
+		$elementFilter = $this->arFilter;
+		$elementFilter[$elementModel::getSectionField()]= $_REQUEST['ID'];
+		$this->totalRowsCount += $elementModel::getCount($elementFilter);
+
+		// возвращае данные без элементов если занимаются всю страницу выборки
+		if (!empty($returnData) && $limitData[0] == 0 && $limitData[1] == $this->totalRowsCount) {
+			return $returnData;
 		}
 
-		$elementModel = static::getModel();
-		$this->totalRowsCount += $elementModel::getCount($this->arFilter);
-
-		if (!empty($sectionData)) {
-			$offset = $limitData[0];
-			$limit = $limitData[1];
-			$pageSize = $this->navParams['nPageSize'];
-			$ints = ceil($this->totalRowsCount/$pageSize);
-			if($offset<=$ints*$pageSize)
+		$elementSort = array();
+		foreach($sort as $field => $direction)
+		{
+			if(in_array($field, $elementVisibleColumns))
 			{
-				return $sectionData;
+				$elementSort[$field] = $direction;
 			}
 		}
 
-
-
+		$elementParams = array(
+			'filter' => $elementFilter,
+			'select' => $elementVisibleColumns,
+			'order' => $elementSort,
+		);
+		if($elementLimit > 0)
+		{
+			$elementParams['limit'] = $elementLimit;
+			$elementParams['offset'] = $elementOffset;
+		}
+		$res  = $elementModel::getList($elementParams);
+		while($arElement = $res->Fetch())
+		{
+			$arElement['IS_SECTION'] = false;
+			$returnData[] = $arElement;
+		}
+		return $returnData;
 	}
 
+	/**
+	 * Огранчения выборки из CAdminResult
+	 * @return array
+	 */
 	protected function getLimits()
 	{
 		if ($this->navParams['navParams']['SHOW_ALL']) {
