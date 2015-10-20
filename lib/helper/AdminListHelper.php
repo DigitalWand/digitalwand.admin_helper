@@ -342,7 +342,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 						"id" => $code,
 						"content" => $widget->getSettings('LIST_TITLE') ? $widget->getSettings('LIST_TITLE') : $widget->getSettings('TITLE'),
 						"sort" => $code,
-						"default" => true
+						"default" => true,
+						'admin_list_helper_sort' => $widget->getSettings('LIST_COLUMN_SORT') ? $widget->getSettings('LIST_COLUMN_SORT') : 100
 					);
 				}
 			}
@@ -400,12 +401,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	public static function uHeadersSort($a, $b)
 	{
+		$a = $a['admin_list_helper_sort'];
+		$b = $b['admin_list_helper_sort'];
 		if ($a == $b)
 		{
 			return 0;
 		}
 
-		return ($a > $b) ? -1 : 1;
+		return ($a < $b) ? -1 : 1;
 	}
 
 	/**
@@ -664,9 +667,21 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$headers = $this->arHeader;
 
+
 		if (static::$hasSections) // Добавляем столбцы разделов если они используются
 		{
-			$headers = array_merge($headers, $this->getSectionsHeader());
+			$sectionHeaders = $this->getSectionsHeader();
+			foreach($sectionHeaders as $sectionHeader)
+			{
+				foreach($headers as $i => $elementHeader)
+				{
+					if($sectionHeader['id'] == $elementHeader['id'])
+					{
+						unset($headers[$i]);
+					}
+				}
+			}
+			$headers = array_merge($headers, $sectionHeaders);
 		}
 
 		usort($headers, array('\DigitalWand\AdminHelper\Helper\AdminListHelper', 'uHeadersSort'));
