@@ -150,6 +150,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected $totalRowsCount = 0;
 
 	/**
+	 * Массив для слияния столбцов элементов и разделов
+	 * @var array
+	 */
+	protected $elementFieldsMap = array();
+
+	/**
 	 * @var string
 	 * HTML верхней части таблицы
 	 * @api
@@ -320,7 +326,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_HEADER);
 				$this->arHeader[] = array(
 					"id" => $code,
-					"content" => $widget->getSettings('TITLE'),
+					"content" => $widget->getSettings('LIST_TITLE')?$widget->getSettings('LIST_TITLE'):$widget->getSettings('TITLE'),
 					"sort" => $code,
 					"default" => true
 				);
@@ -645,6 +651,23 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if(static::$hasSections) // Вывод разделов и элементов в одном списке
 		{
+			// проверяем есть ли столбец раздела с таким названием
+			if($widget->getSettings('LIST_TITLE'))
+			{
+				foreach($this->sectionFields as $sectionColumn)
+				{
+					var_dump($this->sectionFields);
+//					if($sectionColumn['content'] == $widget->getSettings('LIST_TITLE'))
+//					{
+//						// добавляем столбец элементов в карту столбцов
+//						$this->elementFieldsMap[$code] = $sectionColumn['id'];
+//						$mergedColumn = true;
+//						break;
+//					}
+				}
+			}
+
+
 			$mixedData = $this->getMixedData($sectionsVisibleColumns, $visibleColumns, $sort, $raw);
 			$res = new \CDbResult;
 			$res->InitFromArray($mixedData);
@@ -672,6 +695,19 @@ abstract class AdminListHelper extends AdminBaseHelper
 				{
 					$this->modifyRowData($data);
 					list($link, $name) = $this->getRow($data);
+
+					// объединение полей элемента с полями раздела
+					foreach($this->elementFieldsMap as $elementCode => $sectionCode)
+					{
+						if(isset($data[$elementCode]))
+						{
+							$data[$sectionCode] = $elementCode;
+							unset($data[$elementCode]);
+						}
+					}
+
+					var_dump($data);
+
 					$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 					foreach ($this->fields as $code => $settings)
 					{
