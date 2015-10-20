@@ -375,7 +375,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			{
 				$arSectionsHeaders[] = array(
 					"id" => $code,
-					"content" => $settings['TITLE'],
+					"content" => isset($settings['LIST_TITLE']) ? $settings['LIST_TITLE'] : $settings['TITLE'],
 					"sort" => $code,
 					"default" => true
 				);
