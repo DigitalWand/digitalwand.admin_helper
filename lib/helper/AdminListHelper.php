@@ -377,7 +377,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 					"id" => $code,
 					"content" => isset($settings['LIST_TITLE']) ? $settings['LIST_TITLE'] : $settings['TITLE'],
 					"sort" => $code,
-					"default" => true
+					"default" => true,
+					'admin_list_helper_sort' => isset($settings['LIST_COLUMN_SORT']) ? $settings['LIST_COLUMN_SORT'] : 100
 				);
 			}
 			unset($settings['WIDGET']);
@@ -388,6 +389,23 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		return $arSectionsHeaders;
+	}
+
+	/**
+	 * Функция сортировки стобцов
+	 * @see usort
+	 * @param $a
+	 * @param $b
+	 * @return int
+	 */
+	public static function uHeadersSort($a, $b)
+	{
+		if ($a == $b)
+		{
+			return 0;
+		}
+
+		return ($a > $b) ? -1 : 1;
 	}
 
 	/**
@@ -644,26 +662,29 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
+		$headers = $this->arHeader;
+
 		if (static::$hasSections) // Добавляем столбцы разделов если они используются
 		{
-			$this->list->AddHeaders($this->getSectionsHeader());
-			$sectionsVisibleColumns = $this->list->GetVisibleHeaderColumns();
+			$headers = array_merge($headers, $this->getSectionsHeader());
 		}
 
-		$this->list->AddHeaders($this->arHeader);
+		usort($headers, array('\DigitalWand\AdminHelper\Helper\AdminListHelper', 'uHeadersSort'));
+
+		$this->list->AddHeaders($headers);
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
 		if (static::$hasSections) // Убираем столбцы разделов из $visibleColumns
 		{
+			$sectionsVisibleColumns = array();
 			foreach ($visibleColumns as $k => $v)
 			{
-				if (in_array($v, $sectionsVisibleColumns))
+				if (isset($this->sectionFields[$v]))
 				{
 					unset($visibleColumns[$k]);
+					$sectionsVisibleColumns[] = $v;
 				}
 			}
-			$visibleColumns = array_values($visibleColumns);
-			$visibleColumns = array_merge($visibleColumns, array_keys($this->elementFieldsMap));
 		}
 
 		$className = static::getModel();
