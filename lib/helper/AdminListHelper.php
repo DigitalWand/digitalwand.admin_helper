@@ -699,6 +699,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 					$sectionsVisibleColumns[] = $v;
 				}
 			}
+			$visibleColumns = array_values($visibleColumns);
+			$visibleColumns = array_merge($visibleColumns, array_keys($this->tableColumnsMap));
 		}
 
 		$className = static::getModel();
