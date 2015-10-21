@@ -146,7 +146,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * Массив для слияния столбцов элементов и разделов
 	 * @var array
 	 */
-	protected $elementFieldsMap = array();
+	protected $tableColumnsMap = array();
 
 	/**
 	 * Производится инициализация переменных, обработка запросов на редактирование
@@ -330,7 +330,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 						if ($sectionColumn['content'] == $widget->getSettings('LIST_TITLE'))
 						{
 							// добавляем столбец элементов в карту столбцов
-							$this->elementFieldsMap[$code] = $sectionColumn['id'];
+							$this->tableColumnsMap[$code] = $sectionColumn['id'];
 							$mergedColumn = true;
 							break;
 						}
@@ -353,7 +353,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$this->arFilter = $arFilter;
 		}
 
-		if (static::$hasSections)
+		if (static::$useSections)
 		{
 			$model = $this->getModel();
 			$this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
@@ -644,7 +644,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
-		if (static::$hasSections) // Добавляем столбцы разделов если они используются
+		if (static::$useSections) // Добавляем столбцы разделов если они используются
 		{
 			$this->list->AddHeaders($this->getSectionsHeader());
 			$sectionsVisibleColumns = $this->list->GetVisibleHeaderColumns();
@@ -653,7 +653,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->list->AddHeaders($this->arHeader);
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
-		if (static::$hasSections) // Убираем столбцы разделов из $visibleColumns
+		if (static::$useSections) // Убираем столбцы разделов из $visibleColumns
 		{
 			foreach ($visibleColumns as $k => $v)
 			{
@@ -663,7 +663,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				}
 			}
 			$visibleColumns = array_values($visibleColumns);
-			$visibleColumns = array_merge($visibleColumns, array_keys($this->elementFieldsMap));
+			$visibleColumns = array_merge($visibleColumns, array_keys($this->tableColumnsMap));
 		}
 
 		$className = static::getModel();
@@ -705,7 +705,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		// Поля для селекта (множественные поля отфильтрованы)
 		$listSelect = array_flip($listSelect);
 
-		if (static::$hasSections) // Вывод разделов и элементов в одном списке
+		if (static::$useSections) // Вывод разделов и элементов в одном списке
 		{
 			$mixedData = $this->getMixedData($sectionsVisibleColumns, $visibleColumns, $sort, $raw);
 			$res = new \CDbResult;
@@ -735,7 +735,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					$this->modifyRowData($data);
 					list($link, $name) = $this->getRow($data);
 					// объединение полей элемента с полями раздела
-					foreach ($this->elementFieldsMap as $elementCode => $sectionCode)
+					foreach ($this->tableColumnsMap as $elementCode => $sectionCode)
 					{
 						if (isset($data[$elementCode]))
 						{
@@ -746,7 +746,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					foreach ($this->fields as $code => $settings)
 					{
 						$this->addRowCell($row, $code, $data,
-							isset($this->elementFieldsMap[$code]) ? $this->elementFieldsMap[$code] : false);
+							isset($this->tableColumnsMap[$code]) ? $this->tableColumnsMap[$code] : false);
 					}
 					$row->AddActions($this->getRowActions($data));
 				}
@@ -786,6 +786,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->list->CheckListMode();
 	}
 
+	/**
+	 * Получение смешанного списка из разделов и элементов
+	 * @param $sectionsVisibleColumns
+	 * @param $elementVisibleColumns
+	 * @param $sort
+	 * @param $raw
+	 * @return array
+	 */
 	protected function getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw)
 	{
 		$returnData = array();
@@ -1147,7 +1155,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getContextMenu()
 	{
 		$contextMenu = array();
-		if (static::$hasSections)
+		if (static::$useSections)
 		{
 			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
 		}
@@ -1156,7 +1164,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		 * Если задан для разделов добавляем кнопку создать раздел и
 		 * кнопку на уровень вверх если это не корневой раздел
 		 */
-		if (!empty(static::$hasSections) || isset($_REQUEST['ID']))
+		if (!empty(static::$useSections) || isset($_REQUEST['ID']))
 		{
 			if ($_REQUEST['ID'])
 			{
@@ -1196,7 +1204,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				'LINK' => static::getEditPageURL($this->additionalUrlParams),
 				'ICON' => 'btn_new'
 			));
-			if (static::$hasSections)
+			if (static::$useSections)
 			{
 				$contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
 					'LINK' => static::getSectionsEditPageURL($this->additionalUrlParams),
