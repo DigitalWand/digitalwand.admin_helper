@@ -220,7 +220,7 @@ abstract class AdminBaseHelper
 	 * Флаг использования разделов, необходимо переопределять в дочернем классе
 	 * @var bool
 	 */
-	static protected $hasSections = false;
+	static protected $useSections = false;
 
 	/**
 	 * @param array $fields список используемых полей и виджетов для них
