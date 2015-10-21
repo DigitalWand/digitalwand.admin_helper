@@ -492,8 +492,9 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * @return \Bitrix\Main\Entity\DataManager|string Возвращает имя класса используемой модели
-	 * Возвращает имя класса используемой модели раздела
+	 * Возвращает имя класса модели раздела, используется при
+	 * для организации дерева каталога при static::$useSection = true
+	 * @return \Bitrix\Main\Entity\DataManager|string
 	 *
 	 * @throws \Bitrix\Main\ArgumentException
 	 * @throws \Bitrix\Main\SystemException
