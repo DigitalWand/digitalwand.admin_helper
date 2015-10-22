@@ -279,6 +279,13 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	public function show()
 	{
+		if (!$this->hasReadRights())
+		{
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACCESS_FORBIDDEN'));
+			$this->showMessages();
+			return false;
+		}
+
 		$context = new \CAdminContextMenu($this->getMenu());
 		$context->Show();
 

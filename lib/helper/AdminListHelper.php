@@ -668,6 +668,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$className = static::getModel();
 		$visibleColumns[] = static::pk();
+		$sectionsVisibleColumns[] = static::sectionPk();
 
 		$raw = array(
 			'SELECT' => $visibleColumns,
@@ -689,7 +690,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$visibleColumns[] = $name;
 			}
 		}
+
 		$visibleColumns = array_unique($visibleColumns);
+		$sectionsVisibleColumns = array_unique($sectionsVisibleColumns);
+
 		// Поля для селекта (перевернутый массив)
 		$listSelect = array_flip($visibleColumns);
 		foreach ($this->fields as $code => $settings)
@@ -857,16 +861,17 @@ abstract class AdminListHelper extends AdminBaseHelper
 			'select' => $elementVisibleColumns,
 			'order' => $elementSort,
 		);
-		if ($elementLimit > 0)
+		if ($elementLimit > 0 && $elementOffset >= 0)
 		{
 			$elementParams['limit'] = $elementLimit;
 			$elementParams['offset'] = $elementOffset;
-		}
-		$res = $elementModel::getList($elementParams);
-		while ($arElement = $res->Fetch())
-		{
-			$arElement['IS_SECTION'] = false;
-			$returnData[] = $arElement;
+
+			$res = $elementModel::getList($elementParams);
+			while ($arElement = $res->Fetch())
+			{
+				$arElement['IS_SECTION'] = false;
+				$returnData[] = $arElement;
+			}
 		}
 
 		return $returnData;
