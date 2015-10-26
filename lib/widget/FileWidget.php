@@ -272,4 +272,35 @@ class FileWidget extends HelperWidget
 		return $fileId;
 	}
 
+    /**
+	 * {@inheritdoc}
+	 */
+    protected function getMultipleValueReadonly()
+    {
+        $result = '';
+        $values = parent::getMultipleValue();
+        if (!empty($values))
+        {
+            foreach ($values as $value)
+            {
+                $fileInfo = \CFile::GetFileArray($value);
+                if (!empty($fileInfo))
+                {
+                    if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png'|| $fileInfo['CONTENT_TYPE'] == 'image/gif')
+                    {
+                        $result .= '<div><img src="' . $fileInfo['SRC'] . '" alt="' . $fileInfo['ORIGINAL_NAME'] . '" width="100" height="100"></div>';
+                    }
+                    else
+                    {
+                        $result .= '<div>' . $fileInfo['ORIGINAL_NAME'] . '</div>';
+                    }
+                }
+                else
+                {
+                    $result .= '<div>Файл не найден</div>';
+                }
+            }
+        }
+        return $result;
+    }
 }
