@@ -384,7 +384,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		 * Если задан для разделов добавляем кнопку создать раздел и
 		 * кнопку на уровень вверх если это не корневой раздел
 		 */
-		if(!empty(static::$hasSections) || isset($_REQUEST['ID']))
+		if(!empty(static::$sectionModel) && isset($_REQUEST['ID']))
 		{
 			if($_REQUEST['ID'])
 			{
