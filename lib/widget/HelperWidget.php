@@ -152,86 +152,131 @@ abstract class HelperWidget
 	 */
 	abstract protected function genEditHTML();
 
-	/**
-	 * Оборачивает поле в HTML код, который в большинстве случаев менять не придется.
-	 * Далее вызывается кастомизируемая часть.
-	 *
-	 * @param $isPKField - является ли поле первичным ключом модели
-	 *
-	 * @see HelperWidget::genEditHTML();
-	 */
-	public function genBasicEditField($isPKField)
-	{
-		if ($this->getSettings('HIDE_WHEN_CREATE') AND !isset($this->data['ID']))
-		{
-			return;
-		}
+    /**
+     * Оборачивает поле в HTML код, который в большинстве случаев менять не придется.
+     * Далее вызывается кастомизируемая часть.
+     *
+     * @param $isPKField - является ли поле первичным ключом модели
+     *
+     * @see HelperWidget::genEditHTML();
+     */
+    public function genBasicEditField($isPKField)
+    {
+        if ($this->getSettings('HIDE_WHEN_CREATE') AND !isset($this->data['ID']))
+        {
+            return;
+        }
 
-		// JS хелперы
-		$this->jsHelper();
+        // JS хелперы
+        $this->jsHelper();
 
-		if ($this->getSettings('USE_BX_API'))
-		{
-			$this->genEditHTML();
-		}
-		else
-		{
-			print '<tr>';
-			$title = $this->getSettings('TITLE');
-			if ($this->getSettings('REQUIRED') === true)
-			{
-				$title = '<b>' . $title . '</b>';
-			}
-			print '<td width="40%" style="vertical-align: top;">' . $title . ':</td>';
+        if ($this->getSettings('USE_BX_API'))
+        {
+            $this->genEditHTML();
+        }
+        else
+        {
+            print '<tr>';
+            $title = $this->getSettings('TITLE');
+            if ($this->getSettings('REQUIRED') === true)
+            {
+                $title = '<b>' . $title . '</b>';
+            }
+            print '<td width="40%" style="vertical-align: top;">' . $title . ':</td>';
 
-			$field = $this->getValue();
-			if (is_null($field))
-			{
-				$field = '';
-			}
+            $field = $this->getValue();
+            if (is_null($field))
+            {
+                $field = '';
+            }
 
-			$readOnly = $this->getSettings('READONLY');
+            $readOnly = $this->getSettings('READONLY');
 
-			if (!$readOnly AND !$isPKField)
-			{
-				if ($this->getSettings('MULTIPLE'))
-				{
-					$field = $this->genMultipleEditHTML();
-				}
-				else
-				{
-					$field = $this->genEditHTML();
-				}
-			}
-			else
-			{
-				if ($readOnly)
-				{
-					if ($this->getSettings('MULTIPLE'))
-					{
-						$field = $this->getMultipleValueReadonly();
-					}
-					else
-					{
-						$field = $this->getValueReadonly();
-					}
-				}
-			}
+            if (!$readOnly AND !$isPKField)
+            {
+                if ($this->getSettings('MULTIPLE'))
+                {
+                    $field = $this->genMultipleEditHTML();
+                }
+                else
+                {
+                    $field = $this->genEditHTML();
+                }
+            }
+            else
+            {
+                if ($readOnly)
+                {
+                    if ($this->getSettings('MULTIPLE'))
+                    {
+                        $field = $this->getMultipleValueReadonly();
+                    }
+                    else
+                    {
+                        $field = $this->getValueReadonly();
+                    }
+                }
+            }
 
-			print '<td width="60%">' . $field . '</td>';
-			print '</tr>';
-		}
-	}
+            print '<td width="60%">' . $field . '</td>';
+            print '</tr>';
+        }
+    }
 
-	/**
-	 * Возвращает значение поля в форме "только для чтения".
-	 *
-	 * @return mixed
-	 */
-	protected function getValueReadonly()
-	{
-		return $this->getValue();
-	}
+    /**
+     * Возвращает значение поля в форме "только для чтения" для не множественных свойств.
+     *
+     * @return mixed
+     */
+    protected function getValueReadonly()
+    {
+        return $this->getValue();
+    }
+    
+    /**
+     * Возвращает значения множественного поля 
+     * @return array
+     */
+    protected function getMultipleValue()
+    {
+        $rsEntityData = null;
+        $values = [];
+        if (!empty($this->data['ID']))
+        {
+            $entityName = $this->entityName;
+            $rsEntityData = $entityName::getList([
+                'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+                'filter' => ['=ID' => $this->data['ID']]
+            ]);
+            if ($rsEntityData)
+            {
+                while($referenceData = $rsEntityData->fetch())
+                {
+                    if (empty($referenceData['REFERENCE_ID']))
+                    {
+                        continue;
+                    }
+                    $values[] = $referenceData['REFERENCE_VALUE'];
+                }
+            }
+        }
+        else if ($this->data[$this->code])
+        {
+            $values = $this->data[$this->code];
+        }
+        return $values;
+    }
+    
+    /**
+     * Возвращает значение поля в форме "только для чтения" для множественных свойств.
+     *
+     * @return string
+     */
+    protected function getMultipleValueReadonly()
+    {
+        $values = $this->getMultipleValue();
+        return join('<br/>', $values);
+    }
 
 	/**
 	 * Генерирует HTML для поля в списке

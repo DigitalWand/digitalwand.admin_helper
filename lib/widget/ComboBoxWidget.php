@@ -29,27 +29,10 @@ class ComboBoxWidget extends HelperWidget
 		$multiple = $this->getSettings('MULTIPLE');
 
 		$multipleSelected = [];
-		if ($multiple && !empty($this->data['ID']))
-		{
-			$entityName = $this->entityName;
-			$rsEntityData = $entityName::getList([
-				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-				'filter' => ['=ID' => $this->data['ID']]
-			]);
-			while ($referenceData = $rsEntityData->fetch())
-			{
-				if (empty($referenceData['REFERENCE_ID']))
-				{
-					continue;
-				}
-				$multipleSelected[] = $referenceData['REFERENCE_VALUE'];
-			}
-		}
-
-		if($multiple && $this->data[$this->code])
-		{
-			$multipleSelected = $this->data[$this->code];
-		}
+        if ($multiple)
+        {
+            $multipleSelected = $this->getMultipleValue();
+        }
 
 		$variants = $this->getVariants();
 		if (empty($variants))
@@ -235,4 +218,30 @@ class ComboBoxWidget extends HelperWidget
 
 		return ['key' => $value, 'title' => $title];
 	}
+
+    /**
+	 * {@inheritdoc}
+	 */
+    protected function getMultipleValueReadonly()
+    {
+        $variants = $this->getVariants();
+        $values = $this->getMultipleValue();
+        $result = '';
+        if (empty($variants))
+        {
+            $result = 'Не удалось получить данные для выбора';
+        }
+        else
+        {
+            foreach ($variants as $id => $data)
+            {
+                $name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
+                if (in_array($id, $values))
+                {
+                    $result .= $name . '<br/>';
+                }
+            }
+        }
+        return $result;
+    }
 }
