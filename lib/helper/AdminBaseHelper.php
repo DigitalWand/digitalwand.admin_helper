@@ -911,9 +911,23 @@ abstract class AdminBaseHelper
 		$widget->setCode($code);
 		$widget->setData($data);
 		$widget->setEntityName($this->getModel());
+        
+        $this->onCreateWidgetForField($widget, $data);
 
 		return $widget;
 	}
+    
+    
+     /**
+     * Метод вызывается при создании виджета для текущего поля.
+     * Может быть использован для изменения настроек виджета на основе передаваемых данных
+     *
+     * @param \DigitalWand\AdminHelper\Widget\HelperWidget $widget
+     * @param array $data
+     */
+    protected function onCreateWidgetForField(&$widget, $data = array())
+    {
+    }
 
 	/**
 	 * Если класс не объявлен, то битрикс генерирует новый класс в рантайме.
