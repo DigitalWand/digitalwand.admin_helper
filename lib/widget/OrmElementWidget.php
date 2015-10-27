@@ -18,6 +18,7 @@ Loc::loadMessages(__FILE__);
  * <li> <b>INPUT_SIZE</b> - (int) значение атрибута size для input </li>
  * <li> <b>WINDOW_WIDTH</b> - (int) значение width для всплывающего окна выбора элемента </li>
  * <li> <b>WINDOW_HEIGHT</b> - (int) значение height для всплывающего окна выбора элемента </li>
+ * <li> <b>TEMPLATE</b> - (string) шаблон отображения виджета, может принимать значения select|radio,  по умолчанию - select </li>
  *
  */
 class OrmElementWidget extends NumberWidget
@@ -28,7 +29,8 @@ class OrmElementWidget extends NumberWidget
         'WINDOW_WIDTH' => 600,
         'WINDOW_HEIGHT' => 500,
         'TITLE_FIELD_NAME' => 'TITLE',
-        'LIST_VIEW_NAME' => 'list'
+        'LIST_VIEW_NAME' => 'list',
+        'TEMPLATE' => 'select'
     );
 
     /**
@@ -36,6 +38,24 @@ class OrmElementWidget extends NumberWidget
      * @return string
      */
     public function genEditHtml()
+    {
+        if($this->getSettings('TEMPLATE') == 'radio')
+        {
+            $html = $this->genEditHtmlInputs();
+        }
+        else
+        {
+            $html = $this->genEditHtmlSelect();
+        }
+
+        return $html;
+    }
+
+    /**
+     * Генерирует HTML с выбором элемента во вcплывающем окне, шаблон select
+     * @return string
+     */
+    public function genEditHtmlSelect()
     {
         $inputSize = (int)$this->getSettings('INPUT_SIZE');
         $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
@@ -72,6 +92,27 @@ class OrmElementWidget extends NumberWidget
         . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
         . '&amp;n=' . $name . '&amp;k=' . $key . $additionalUrlParams.'\', ' . $windowWidth . ', ' . $windowHeight .');">' .
         '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $elementName . '</span>';
+    }
+
+    /**
+     * Генерирует HTML с выбором элемента в виде радио инпутов
+     * @return string
+     */
+    public function genEditHtmlInputs()
+    {
+        $return = '';
+
+        $elementList = $this->getOrmElementList();
+
+        if(!is_null($elementList))
+        {
+            foreach($elementList as $key => $element)
+            {
+                $return .= InputType("radio", $this->getEditInputName(), $element['ID'], $this->getValue(), false, $element['TITLE']);
+            }
+        }
+
+        return $return;
     }
 
     /**
@@ -316,5 +357,36 @@ class OrmElementWidget extends NumberWidget
         }
 
         return $refInfo;
+    }
+
+    /**
+     * Получает информацию о всех активных элементах для выбора в input
+     *
+     * @return array
+     *
+     * @throws \Bitrix\Main\ArgumentException
+     */
+    protected function getOrmElementList()
+    {
+        $valueList = null;
+
+        $model = $this->getSettings('MODEL');
+
+        $rsEntity = $model::getList([
+            'filter' => [
+                'ACTIVE' => 1
+            ],
+            'select' => [
+                'ID',
+                'TITLE'
+            ]
+        ]);
+
+        while ($entity = $rsEntity->fetch())
+        {
+            $valueList[] = $entity;
+        }
+
+        return $valueList;
     }
 }
