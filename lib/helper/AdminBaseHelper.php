@@ -311,7 +311,7 @@ abstract class AdminBaseHelper
 	 */
 	static public function getInterfaceClass()
 	{
-		return static::$interfaceClass[get_called_class()];
+		return isset(static::$interfaceClass[get_called_class()])?static::$interfaceClass[get_called_class()]:false;
 	}
 
 	static protected function getButton($code, $params, $keys = array('name', 'TEXT'))
@@ -450,27 +450,10 @@ abstract class AdminBaseHelper
 			 */
 			if (count($classNameParts) > 2)
 			{
-				/**
-				 * Название класса без namespace
-				 */
-				$classCaption = array_pop($classNameParts);
-				/**
-				 * Приставка Helper, тоже не нужна
-				 */
-				array_pop($classNameParts);
-				/**
-				 * Имя сущности 3-е слева в названии класса
-				 */
-				$entityName = array_pop($classNameParts);
-				/**
-				 * Тип хелпера из названия класса
-				 */
-				$viewType = str_replace(array($entityName, 'Helper'), '', $classCaption);
-
-				if ($entityName && $viewType)
-				{
-					static::$viewName[$className] = strtolower($entityName) . '_' . strtolower($viewType);
-				}
+				$classCaption = str_replace('Helper', '',array_pop($classNameParts)); // название класса без namespace и приставки Helper
+				$entityName = str_replace(array('List', 'Edit'), '', $classCaption);
+				$viewType = str_replace($entityName, '', $classCaption);
+				static::$viewName[$className] = strtolower($entityName) . '_' . strtolower($viewType);
 			}
 		}
 
@@ -855,6 +838,12 @@ abstract class AdminBaseHelper
 	 */
 	static public function getViewURL($viewName, $defaultURL, $params = array())
 	{
+		$interfaceClass = static::getInterfaceClass();
+		if($interfaceClass)
+		{
+			$params['entity'] = $interfaceClass::getNamespaceUrlParam();
+		}
+
 		if (isset($defaultURL))
 		{
 			$url = $defaultURL . "?lang=" . LANGUAGE_ID;
@@ -911,23 +900,22 @@ abstract class AdminBaseHelper
 		$widget->setCode($code);
 		$widget->setData($data);
 		$widget->setEntityName($this->getModel());
-        
-        $this->onCreateWidgetForField($widget, $data);
+
+		$this->onCreateWidgetForField($widget, $data);
 
 		return $widget;
 	}
-    
-    
-     /**
-     * Метод вызывается при создании виджета для текущего поля.
-     * Может быть использован для изменения настроек виджета на основе передаваемых данных
-     *
-     * @param \DigitalWand\AdminHelper\Widget\HelperWidget $widget
-     * @param array $data
-     */
-    protected function onCreateWidgetForField(&$widget, $data = array())
-    {
-    }
+
+	/**
+	 * Метод вызывается при создании виджета для текущего поля.
+	 * Может быть использован для изменения настроек виджета на основе передаваемых данных
+	 *
+	 * @param \DigitalWand\AdminHelper\Widget\HelperWidget $widget
+	 * @param array $data
+	 */
+	protected function onCreateWidgetForField(&$widget, $data = array())
+	{
+	}
 
 	/**
 	 * Если класс не объявлен, то битрикс генерирует новый класс в рантайме.

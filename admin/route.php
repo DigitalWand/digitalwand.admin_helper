@@ -33,34 +33,38 @@ if (isset($_SESSION["SESS_SORT_ORDER"][$uniq]))
 
 $module = getRequestParams('module');
 $view = getRequestParams('view');
+$entity = getRequestParams('entity');
 if (!$module OR !$view OR !Loader::IncludeModule($module))
 {
 	include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
 
-/**
- * Пытаемся определить имя класса админского интерфейса
- */
-$interfaceNameParts = explode('.', $module);
-$helperNameParts = explode('_', $view);
-$helperType = array_pop($helperNameParts);
-$entityName = array_pop($helperNameParts);
-$interfaceNameParts = array_merge($interfaceNameParts, $helperNameParts);
-$interfaceNameParts[] = $entityName;
-$interfaceNameParts[] = 'Helper';
-$interfaceNameParts[] = $entityName . 'AdminInterface';
-foreach ($interfaceNameParts as $i => $v)
+if ($entity) // Собираем имя класса админского интерфейса
 {
-	$interfaceNameParts[$i] = ucfirst($v);
-}
-$interfaceNameClass = implode('\\', $interfaceNameParts);
+	$moduleNameParts = explode('.', $module);
+	$entityNameParts = explode('_', $entity);
+	$interfaceNameParts = array_merge($moduleNameParts, $entityNameParts);
+	$viewParts = explode('_',$view);
+	if(count($viewParts)>1) // имя сущности есть во view
+	{
+		$entity = $viewParts[0];
+	}
+	else // имя сущности есть в entity
+	{
+		$entity = $entityNameParts[0];
+	}
+	$interfaceNameParts[] = ucfirst($entity).'AdminInterface';
 
-/**
- * Регистрируем класс интерфейса если он существует
- */
-if (class_exists($interfaceNameClass))
-{
-	$interfaceNameClass::register();
+	foreach ($interfaceNameParts as $i => $v)
+	{
+		$interfaceNameParts[$i] = ucfirst($v);
+	}
+	$interfaceNameClass = implode('\\', $interfaceNameParts);
+
+	if (class_exists($interfaceNameClass)) // Регистрируем класс интерфейса если он существует
+	{
+		$interfaceNameClass::register();
+	}
 }
 
 list($helper, $interface) = AdminBaseHelper::getGlobalInterfaceSettings($module, $view);
