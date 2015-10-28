@@ -425,7 +425,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			{
 				$sectionsHelperClass = static::getSectionsHelperClass();
 				$contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
-					'LINK' => $sectionsHelperClass::getLink($this->additionalUrlParams),
+					'LINK' => $sectionsHelperClass::getUrl($this->additionalUrlParams),
 					'ICON' => 'btn_new'
 				));
 			}
@@ -783,7 +783,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 			{
 				$sectionHelperClass = static::getSectionsHelperClass();
 				$editHelperClass = static::getEditHelperClass();
-
 
 				$actions['edit'] = array(
 					"ICON" => "edit",

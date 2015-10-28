@@ -790,7 +790,7 @@ abstract class AdminBaseHelper
 	 */
 	static protected function getListHelperClass()
 	{
-		static::getHelperClass('List');
+		return static::getHelperClass('List');
 	}
 	/**
 	 * Возвращает имя класса SectionsEditHelper-a
@@ -798,7 +798,7 @@ abstract class AdminBaseHelper
 	 */
 	static protected function getSectionsHelperClass()
 	{
-		static::getHelperClass(static::$sectionSuffix.'Edit');
+		return static::getHelperClass(static::$sectionSuffix.'Edit');
 	}
 
 	/**
@@ -808,8 +808,7 @@ abstract class AdminBaseHelper
 	 */
 	static protected function getHelperClass($class)
 	{
-		$class = '\\'.str_replace(array(static::$sectionSuffix.'Edit', 'Edit', 'List'), $class, get_called_class());
-//		var_dump($class);'<br>';
+		$class = str_replace(array(static::$sectionSuffix.'Edit', 'Edit', 'List'), $class, get_called_class());
 		return class_exists($class) ? $class : false;
 	}
 
