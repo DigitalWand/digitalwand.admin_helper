@@ -223,6 +223,12 @@ abstract class AdminBaseHelper
 	static protected $hasSections = false;
 
 	/**
+	 * Правило именования хелперов для разделов по умолчанию
+	 * @var string
+	 */
+	static protected $sectionSuffix = 'Sections';
+
+	/**
 	 * @param array $fields список используемых полей и виджетов для них
 	 * @param array $tabs список вкладок для детальной страницы
 	 * @param string $module название модуля
@@ -311,7 +317,7 @@ abstract class AdminBaseHelper
 	 */
 	static public function getInterfaceClass()
 	{
-		return isset(static::$interfaceClass[get_called_class()])?static::$interfaceClass[get_called_class()]:false;
+		return isset(static::$interfaceClass[get_called_class()]) ? static::$interfaceClass[get_called_class()] : false;
 	}
 
 	static protected function getButton($code, $params, $keys = array('name', 'TEXT'))
@@ -450,7 +456,7 @@ abstract class AdminBaseHelper
 			 */
 			if (count($classNameParts) > 2)
 			{
-				$classCaption = str_replace('Helper', '',array_pop($classNameParts)); // название класса без namespace и приставки Helper
+				$classCaption = str_replace('Helper', '', array_pop($classNameParts)); // название класса без namespace и приставки Helper
 				$entityName = str_replace(array('List', 'Edit'), '', $classCaption);
 				$viewType = str_replace($entityName, '', $classCaption);
 				static::$viewName[$className] = strtolower($entityName) . '_' . strtolower($viewType);
@@ -771,6 +777,65 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+	 * Возвращает имя класса EditHelper-a
+	 * @return bool|string
+	 */
+	static protected function getEditHelperClass()
+	{
+		return static::getHelperClass('Edit');
+	}
+	/**
+	 * Возвращает имя класса ListHelper-a
+	 * @return bool|string
+	 */
+	static protected function getListHelperClass()
+	{
+		static::getHelperClass('List');
+	}
+	/**
+	 * Возвращает имя класса SectionsEditHelper-a
+	 * @return bool|string
+	 */
+	static protected function getSectionsHelperClass()
+	{
+		static::getHelperClass(static::$sectionSuffix.'Edit');
+	}
+
+	/**
+	 * Возвращает класс хелпера нужного типа основываясь на текущем классе
+	 * @param $class
+	 * @return string|bool
+	 */
+	static protected function getHelperClass($class)
+	{
+		$class = '\\'.str_replace(array(static::$sectionSuffix.'Edit', 'Edit', 'List'), $class, get_called_class());
+//		var_dump($class);'<br>';
+		return class_exists($class) ? $class : false;
+	}
+
+	/**
+	 * Возвращает относительный namespace до хелперов в виде URL параметра
+	 * @return string
+	 */
+	static protected function getNamespaceUrlParam()
+	{
+
+		$namespaceParts = explode('\\', get_called_class());
+		array_pop($namespaceParts); // убираем имя класс
+		array_shift($namespaceParts); // убираем namespace вендора
+		array_shift($namespaceParts); // убираем namespace модуля
+
+		return str_replace( // формируем параметр
+			'\\',
+			'_',
+			implode(
+				'\\',
+				array_map('lcfirst', $namespaceParts)
+			)
+		);
+	}
+
+	/**
 	 * Возвращает URL страницы редактирования класса данного представления
 	 * @param array $params
 	 * @return string
@@ -838,11 +903,7 @@ abstract class AdminBaseHelper
 	 */
 	static public function getViewURL($viewName, $defaultURL, $params = array())
 	{
-		$interfaceClass = static::getInterfaceClass();
-		if($interfaceClass)
-		{
-			$params['entity'] = $interfaceClass::getNamespaceUrlParam();
-		}
+		$params['entity'] = static::getNamespaceUrlParam();
 
 		if (isset($defaultURL))
 		{

@@ -621,5 +621,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		return $this->tabControl;
 	}
 
+	public static function getUrl($params = array())
+	{
+		return static::getViewURL(static::getViewName(), static::$editPageUrl, $params);
+	}
 }
 

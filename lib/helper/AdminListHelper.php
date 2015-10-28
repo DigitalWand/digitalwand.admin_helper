@@ -61,11 +61,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	protected $sectionFields = array();
 
-    /**
-     * @var string
-     * Название столбца, в котором хранится название элемента
-     */
-    protected $fieldPopupResultElTitle = '';
+	/**
+	 * @var string
+	 * Название столбца, в котором хранится название элемента
+	 */
+	protected $fieldPopupResultElTitle = '';
 
 	/**
 	 * @var string
@@ -128,7 +128,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	static protected $tablePrefix = "digitalwand_admin_helper_";
 
-
 	/**
 	 * @var array
 	 * @see \CAdminList::AddGroupActionTable()
@@ -172,7 +171,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->restoreLastGetQuery();
 		$this->prepareAdminVariables();
 
-		if (isset($_REQUEST['action'])||isset($_REQUEST['action_button']))
+		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']))
 		{
 			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
 			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
@@ -313,7 +312,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$this->arFilter = $arFilter;
 		}
 
-		if(static::$hasSections)
+		if (static::$hasSections)
 		{
 			$model = $this->getModel();
 			$this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
@@ -329,9 +328,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$arSectionsHeaders = array();
 		$sectionsInterfaceSettings = static::getInterfaceSettings(static::$sectionsEditViewName);
 		$this->sectionFields = $sectionsInterfaceSettings['FIELDS'];
-		foreach($sectionsInterfaceSettings['FIELDS'] as $code => $settings)
+		foreach ($sectionsInterfaceSettings['FIELDS'] as $code => $settings)
 		{
-			if(isset($settings['HEADER']) && $settings['HEADER'] == true)
+			if (isset($settings['HEADER']) && $settings['HEADER'] == true)
 			{
 				$arSectionsHeaders[] = array(
 					"id" => $code,
@@ -341,11 +340,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 				);
 			}
 			unset($settings['WIDGET']);
-			foreach($settings as $c => $v)
+			foreach ($settings as $c => $v)
 			{
 				$sectionsInterfaceSettings['FIELDS'][$code]['WIDGET']->setSetting($c, $v);
 			}
 		}
+
 		return $arSectionsHeaders;
 	}
 
@@ -359,7 +359,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		return array(
 			static::getButton('MAIN_ADMIN_LIST_SELECTED', array("value" => $res->SelectedRowsCount())),
-			static::getButton('MAIN_ADMIN_LIST_CHECKED', array("value" => $res->SelectedRowsCount()),array(
+			static::getButton('MAIN_ADMIN_LIST_CHECKED', array("value" => $res->SelectedRowsCount()), array(
 				"counter" => true,
 				"value" => "0",
 			)),
@@ -375,7 +375,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getContextMenu()
 	{
 		$contextMenu = array();
-		if(static::$hasSections)
+		if (static::$hasSections)
 		{
 			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
 		}
@@ -384,18 +384,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 		 * Если задан для разделов добавляем кнопку создать раздел и
 		 * кнопку на уровень вверх если это не корневой раздел
 		 */
-		if(!empty(static::$sectionModel) && isset($_REQUEST['ID']))
+		if (!empty(static::$sectionModel) && isset($_REQUEST['ID']))
 		{
-			if($_REQUEST['ID'])
+			if ($_REQUEST['ID'])
 			{
 				$params = $this->additionalUrlParams;
 				$sectionModel = static::$sectionModel;
 				$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
-				if($this->isPopup())
+				if ($this->isPopup())
 				{
 					$params = array_merge($_GET);
 				}
-				if($section[$sectionModel::getSectionField()])
+				if ($section[$sectionModel::getSectionField()])
 				{
 					$params['ID'] = $section[$sectionModel::getSectionField()];
 				}
@@ -405,7 +405,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				}
 				unset($params['SECTION_ID']);
 				$contextMenu[] = static::getButton('LIST_SECTION_UP', array(
-					'LINK' => static::getListPageURL($params),
+					'LINK' => static::getUrl($params),
 					'ICON' => 'btn_list'
 				));
 			}
@@ -416,14 +416,16 @@ abstract class AdminListHelper extends AdminBaseHelper
 		 */
 		if (!$this->isPopup() && $this->hasWriteRights())
 		{
+			$editHelperClass = static::getEditHelperClass();
 			$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
-				'LINK' => static::getEditPageURL($this->additionalUrlParams),
+				'LINK' => $editHelperClass::getUrl($this->additionalUrlParams),
 				'ICON' => 'btn_new'
 			));
-			if(static::$hasSections)
+			if (static::$hasSections)
 			{
+				$sectionsHelperClass = static::getSectionsHelperClass();
 				$contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
-					'LINK' => static::getSectionsEditPageURL($this->additionalUrlParams),
+					'LINK' => $sectionsHelperClass::getLink($this->additionalUrlParams),
 					'ICON' => 'btn_new'
 				));
 			}
@@ -447,6 +449,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$result = array('delete' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"));
 			}
 		}
+
 		return $result;
 	}
 
@@ -533,7 +536,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
-		if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
+		if (static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
 		{
 			/**
 			 * Добавляем столбцы разделов если они используются
@@ -543,20 +546,20 @@ abstract class AdminListHelper extends AdminBaseHelper
 			 * Добавляем разделы в выборку если не первая страница
 			 */
 			$sectionsModel = static::$sectionModel;
-			$res  = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
+			$res = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
 			$fields = $this->fields;
 			$this->fields = $this->sectionFields;
-			while($data = $res->Fetch())
+			while ($data = $res->Fetch())
 			{
 				$this->modifyRowData($data);
-				list($link, $name) = $this->getRow($data, 'getListPageUrl');
+				list($link, $name) = $this->getRow($data, get_called_class());
 
-				$row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
+				$row = $this->list->AddRow('s' . $data[$this->pk()], $data, $link, $name);
 				foreach ($this->fields as $code => $settings)
 				{
 					$this->addRowCell($row, $code, $data);
 				}
-				$row->AddActions( $this->getRowActions($data, true) );
+				$row->AddActions($this->getRowActions($data, true));
 			}
 			$this->fields = $fields;
 			$sectionsVisibleColumns = $this->list->GetVisibleHeaderColumns();
@@ -566,11 +569,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
-		if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
+		if (static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
 		{
-			foreach($visibleColumns as $k => $v)
+			foreach ($visibleColumns as $k => $v)
 			{
-				if(in_array($v, $sectionsVisibleColumns))
+				if (in_array($v, $sectionsVisibleColumns))
 				{
 					unset($visibleColumns[$k]);
 				}
@@ -632,12 +635,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 			{
 				$this->addRowCell($row, $code, $data);
 			}
-			$row->AddActions( $this->getRowActions($data) );
+			$row->AddActions($this->getRowActions($data));
 		}
 
-		$this->list->AddFooter( $this->getFooter($res) );
+		$this->list->AddFooter($this->getFooter($res));
 		$this->list->AddGroupActionTable($this->getGroupActions(), $this->groupActionsParams);
-		$this->list->AddAdminContextMenu( $this->getContextMenu() );
+		$this->list->AddAdminContextMenu($this->getContextMenu());
 
 		$this->list->BeginPrologContent();
 		echo $this->prologHtml;
@@ -694,8 +697,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @return array возвращает ссылку на детальную страницу и её название
 	 * @api
 	 */
-	protected function getRow($data, $method = 'getEditPageURL')
+	protected function getRow($data, $class = false)
 	{
+		if (empty($class))
+		{
+			$class = static::getEditHelperClass();
+		}
 		if ($this->isPopup())
 		{
 			return array();
@@ -707,7 +714,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				static::pk() => $data[static::pk()]
 			));
 
-			return array(static::$method($query));
+			return array($class::getUrl($query));
 		}
 	}
 
@@ -769,21 +776,20 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		else
 		{
-			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName();
-			$interfaceClass = static::getInterfaceClass();
-			if($interfaceClass)
-			{
-				$viewQueryString.='&entity='.$interfaceClass::getNamespaceUrlParam();
-			}
+			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName().'&entity=' . static::getNamespaceUrlParam();
 			$query = array_merge($this->additionalUrlParams,
 				array($this->pk() => $data[$this->pk()]));
 			if ($this->hasWriteRights())
 			{
+				$sectionHelperClass = static::getSectionsHelperClass();
+				$editHelperClass = static::getEditHelperClass();
+
+
 				$actions['edit'] = array(
 					"ICON" => "edit",
 					"DEFAULT" => true,
 					"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_EDIT"),
-					"ACTION" => $this->list->ActionRedirect($section?static::getSectionsEditPageURL($query):static::getEditPageURL($query))
+					"ACTION" => $this->list->ActionRedirect($section ? $sectionHelperClass::getUrl($query) : $editHelperClass::getUrl($query))
 				);
 			}
 			if ($this->hasDeleteRights())
@@ -792,7 +798,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					"ICON" => "delete",
 					"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),
 					"ACTION" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
-							$section?"delete-section":"delete", $viewQueryString)
+							$section ? "delete-section" : "delete", $viewQueryString)
 				);
 			}
 		}
@@ -836,7 +842,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	public function createFilterForm()
 	{
 		$this->setContext(AdminListHelper::OP_CREATE_FILTER_FORM);
-		print ' <form name="find_form" method="GET" action="' . static::getListPageURL($this->additionalUrlParams) . '?">';
+		print ' <form name="find_form" method="GET" action="' . static::getUrl($this->additionalUrlParams) . '?">';
 
 		$oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->arFilterOpts);
 		$oFilter->Begin();
@@ -848,7 +854,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$oFilter->Buttons(array(
 			"table_id" => $this->getListTableID(),
-			"url" => static::getListPageURL($this->additionalUrlParams),
+			"url" => static::getUrl($this->additionalUrlParams),
 			"form" => "find_form",
 		));
 		$oFilter->End();
@@ -1002,5 +1008,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
 		$_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
+	}
+
+	public static function getUrl($params = array())
+	{
+		return static::getViewURL(static::getViewName(), static::$listPageUrl, $params);
 	}
 }
