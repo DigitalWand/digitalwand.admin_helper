@@ -1,5 +1,6 @@
 <?php
 
+
 namespace DigitalWand\AdminHelper\Helper;
 
 use Bitrix\Main\Localization\Loc;
@@ -312,7 +313,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$this->arFilter = $arFilter;
 		}
 
-		if (static::$hasSections)
+		if (static::getHelperClass(AdminSectionEditHelper::class))
 		{
 			$model = $this->getModel();
 			$this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
@@ -326,7 +327,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	public function getSectionsHeader()
 	{
 		$arSectionsHeaders = array();
-		$sectionsInterfaceSettings = static::getInterfaceSettings(static::$sectionsEditViewName);
+		$sectionHelper = static::getHelperClass(AdminSectionEditHelper::class);
+		$sectionsInterfaceSettings = static::getInterfaceSettings($sectionHelper::getViewName());
 		$this->sectionFields = $sectionsInterfaceSettings['FIELDS'];
 		foreach ($sectionsInterfaceSettings['FIELDS'] as $code => $settings)
 		{
@@ -375,7 +377,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getContextMenu()
 	{
 		$contextMenu = array();
-		if (static::$hasSections)
+		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::class);
+		if ($sectionEditHelper)
 		{
 			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
 		}
@@ -384,12 +387,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 		 * Если задан для разделов добавляем кнопку создать раздел и
 		 * кнопку на уровень вверх если это не корневой раздел
 		 */
-		if (!empty(static::$sectionModel) && isset($_REQUEST['ID']))
+		if ($sectionEditHelper && isset($_REQUEST['ID']))
 		{
 			if ($_REQUEST['ID'])
 			{
 				$params = $this->additionalUrlParams;
-				$sectionModel = static::$sectionModel;
+				$sectionModel = $sectionEditHelper::getModel();
 				$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
 				if ($this->isPopup())
 				{
@@ -416,14 +419,17 @@ abstract class AdminListHelper extends AdminBaseHelper
 		 */
 		if (!$this->isPopup() && $this->hasWriteRights())
 		{
-			$editHelperClass = static::getEditHelperClass();
-			$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
-				'LINK' => $editHelperClass::getUrl($this->additionalUrlParams),
-				'ICON' => 'btn_new'
-			));
-			if (static::$hasSections)
+			$editHelperClass = static::getHelperClass(AdminEditHelper::class);
+			if ($editHelperClass)
 			{
-				$sectionsHelperClass = static::getSectionsHelperClass();
+				$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
+					'LINK' => $editHelperClass::getUrl($this->additionalUrlParams),
+					'ICON' => 'btn_new'
+				));
+			}
+			$sectionsHelperClass = static::getHelperClass(AdminSectionEditHelper::class);
+			if ($sectionsHelperClass)
+			{
 				$contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
 					'LINK' => $sectionsHelperClass::getUrl($this->additionalUrlParams),
 					'ICON' => 'btn_new'
@@ -536,7 +542,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
 
-		if (static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
+		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::class);
+		if ($sectionEditHelper && $_REQUEST['PAGEN_1'] < 2)
 		{
 			/**
 			 * Добавляем столбцы разделов если они используются
@@ -545,7 +552,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			/**
 			 * Добавляем разделы в выборку если не первая страница
 			 */
-			$sectionsModel = static::$sectionModel;
+			$sectionsModel = $sectionEditHelper::getModel();
 			$res = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
 			$fields = $this->fields;
 			$this->fields = $this->sectionFields;
@@ -569,7 +576,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
-		if (static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
+		if ($sectionEditHelper && $_REQUEST['PAGEN_1'] < 2)
 		{
 			foreach ($visibleColumns as $k => $v)
 			{
@@ -701,7 +708,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		if (empty($class))
 		{
-			$class = static::getEditHelperClass();
+			$class = static::getHelperClass(AdminListHelper::class);
 		}
 		if ($this->isPopup())
 		{
@@ -776,13 +783,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		else
 		{
-			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName().'&entity=' . static::getNamespaceUrlParam();
+			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName() . '&entity=' . static::getNamespaceUrlParam();
 			$query = array_merge($this->additionalUrlParams,
 				array($this->pk() => $data[$this->pk()]));
 			if ($this->hasWriteRights())
 			{
-				$sectionHelperClass = static::getSectionsHelperClass();
-				$editHelperClass = static::getEditHelperClass();
+				$sectionHelperClass = static::getHelperClass(AdminSectionEditHelper::class);
+				$editHelperClass = static::getHelperClass(AdminEditHelper::class);
 
 				$actions['edit'] = array(
 					"ICON" => "edit",

@@ -3,7 +3,9 @@
 namespace DigitalWand\AdminHelper\Helper;
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\LoaderException;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\ModuleManager;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
@@ -117,6 +119,12 @@ abstract class AdminBaseHelper
 	 * Привязка класса интерфеса к классу хелпера
 	 */
 	static protected $interfaceClass = array();
+
+	static protected $helperNames = array(
+		'list' => 'List',
+		'edit' => 'Edit',
+		'section' => 'Section'
+	);
 
 	/**
 	 * @var array
@@ -457,7 +465,7 @@ abstract class AdminBaseHelper
 			if (count($classNameParts) > 2)
 			{
 				$classCaption = str_replace('Helper', '', array_pop($classNameParts)); // название класса без namespace и приставки Helper
-				$entityName = str_replace(array('List', 'Edit'), '', $classCaption);
+				$entityName = str_replace(static::$helperNames, '', $classCaption);
 				$viewType = str_replace($entityName, '', $classCaption);
 				static::$viewName[$className] = strtolower($entityName) . '_' . strtolower($viewType);
 			}
@@ -483,6 +491,7 @@ abstract class AdminBaseHelper
 	/**
 	 * Возвращает имя модуля
 	 * @return string
+	 * @throws LoaderException
 	 * @api
 	 */
 	static public function getModule()
@@ -501,28 +510,25 @@ abstract class AdminBaseHelper
 			 * Разбираем имя класса
 			 */
 			$classNameParts = explode('\\', trim($className, '\\'));
-			/**
-			 * Получаем список модулей
-			 */
-			$rsResult = \CModule::getList();
-			$modules = array();
-			while ($arModule = $rsResult->Fetch())
-			{
-				$modules[$arModule['ID']] = $arModule['ID'];
-			}
+
 			/**
 			 * Составляем имя модуля из имени класса по частям слева направо и проверяем есть ли такой модуль
 			 */
 			$moduleNameParts = array();
+			$moduleName = false;
 			while (count($classNameParts))
 			{
 				$moduleNameParts[] = strtolower(array_shift($classNameParts));
 				$moduleName = implode('.', $moduleNameParts);
-				if (isset($modules[$moduleName]))
+				if (ModuleManager::isModuleInstalled($moduleName))
 				{
 					static::$module[$className] = $moduleName;
 					break;
 				}
+			}
+			if (empty($moduleName))
+			{
+				throw new LoaderException('Module name not found');
 			}
 		}
 
@@ -777,39 +783,46 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает имя класса EditHelper-a
-	 * @return bool|string
-	 */
-	static protected function getEditHelperClass()
-	{
-		return static::getHelperClass('Edit');
-	}
-	/**
-	 * Возвращает имя класса ListHelper-a
-	 * @return bool|string
-	 */
-	static protected function getListHelperClass()
-	{
-		return static::getHelperClass('List');
-	}
-	/**
-	 * Возвращает имя класса SectionsEditHelper-a
-	 * @return bool|string
-	 */
-	static protected function getSectionsHelperClass()
-	{
-		return static::getHelperClass(static::$sectionSuffix.'Edit');
-	}
-
-	/**
-	 * Возвращает класс хелпера нужного типа основываясь на текущем классе
+	 * Возвращает класс хелпера нужного типа основываясь на переданном параметре
 	 * @param $class
 	 * @return string|bool
 	 */
-	static protected function getHelperClass($class)
+	public function getHelperClass($class)
 	{
-		$class = str_replace(array(static::$sectionSuffix.'Edit', 'Edit', 'List'), $class, get_called_class());
-		return class_exists($class) ? $class : false;
+		$interfaceSettings = self::$interfaceSettings[static::getModule()];
+
+		foreach ($interfaceSettings as $viewName => $settings)
+		{
+			// ищем ближайшего родителя из DigitalWand\AdminHelper
+			$parentClasses = class_parents($settings['helper']);
+			array_pop($parentClasses); // AdminBaseHelper
+			$parentClass = array_pop($parentClasses);
+			$thirdClass = array_pop($parentClasses);
+			if (in_array($thirdClass, array(AdminSectionListHelper::class, AdminSectionEditHelper::class)))
+			{
+				$parentClass = $thirdClass;
+			}
+
+			if ($parentClass == $class && class_exists($settings['helper']))
+			{
+				// получаем namespace-ы
+				$helperClassParts = explode('\\', $settings['helper']);
+				array_pop($helperClassParts);
+				$helperNamespace = implode('\\', $helperClassParts);
+
+				$сlassParts = explode('\\', get_called_class());
+				array_pop($сlassParts);
+				$classNamespace = implode('\\', $сlassParts);
+
+				// сверяем namespace-ы
+				if ($helperNamespace == $classNamespace)
+				{
+					return $settings['helper'];
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/**

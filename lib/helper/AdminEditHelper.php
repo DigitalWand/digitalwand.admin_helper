@@ -142,7 +142,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				{
 					if (isset($_REQUEST['save']))
 					{
-						$url = $this->getListPageURL(array_merge($this->additionalUrlParams,
+						$listHelperClass = static::getHelperClass(AdminListHelper::class);
+						$url = $listHelperClass::getUrl(array_merge($this->additionalUrlParams,
 							array(
 								'restore_query' => 'Y'
 							)));
@@ -222,9 +223,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	protected function getMenu($showDeleteButton = true)
 	{
+		$listHelper = static::getHelperClass(AdminListHelper::class);
 		$menu = array(
 			static::getButton('RETURN_TO_LIST', array(
-				"LINK" => $this->getListPageURL(array_merge($this->additionalUrlParams,
+				"LINK" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
 					array('restore_query' => 'Y')
 				)),
 				"ICON" => "btn_list",
@@ -236,7 +238,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		if (isset($this->data[$this->pk()]) && $this->hasWriteRights())
 		{
 			$arSubMenu[] = static::getButton('ADD_ELEMENT', array(
-				"LINK" => static::getEditPageURL(array_merge($this->additionalUrlParams,
+				"LINK" => static::getUrl(array_merge($this->additionalUrlParams,
 					array(
 						'action' => 'add',
 						'lang' => LANGUAGE_ID,
@@ -250,7 +252,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		{
 			$arSubMenu[] = static::getButton('DELETE_ELEMENT', array(
 				"ONCLICK" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM') . "')) location.href='" .
-					static::getEditPageURL(array_merge($this->additionalUrlParams,
+					static::getUrl(array_merge($this->additionalUrlParams,
 						array(
 							'ID' => $this->data[$this->pk()],
 							'action' => 'delete',
@@ -303,7 +305,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		}
 
 		$this->tabControl->Begin(array(
-			'FORM_ACTION' => static::getEditPageURL($query)
+			'FORM_ACTION' => static::getUrl($query)
 		));
 
 		foreach ($this->tabs as $tabSettings)
@@ -325,8 +327,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	protected function showEditPageButtons()
 	{
+
+		$listHelper = static::getHelperClass(AdminListHelper::class);
 		$this->tabControl->Buttons(array(
-			"back_url" => $this->getListPageURL(array_merge($this->additionalUrlParams,
+			"back_url" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
 				array(
 					'lang' => LANGUAGE_ID,
 					'restore_query' => 'Y',
@@ -491,7 +495,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 			if (!$existing)
 			{
-				LocalRedirect($this->getEditPageURL(['ID' => $result->getId(), 'lang' => LANGUAGE_ID]));
+				LocalRedirect(static::getUrl(['ID' => $result->getId(), 'lang' => LANGUAGE_ID]));
 			}
 
 			return true;
@@ -584,8 +588,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		if ($action == 'delete' AND !is_null($id))
 		{
 			$this->deleteElement($id);
-
-			LocalRedirect($this->getListPageURL(array_merge($this->additionalUrlParams,
+			$listHelper = static::getHelperClass(AdminListHelper::class);
+			LocalRedirect($listHelper::getUrl(array_merge($this->additionalUrlParams,
 				array(
 					'restore_query' => 'Y'
 				))));
