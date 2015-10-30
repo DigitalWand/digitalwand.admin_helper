@@ -541,6 +541,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	public function buildList($sort)
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
+		$isSectionListHelper = static::getHelperClass(AdminSectionListHelper::class) == static::class;
 
 		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::class);
 		if ($sectionEditHelper && $_REQUEST['PAGEN_1'] < 2)
@@ -553,7 +554,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 			 * Добавляем разделы в выборку если не первая страница
 			 */
 			$sectionsModel = $sectionEditHelper::getModel();
-			$res = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
+			$sectionFilter = array(
+				$sectionsModel::getSectionField() => $_REQUEST['ID'],
+			);
+			if($isSectionListHelper)
+			{
+				$sectionFilter = array_merge($sectionFilter, $this->arFilter);
+			}
+			$res = $sectionsModel::getList(array('filter'=>$sectionFilter));
 			$fields = $this->fields;
 			$this->fields = $this->sectionFields;
 			while ($data = $res->Fetch())
@@ -624,25 +632,34 @@ abstract class AdminListHelper extends AdminBaseHelper
 				unset($listSelect[$code]);
 			}
 		}
-		// Поля для селекта (множественные поля отфильтрованы)
-		$listSelect = array_flip($listSelect);
-		$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
+
+		// для AdminSectionListHelper не выбираем элементы
+		if(!$isSectionListHelper)
+		{
+			// Поля для селекта (множественные поля отфильтрованы)
+			$listSelect = array_flip($listSelect);
+			$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
+		}
 
 		$res = new \CAdminResult($res, $this->getListTableID());
 		$res->NavStart();
 
 		$this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
 
-		while ($data = $res->NavNext(false))
+		// для AdminSectionListHelper не выбираем элементы
+		if(!$isSectionListHelper)
 		{
-			$this->modifyRowData($data);
-			list($link, $name) = $this->getRow($data);
-			$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
-			foreach ($this->fields as $code => $settings)
+			while ($data = $res->NavNext(false))
 			{
-				$this->addRowCell($row, $code, $data);
+				$this->modifyRowData($data);
+				list($link, $name) = $this->getRow($data);
+				$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
+				foreach ($this->fields as $code => $settings)
+				{
+					$this->addRowCell($row, $code, $data);
+				}
+				$row->AddActions($this->getRowActions($data));
 			}
-			$row->AddActions($this->getRowActions($data));
 		}
 
 		$this->list->AddFooter($this->getFooter($res));
