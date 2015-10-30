@@ -769,7 +769,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		else
 		{
-			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::$viewName;
+			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName();
 			$query = array_merge($this->additionalUrlParams,
 				array($this->pk() => $data[$this->pk()]));
 			if ($this->hasWriteRights())
