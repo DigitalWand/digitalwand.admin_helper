@@ -54,21 +54,21 @@ class ImageWidget extends FileWidget
      */
     public function genListHTML(&$row, $data)
     {
-        $image = $this->getImageByID($data[$this->code],'LIST');
+        if ($_REQUEST['mode'] == 'excel') {
+            $path = \CFile::GetPath($data[$this->code]);
+            $scheme = empty($_SERVER['REQUEST_SCHEME']) ? 'http' : $_SERVER['REQUEST_SCHEME'];
+            $html = $scheme . '://' . $_SERVER['SERVER_NAME'] . $path;
 
-        if (!$image)
-        {
-            $html = "";    
-        }
-        else
-        {
-            if ($_REQUEST['mode'] == 'excel') {
-                $html = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . $image['src'];
+        } else {
+            $image = $this->getImageByID($data[$this->code], 'LIST');
+            if (!$image) {
+                $html = "";
             } else {
                 $html = '<img src="' . $image['src'] . '" width="' . $this->getSettings('LIST_WIDTH') . '" height="' . $this->getSettings('LIST_HEIGHT') . '">';
             }
         }
-        $row->AddViewField($this->code,$html);
+
+        $row->AddViewField($this->code, $html);
 
     }
 
