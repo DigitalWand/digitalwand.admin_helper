@@ -62,7 +62,11 @@ class ImageWidget extends FileWidget
         }
         else
         {
-            $html = '<img src="'.$image['src'].'" width="'.$this->getSettings('LIST_WIDTH').'" height="'.$this->getSettings('LIST_HEIGHT').'">';
+            if ($_REQUEST['mode'] == 'excel') {
+                $html = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . $image['src'];
+            } else {
+                $html = '<img src="' . $image['src'] . '" width="' . $this->getSettings('LIST_WIDTH') . '" height="' . $this->getSettings('LIST_HEIGHT') . '">';
+            }
         }
         $row->AddViewField($this->code,$html);
 
