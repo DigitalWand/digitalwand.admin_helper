@@ -405,9 +405,11 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->fields as $name => $settings) {
             if ((isset($settings['VIRTUAL']) AND $settings['VIRTUAL'] == true)) {
                 $key = array_search($name, $visibleColumns);
-                unset($visibleColumns[$key]);
-                unset($this->arFilter[$name]);
-                unset($sort[$name]);
+                if($key){
+                    unset($visibleColumns[$key]);
+                    unset($this->arFilter[$name]);
+                    unset($sort[$name]);
+                }
             }
             if (isset($settings['FORCE_SELECT']) AND $settings['FORCE_SELECT'] == true) {
                 $visibleColumns[] = $name;
