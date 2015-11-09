@@ -405,7 +405,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         foreach ($this->fields as $name => $settings) {
             if ((isset($settings['VIRTUAL']) AND $settings['VIRTUAL'] == true)) {
                 $key = array_search($name, $visibleColumns);
-                if($key){
+                if($key !== false){
                     unset($visibleColumns[$key]);
                     unset($this->arFilter[$name]);
                     unset($sort[$name]);
