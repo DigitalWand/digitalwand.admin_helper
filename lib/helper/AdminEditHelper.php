@@ -3,6 +3,7 @@
 namespace DigitalWand\AdminHelper\Helper;
 
 use Bitrix\Main\Localization\Loc;
+use DigitalWand\AdminHelper\Model\EntityManager;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 
@@ -531,20 +532,12 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * @throws \Exception
 	 * @api
 	 */
-	protected function saveElement($id = false)
+	protected function saveElement($id = null)
 	{
 		$className = static::getModel();
+		$saveHelper = new EntityManager($className, $this->data, $id);
 
-		if ($id)
-		{
-			$result = $className::update($id, $this->data);
-		}
-		else
-		{
-			$result = $className::add($this->data);
-		}
-
-		return $result;
+		return $saveHelper->save();
 	}
 
 	/**
