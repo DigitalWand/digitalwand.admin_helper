@@ -11,6 +11,7 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Helper\AdminListHelper' => 'lib/helper/AdminListHelper.php',
         'DigitalWand\AdminHelper\Helper\AdminEditHelper' => 'lib/helper/AdminEditHelper.php',
         'DigitalWand\AdminHelper\Model\RelativeDataManager' => 'lib/model/relativedatamanager.php',
+        'DigitalWand\AdminHelper\Model\EntityManager' => 'lib/model/EntityManager.php',
         'DigitalWand\AdminHelper\Helper\Exception' => 'lib/helper/Exception.php',
 
         'DigitalWand\AdminHelper\Widget\HelperWidget' => 'lib/widget/HelperWidget.php',
