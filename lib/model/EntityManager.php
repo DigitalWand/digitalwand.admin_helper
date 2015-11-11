@@ -128,8 +128,7 @@ class EntityManager
 
 	public function save()
 	{
-		echo "Save\n";
-		$this->beforeSave();
+		$this->collectReferencesData();
 
 		/** @var DataManager $modelClass */
 		$modelClass = $this->modelClass;
@@ -146,13 +145,16 @@ class EntityManager
 			$result = $modelClass::update($this->modelId, $this->modelData);
 		}
 
-		return $result->isSuccess();
-	}
+		if ($result->isSuccess())
+		{
+			$this->processReferencesData();
 
-	protected function beforeSave()
-	{
-		$this->collectReferencesData();
-		$this->processReferencesData();
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -162,7 +164,7 @@ class EntityManager
 	 */
 	protected function getReferences()
 	{
-		echo "Сбор связей\n";
+		echo "# Сбор списка связей\n";
 		$references = [];
 		/** @var DataManager $modelClass */
 		$modelClass = $this->modelClass;
@@ -173,9 +175,11 @@ class EntityManager
 		{
 			if ($field instanceof Entity\ReferenceField)
 			{
+				echo "$fieldName, ";
 				$references[$fieldName] = $field;
 			}
 		}
+		echo "\n";
 
 		return $references;
 	}
@@ -185,21 +189,23 @@ class EntityManager
 	 */
 	protected function collectReferencesData()
 	{
-		echo "Сбор данных связей\n";
 		$references = $this->getReferences();
+		echo "# Сбор данных связей\n";
 
 		// Извлечение данных управляемых связей
 		foreach ($references as $fieldName => $reference)
 		{
-			if (!empty($entityData[$fieldName]))
+			if (!empty($this->modelData[$fieldName]))
 			{
+				echo "$fieldName, ";
+
 				// Извлечение данных для связи
-				$this->referencesData[$fieldName] = $entityData[$fieldName];
+				$this->referencesData[$fieldName] = $this->modelData[$fieldName];
 				unset($this->modelData[$fieldName]);
 			}
 		}
 
-		print_r($this->referencesData);
+		echo "\n";
 	}
 
 	/**
@@ -209,7 +215,7 @@ class EntityManager
 	 */
 	protected function processReferencesData()
 	{
-		echo "Обработка данных связей\n";
+		echo "# Обработка данных связей\n";
 
 		/** @var DataManager $modelClass */
 		$modelClass = $this->modelClass;
@@ -220,8 +226,8 @@ class EntityManager
 		{
 			/** @var Entity\ReferenceField $reference */
 			$reference = $fields[$fieldName];
-			$referenceDataSet = $this->linkDataSet($reference, $referenceDataSet, $this->modelData);
-			$referenceStaleDataSet = $this->getReferenceDataSet($reference, $this->modelId);
+			$referenceDataSet = $this->linkDataSet($reference, $referenceDataSet);
+			$referenceStaleDataSet = $this->getReferenceDataSet($reference);
 
 			// Создание и обновление привязанных данных
 			$processedDataIds = [];
@@ -229,8 +235,8 @@ class EntityManager
 			{
 				if (empty($referenceData['ID']))
 				{
+					// Создание данных связи
 					$resultId = $this->createReferenceData($reference, $referenceData);
-
 					if ($resultId)
 					{
 						$processedDataIds[] = $resultId;
@@ -238,11 +244,16 @@ class EntityManager
 				}
 				else
 				{
-					$this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet, $this->modelData);
-
-					if ($referenceData['ID'])
+					if ($this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet) === false)
 					{
-						$processedDataIds[] = $referenceData['ID'];
+						echo "ЛАЖА\n";
+					}
+					else
+					{
+						if ($referenceData['ID'])
+						{
+							$processedDataIds[] = $referenceData['ID'];
+						}
 					}
 				}
 			}
@@ -252,7 +263,10 @@ class EntityManager
 			{
 				if (!in_array($referenceData['ID'], $processedDataIds))
 				{
-					$this->deleteReferenceData($reference, $referenceData['ID']);
+					if ($this->deleteReferenceData($reference, $referenceData['ID']) === false)
+					{
+						echo "ЛАЖА\n";
+					}
 				}
 			}
 		}
@@ -262,23 +276,22 @@ class EntityManager
 
 	/**
 	 * Удаление всех данных связей
-	 *
-	 * @param Entity\Event $event
 	 */
-	protected function deleteReferencesData(Entity\Event $event)
+	protected function deleteReferencesData()
 	{
-		echo "Удаление данных связей\n";
-
-		$references = $this->getReferences();
-		$entityId = $event->getParameter('primary')['ID'];
-		foreach ($references as $fieldName => $reference)
-		{
-			$referenceStaleDataSet = $this->getReferenceDataSet($reference, $entityId);
-			foreach ($referenceStaleDataSet as $referenceData)
-			{
-				$this->deleteReferenceData($reference, $referenceData['ID']);
-			}
-		}
+		echo "# Удаление данных связей\n";
+		// TODO Удалять только данные связей, который описаны в интерфейсе
+		/*
+				$references = $this->getReferences();
+				foreach ($references as $fieldName => $reference)
+				{
+					$referenceStaleDataSet = $this->getReferenceDataSet($reference, $this->modelId);
+					foreach ($referenceStaleDataSet as $referenceData)
+					{
+						$this->deleteReferenceData($reference, $referenceData['ID']);
+					}
+				}
+		*/
 	}
 
 	/**
@@ -291,7 +304,7 @@ class EntityManager
 	 */
 	protected function createReferenceData(Entity\ReferenceField $reference, array $referenceData)
 	{
-		echo "Создание данных связей\n";
+		echo "# Создание.......\n";
 		if (!empty($referenceData['ID']))
 		{
 			throw new \ArgumentException('Аргумент data не может содержать идентификатор элемента', 'data');
@@ -308,16 +321,13 @@ class EntityManager
 	 *
 	 * @param Entity\ReferenceField $reference
 	 * @param array $referenceData
-	 * @param array $entityData
 	 * @param array $referenceStaleDataSet
 	 * @return bool
 	 * @throws \ArgumentException
 	 */
-	protected function updateReferenceData(
-		Entity\ReferenceField $reference, array $referenceData, array $referenceStaleDataSet, array $entityData
-	)
+	protected function updateReferenceData(Entity\ReferenceField $reference, array $referenceData, array $referenceStaleDataSet)
 	{
-		echo "Обновление данных связей\n";
+		echo "# Обновление.......\n";
 		if (empty($referenceData['ID']))
 		{
 			throw new \ArgumentException('Аргумент data должен содержать идентификатор элемента', 'data');
@@ -327,7 +337,7 @@ class EntityManager
 		if ($this->isDifferentData($referenceStaleDataSet[$referenceData['ID']], $referenceData))
 		{
 			$refClass = $reference->getRefEntity()->getDataClass();
-			$result = $refClass::update($entityData['ID'], $referenceData);
+			$result = $refClass::update($this->modelData['ID'], $referenceData);
 
 			return ($result->isSuccess() ? $referenceData['ID'] : false);
 		}
@@ -347,11 +357,7 @@ class EntityManager
 	 */
 	protected function deleteReferenceData(Entity\ReferenceField $reference, $referenceId)
 	{
-		echo "Удаление данных связей\n";
-		if (!empty($referenceData['ID']))
-		{
-			throw new \ArgumentException('Аргумент data не может содержать идентификатор элемента', 'data');
-		}
+		echo "# Удаление.......\n";
 
 		$refClass = $reference->getRefEntity()->getDataClass();
 		$result = $refClass::delete($referenceId);
@@ -363,14 +369,15 @@ class EntityManager
 	 * Чтение связанной записи
 	 *
 	 * @param $reference
-	 * @param $entityId
 	 * @return array
 	 */
-	protected function getReferenceDataSet(Entity\ReferenceField $reference, $entityId)
+	protected function getReferenceDataSet(Entity\ReferenceField $reference)
 	{
-		echo "Чтение данных связи\n";
+		echo "# Чтение данных связи\n";
+		/** @var DataManager $modelClass */
+		$modelClass = $this->modelClass;
 		$dataSet = [];
-		$rsData = static::getList(['select' => ['REF_' => $reference->getName() . '.*'], 'filter' => ['=ID' => $entityId]]);
+		$rsData = $modelClass::getList(['select' => ['REF_' => $reference->getName() . '.*'], 'filter' => ['=ID' => $this->modelId]]);
 		while ($data = $rsData->fetch())
 		{
 			if (empty($data['REF_ID']))
@@ -395,17 +402,16 @@ class EntityManager
 	 *
 	 * @param Entity\ReferenceField $reference
 	 * @param array $referenceData
-	 * @param array $entityData
 	 * @return array
 	 */
-	protected function linkData(Entity\ReferenceField $reference, array $referenceData, array $entityData)
+	protected function linkData(Entity\ReferenceField $reference, array $referenceData)
 	{
-		echo "Связывание данных\n";
 		$referenceConditions = $this->getReferenceConditions($reference);
+		echo "# Связывание данных\n";
 
 		foreach ($referenceConditions as $thisField => $refField)
 		{
-			$referenceData[$refField] = $entityData[$thisField];
+			$referenceData[$refField] = $this->modelData[$thisField];
 		}
 
 		return $referenceData;
@@ -416,15 +422,14 @@ class EntityManager
 	 *
 	 * @param Entity\ReferenceField $reference
 	 * @param array $referenceDataSet
-	 * @param array $entityData
 	 * @return array
 	 */
-	protected function linkDataSet(Entity\ReferenceField $reference, array $referenceDataSet, array $entityData)
+	protected function linkDataSet(Entity\ReferenceField $reference, array $referenceDataSet)
 	{
-		echo "Связывание набора данных\n";
+		echo "# Связывание набора данных\n";
 		foreach ($referenceDataSet as $key => $referenceData)
 		{
-			$referenceDataSet[$key] = $this->linkData($reference, $referenceData, $entityData);
+			$referenceDataSet[$key] = $this->linkData($reference, $referenceData);
 		}
 
 		return $referenceDataSet;
@@ -438,7 +443,7 @@ class EntityManager
 	 */
 	protected function getReferenceConditions(Entity\ReferenceField $reference)
 	{
-		echo "Парсинг условий\n";
+		echo "# Парсинг условий\n";
 		$conditionsFields = [];
 
 		foreach ($reference->getReference() as $thisCondition => $refCondition)
@@ -456,8 +461,10 @@ class EntityManager
 			else
 			{
 				$conditionsFields[$thisFieldMatch[1]] = $refFieldMatch[1];
+				echo "$thisFieldMatch[1] => $refFieldMatch[1]";
 			}
 		}
+		echo "\n";
 
 		return $conditionsFields;
 	}
