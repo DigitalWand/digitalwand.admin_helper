@@ -99,6 +99,7 @@ use Bitrix\Main\Entity;
  * и используйте трейт DataManagerTrait
  */
 // TODO Использовать PK вместо ID
+// TODO Автоматическая подстановка FIELD, ENTITY при чтении и сохранении
 class EntityManager
 {
 	/**
@@ -119,11 +120,23 @@ class EntityManager
 	 */
 	protected $referencesData;
 
+	/**
+	 * @param DataManager $modelClass
+	 * @param $modelData
+	 * @param null $modelId
+	 */
 	public function __construct($modelClass, $modelData, $modelId = null)
 	{
 		$this->modelClass = $modelClass;
 		$this->modelData = $modelData;
 		$this->modelId = $modelId;
+
+		if (!empty($this->modelId))
+		{
+			/** @var Entity\Base $entity */
+			$entity = $modelClass::getEntity();
+			$this->modelData[$entity->getPrimary()] = $this->modelId;
+		}
 	}
 
 	public function save()
@@ -237,9 +250,13 @@ class EntityManager
 				{
 					// Создание данных связи
 					$resultId = $this->createReferenceData($reference, $referenceData);
-					if ($resultId)
+					if ($resultId !== false)
 					{
 						$processedDataIds[] = $resultId;
+					}
+					else
+					{
+						echo "ЛАЖА\n";
 					}
 				}
 				else
@@ -337,7 +354,7 @@ class EntityManager
 		if ($this->isDifferentData($referenceStaleDataSet[$referenceData['ID']], $referenceData))
 		{
 			$refClass = $reference->getRefEntity()->getDataClass();
-			$result = $refClass::update($this->modelData['ID'], $referenceData);
+			$result = $refClass::update($referenceData['ID'], $referenceData);
 
 			return ($result->isSuccess() ? $referenceData['ID'] : false);
 		}
@@ -377,6 +394,7 @@ class EntityManager
 		/** @var DataManager $modelClass */
 		$modelClass = $this->modelClass;
 		$dataSet = [];
+
 		$rsData = $modelClass::getList(['select' => ['REF_' => $reference->getName() . '.*'], 'filter' => ['=ID' => $this->modelId]]);
 		while ($data = $rsData->fetch())
 		{
@@ -473,13 +491,14 @@ class EntityManager
 	 * Обнаружение отличий массивов
 	 * Метод не сранивает наличие аргументов, сравниваются только значения общих параметров
 	 *
-	 * @param $data1
-	 * @param $data2
+	 * @param array $data1
+	 * @param array $data2
 	 * @return bool
 	 */
-	protected function isDifferentData($data1, $data2)
+	protected function isDifferentData(array $data1 = null, array $data2 = null)
 	{
-		echo "Проверка отличий данных\n";
+		echo "Проверка различий данных\n";
+
 		foreach ($data1 as $key => $value)
 		{
 			if (isset($data2[$key]) && $data2[$key] != $value)
@@ -487,6 +506,8 @@ class EntityManager
 				return true;
 			}
 		}
+
+		echo "Данные не отличаются\n";
 
 		return false;
 	}
