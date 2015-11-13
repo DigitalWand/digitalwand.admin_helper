@@ -50,9 +50,14 @@ class CheckboxWidget extends HelperWidget
             $row->AddEditField($this->getCode(), $editHtml);
         }
 
-        $value = intval($this->getValue() == 'Y') ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
+        $value = $this->getValueReadonly();
         $row->AddViewField($this->getCode(), $value);
 
+    }
+
+    protected function getValueReadonly()
+    {
+        return intval($this->getValue() == 'Y') ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
     }
 
     /**
