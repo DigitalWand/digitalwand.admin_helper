@@ -308,7 +308,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
      * @param $tabSettings
      * @internal
      */
-    private function showTabElements($tabSettings)
+    protected function showTabElements($tabSettings)
     {
         $this->setContext(AdminEditHelper::OP_SHOW_TAB_ELEMENTS);
 
