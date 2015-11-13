@@ -1,7 +1,9 @@
 <?php
-
+// TODO Проверить, не удаляются ли поля, не имеющие отношения к управляемым связям
+// TODO Описать как хранить разные поля, разные поля разных моделей в одной таблице
 namespace DigitalWand\AdminHelper\Model;
 
+use Bitrix\Main\ArgumentException;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Entity;
 
@@ -99,7 +101,6 @@ use Bitrix\Main\Entity;
  * и используйте трейт DataManagerTrait
  */
 // TODO Использовать PK вместо ID
-// TODO Автоматическая подстановка FIELD, ENTITY при чтении и сохранении
 class EntityManager
 {
 	/**
@@ -141,6 +142,7 @@ class EntityManager
 
 	public function save()
 	{
+		ob_start();
 		$this->collectReferencesData();
 
 		/** @var DataManager $modelClass */
@@ -161,13 +163,11 @@ class EntityManager
 		if ($result->isSuccess())
 		{
 			$this->processReferencesData();
+		}
 
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		ShowMessage(ob_get_clean());
+
+		return $result;
 	}
 
 	/**
@@ -188,7 +188,7 @@ class EntityManager
 		{
 			if ($field instanceof Entity\ReferenceField)
 			{
-				echo "$fieldName, ";
+				//echo "$fieldName, ";
 				$references[$fieldName] = $field;
 			}
 		}
@@ -208,9 +208,9 @@ class EntityManager
 		// Извлечение данных управляемых связей
 		foreach ($references as $fieldName => $reference)
 		{
-			if (!empty($this->modelData[$fieldName]))
+			if (isset($this->modelData[$fieldName]))
 			{
-				echo "$fieldName, ";
+				//echo "$fieldName, ";
 
 				// Извлечение данных для связи
 				$this->referencesData[$fieldName] = $this->modelData[$fieldName];
@@ -224,7 +224,7 @@ class EntityManager
 	/**
 	 * Обработка данных для связей
 	 *
-	 * @throws \ArgumentException
+	 * @throws ArgumentException
 	 */
 	protected function processReferencesData()
 	{
@@ -237,6 +237,7 @@ class EntityManager
 
 		foreach ($this->referencesData as $fieldName => $referenceDataSet)
 		{
+			echo "\n$fieldName\n";
 			/** @var Entity\ReferenceField $reference */
 			$reference = $fields[$fieldName];
 			$referenceDataSet = $this->linkDataSet($reference, $referenceDataSet);
@@ -249,28 +250,34 @@ class EntityManager
 				if (empty($referenceData['ID']))
 				{
 					// Создание данных связи
-					$resultId = $this->createReferenceData($reference, $referenceData);
-					if ($resultId !== false)
+					if (!empty($referenceData['VALUE']))
 					{
-						$processedDataIds[] = $resultId;
-					}
-					else
-					{
-						echo "ЛАЖА\n";
+						$result = $this->createReferenceData($reference, $referenceData);
+						if ($result->isSuccess())
+						{
+							$processedDataIds[] = $result->getId();
+						}
+						else
+						{
+							echo "ЛАЖА\n";
+						}
 					}
 				}
 				else
 				{
-					if ($this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet) === false)
+					$updateResult = $this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet);
+					if ($updateResult !== false)
 					{
-						echo "ЛАЖА\n";
+						if (is_object($updateResult) && !$updateResult->isSuccess())
+						{
+							echo "ЛАЖА\n";
+						}
+
+						$processedDataIds[] = $referenceData['ID'];
 					}
 					else
 					{
-						if ($referenceData['ID'])
-						{
-							$processedDataIds[] = $referenceData['ID'];
-						}
+						echo "ЛАЖА\n";
 					}
 				}
 			}
@@ -280,7 +287,7 @@ class EntityManager
 			{
 				if (!in_array($referenceData['ID'], $processedDataIds))
 				{
-					if ($this->deleteReferenceData($reference, $referenceData['ID']) === false)
+					if (!$this->deleteReferenceData($reference, $referenceData['ID'])->isSuccess())
 					{
 						echo "ЛАЖА\n";
 					}
@@ -316,21 +323,22 @@ class EntityManager
 	 *
 	 * @param Entity\ReferenceField $reference
 	 * @param array $referenceData
-	 * @return bool|int
-	 * @throws \ArgumentException
+	 * @return \Bitrix\Main\Entity\AddResult
+	 * @throws ArgumentException
 	 */
 	protected function createReferenceData(Entity\ReferenceField $reference, array $referenceData)
 	{
 		echo "# Создание.......\n";
 		if (!empty($referenceData['ID']))
 		{
-			throw new \ArgumentException('Аргумент data не может содержать идентификатор элемента', 'data');
+			throw new ArgumentException('Аргумент data не может содержать идентификатор элемента', 'data');
 		}
 
 		$refClass = $reference->getRefEntity()->getDataClass();
-		$result = $refClass::add($referenceData);
 
-		return ($result->isSuccess() ? $result->getId() : false);
+		print_r($referenceData);
+
+		return $refClass::add($referenceData);
 	}
 
 	/**
@@ -339,15 +347,15 @@ class EntityManager
 	 * @param Entity\ReferenceField $reference
 	 * @param array $referenceData
 	 * @param array $referenceStaleDataSet
-	 * @return bool
-	 * @throws \ArgumentException
+	 * @return Entity\UpdateResult|null
+	 * @throws ArgumentException
 	 */
 	protected function updateReferenceData(Entity\ReferenceField $reference, array $referenceData, array $referenceStaleDataSet)
 	{
 		echo "# Обновление.......\n";
 		if (empty($referenceData['ID']))
 		{
-			throw new \ArgumentException('Аргумент data должен содержать идентификатор элемента', 'data');
+			throw new ArgumentException('Аргумент data должен содержать идентификатор элемента', 'data');
 		}
 
 		// Сравнение старых данных и новых, обновляется только при различиях
@@ -356,11 +364,11 @@ class EntityManager
 			$refClass = $reference->getRefEntity()->getDataClass();
 			$result = $refClass::update($referenceData['ID'], $referenceData);
 
-			return ($result->isSuccess() ? $referenceData['ID'] : false);
+			return $result;
 		}
 		else
 		{
-			return $referenceData['ID'];
+			return null;
 		}
 	}
 
@@ -369,8 +377,8 @@ class EntityManager
 	 *
 	 * @param Entity\ReferenceField $reference
 	 * @param $referenceId
-	 * @return bool|int
-	 * @throws \ArgumentException
+	 * @return \Bitrix\Main\Entity\Result
+	 * @throws ArgumentException
 	 */
 	protected function deleteReferenceData(Entity\ReferenceField $reference, $referenceId)
 	{
@@ -379,7 +387,7 @@ class EntityManager
 		$refClass = $reference->getRefEntity()->getDataClass();
 		$result = $refClass::delete($referenceId);
 
-		return ($result->isSuccess() ? $referenceId : false);
+		return $result;
 	}
 
 	/**
@@ -427,9 +435,17 @@ class EntityManager
 		$referenceConditions = $this->getReferenceConditions($reference);
 		echo "# Связывание данных\n";
 
-		foreach ($referenceConditions as $thisField => $refField)
+		foreach ($referenceConditions as $refField => $refValue)
 		{
-			$referenceData[$refField] = $this->modelData[$thisField];
+			if (empty($refValue['thisField']))
+			{
+				$referenceData[$refField] = $refValue['customValue'];
+			}
+			else
+			{
+				$referenceData[$refField] = $this->modelData[$refValue['thisField']];
+			}
+			//echo "$refField = $referenceData[$refField]\n";
 		}
 
 		return $referenceData;
@@ -461,28 +477,64 @@ class EntityManager
 	 */
 	protected function getReferenceConditions(Entity\ReferenceField $reference)
 	{
-		echo "# Парсинг условий\n";
+		echo "# Парсинг условий " . $reference->getName() . "\n";
 		$conditionsFields = [];
 
-		foreach ($reference->getReference() as $thisCondition => $refCondition)
+		foreach ($reference->getReference() as $leftCondition => $rightCondition)
 		{
+			$thisField = null;
+			$refField = null;
+			$customValue = null;
+
+			// Поиск this.... в левом условии
 			$thisFieldMatch = [];
 			$refFieldMatch = [];
+			if (preg_match('/=this\.([A-z]+)/', $leftCondition, $thisFieldMatch) == 1)
+			{
+				$thisField = $thisFieldMatch[1];
+			}
+			// Поиск ref.... в левом условии
+			else if (preg_match('/ref\.([A-z]+)/', $leftCondition, $refFieldMatch) == 1)
+			{
+				$refField = $refFieldMatch[1];
+			}
 
-			preg_match('/=this\.([A-z]+)/', $thisCondition, $thisFieldMatch);
-			preg_match('/ref\.([A-z]+)/', $refCondition, $refFieldMatch);
+			// Поиск expression value... в правом условии
+			$refFieldMatch = [];
+			if ($rightCondition instanceof \Bitrix\Main\DB\SqlExpression)
+			{
+				$customValueDirty = $rightCondition->compile();
+				$customValue = preg_replace('/^([\'"])(.+)\1$/', '$2', $customValueDirty);
+				if ($customValueDirty == $customValue)
+				{
+					// Если значение выражения не обрамлено кавычками, значит оно не нужно нам
+					$customValue = null;
+				}
+			}
+			// Поиск ref.... в правом условии
+			else if (preg_match('/ref\.([A-z]+)/', $rightCondition, $refFieldMatch) > 0)
+			{
+				$refField = $refFieldMatch[1];
+			}
 
-			if (empty($thisFieldMatch[1]) || empty($refFieldMatch[1]))
+			//echo "\n= " . $refField . ' - ' . $thisField . ' - ' . $customValue . "\n";
+
+			// Если не указано поле, которое нужно заполнить или не найдено содержимое для него, то исключаем условие
+			if (empty($refField) || (empty($thisField) && empty($customValue)))
 			{
 				continue;
 			}
 			else
 			{
-				$conditionsFields[$thisFieldMatch[1]] = $refFieldMatch[1];
-				echo "$thisFieldMatch[1] => $refFieldMatch[1]";
+				$conditionsFields[$refField] = [
+					'thisField' => $thisField,
+					'customValue' => $customValue,
+				];
+				//echo "Принято\n";
 			}
 		}
-		echo "\n";
+
+		//echo "\n";
 
 		return $conditionsFields;
 	}

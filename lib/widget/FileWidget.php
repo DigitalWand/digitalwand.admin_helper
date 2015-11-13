@@ -172,12 +172,6 @@ class FileWidget extends HelperWidget
 			{
 				foreach ($_FILES[$this->getCode()]['name'] as $key => $fileName)
 				{
-					if (empty($fileName)
-						|| empty($_FILES[$this->getCode()]['tmp_name'][$key])
-						|| !empty($_FILES[$this->getCode()]['error'][$key])) {
-						continue;
-					}
-
 					$description = null;
 
 					if (isset($this->data[$this->getCode()][$key]['DESCRIPTION']))
@@ -188,6 +182,12 @@ class FileWidget extends HelperWidget
 					if (empty($this->data[$this->getCode()][$key]))
 					{
 						unset($this->data[$this->getCode()][$key]);
+					}
+
+					if (empty($fileName)
+						|| empty($_FILES[$this->getCode()]['tmp_name'][$key])
+						|| !empty($_FILES[$this->getCode()]['error'][$key])) {
+						continue;
 					}
 
 					$fileId = $this->saveFile($fileName, $_FILES[$this->getCode()]['tmp_name'][$key], false, $description);
