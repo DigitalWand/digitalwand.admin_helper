@@ -6,28 +6,10 @@ use DigitalWand\AdminHelper\Helper\AdminEditHelper;
 
 require_once($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_before.php");
 
-function getRequestParams($param)
-{
-    if (!isset($_REQUEST[$param])) {
-        return false;
-    } else {
-        return htmlspecialcharsbx($_REQUEST[$param]);
-    }
-}
+AdminListHelper::sessionSortFix();
 
-/*Очищаем переменные сессии, чтобы сортировка восстанавливалась с учетом $table_id */
-/** @global CMain $APPLICATION */
-global $APPLICATION;
-$uniq = md5($APPLICATION->GetCurPage());
-if (isset($_SESSION["SESS_SORT_BY"][$uniq])) {
-    unset($_SESSION["SESS_SORT_BY"][$uniq]);
-}
-if (isset($_SESSION["SESS_SORT_ORDER"][$uniq])) {
-    unset($_SESSION["SESS_SORT_ORDER"][$uniq]);
-}
-
-$module = getRequestParams('module');
-$view = getRequestParams('view');
+$module = AdminBaseHelper::getRequestParam('module');
+$view = AdminBaseHelper::getRequestParam('view');
 if (!$module OR !$view OR !Loader::IncludeModule($module)) {
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }

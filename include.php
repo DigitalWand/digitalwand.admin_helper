@@ -6,6 +6,8 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
     array(
         'DigitalWand\AdminHelper\EventHandlers' => 'lib/EventHandlers.php',
 
+        'DigitalWand\AdminHelper\View\AdminList' => 'lib/view/AdminList.php',
+
         'DigitalWand\AdminHelper\Helper\AdminBaseHelper' => 'lib/helper/AdminBaseHelper.php',
         'DigitalWand\AdminHelper\Helper\AdminListHelper' => 'lib/helper/AdminListHelper.php',
         'DigitalWand\AdminHelper\Helper\AdminEditHelper' => 'lib/helper/AdminEditHelper.php',
@@ -22,5 +24,7 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Widget\VisualEditorWidget' => 'lib/widget/VisualEditorWidget.php',
         'DigitalWand\AdminHelper\Widget\DateTimeWidget' => 'lib/widget/DateTimeWidget.php',
         'DigitalWand\AdminHelper\Widget\HLIBlockFieldWidget' => 'lib/widget/HLIBlockFieldWidget.php',
+
+        'DigitalWand\AdminHelper\Agent\ExcelExport' => 'lib/agent/ExcelExport.php',
     )
 );

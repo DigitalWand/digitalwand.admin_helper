@@ -2,6 +2,7 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
@@ -243,6 +244,10 @@ abstract class AdminBaseHelper
      */
     static public function setInterfaceSettings(array $settings, array $helpers = array(), $module = '')
     {
+        if(!empty($module)){
+            Loader::includeModule($module);
+        }
+
         foreach ($helpers as $helper/**@var AdminBaseHelper $helper */) {
             $success = $helper::registerInterfaceSettings($module, $settings);
             if (!$success) return false;
@@ -307,6 +312,22 @@ abstract class AdminBaseHelper
             self::$interfaceSettings[$module][$view]['helper'],
             self::$interfaceSettings[$module][$view]['interface'],
         );
+    }
+
+    /**
+     * Получает $_GET-параметр для определения типа хэлпера
+     * Выполняется на этапе роутинга
+     * @param $param
+     * @return bool|string
+     */
+    static public function getRequestParam($param)
+    {
+        $request = Application::getInstance()->getContext()->getRequest();
+        if (!$request[$param]) {
+            return false;
+        } else {
+            return htmlspecialcharsbx($request[$param]);
+        }
     }
 
     /**

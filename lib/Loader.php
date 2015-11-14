@@ -20,6 +20,8 @@ use Bitrix\Main\Context;
  */
 class Loader
 {
+    static protected $loadedInterfaces = array();
+
     /**
      * @param string $interface путь к Interface.php или полное наименование класса-интерфейса
      */
@@ -31,6 +33,22 @@ class Loader
             } else {
                 require_once $interface;
             }
+            static::$loadedInterfaces[] = $interface;
         }
+    }
+
+    static public function forceLoadInterface($interface)
+    {
+        if (class_exists($interface)) {
+            $interface::register();
+        } else {
+            require_once $interface;
+        }
+        static::$loadedInterfaces[] = $interface;
+    }
+
+    static public function getLoadedInterfaces()
+    {
+        return static::$loadedInterfaces;
     }
 }

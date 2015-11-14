@@ -5,6 +5,8 @@ namespace DigitalWand\AdminHelper\Helper;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
+use DigitalWand\AdminHelper\Agent\ExcelExport;
+use DigitalWand\AdminHelper\View\AdminList;
 
 Loc::loadMessages(__FILE__);
 
@@ -46,6 +48,12 @@ abstract class AdminListHelper extends AdminBaseHelper
      * В этой версии не должно быть операций удаления/перехода к редактированию.
      */
     protected $isPopup = false;
+
+    /**
+     * @var bool
+     * Режим работы в командной строке
+     */
+    protected $cliMode = false;
 
     /**
      * @var string
@@ -115,6 +123,12 @@ abstract class AdminListHelper extends AdminBaseHelper
     protected $contextMenu = array();
 
     /**
+     * @var array
+     * Массив с настройками дополнительного контекстного меню (выпадает по клику на шестерёнку)
+     */
+    protected $contextAdditionalMenu = array();
+
+    /**
      * @var array массив со списком групповых действий над таблицей.
      * Ключ - код действия. Знаение - перевод.
      * @see \CAdminList::AddGroupActionTable()
@@ -155,14 +169,17 @@ abstract class AdminListHelper extends AdminBaseHelper
      * @param bool $isPopup
      * @throws \Bitrix\Main\ArgumentException
      */
-    public function __construct($fields, $isPopup = false)
+    public function __construct($fields, $isPopup = false, $cliMode = false)
     {
         $this->isPopup = $isPopup;
+        $this->cliMode = $cliMode;
+
         parent::__construct($fields);
 
         $this->restoreLastGetQuery();
         $this->prepareAdminVariables();
         $this->addContextMenu();
+        $this->addContextAdditionalMenu();
         $this->addGroupActions();
 
         if (isset($_REQUEST['action'])) {
@@ -172,7 +189,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         $className = static::getModel();
         $oSort = new \CAdminSorting($this->getListTableID(), static::pk(), "desc");
-        $this->list = new \CAdminList($this->getListTableID(), $oSort);
+        $this->list = new AdminList($this->getListTableID(), $oSort);
+        $this->list->setHelper($this);
         $this->list->InitFilter($this->arFilterFields);
 
         if ($this->list->EditAction() AND $this->hasRights()) {
@@ -232,6 +250,78 @@ abstract class AdminListHelper extends AdminBaseHelper
         }
     }
 
+    protected function customActions($action, $id = null)
+    {
+        parent::customActions($action, $id);
+        if ($action == 'shedule_export') {
+            $this->sheduleDelayedExport();
+        }
+    }
+
+    protected function sheduleDelayedExport()
+    {
+        global $USER;
+        $module = $this->getModule();
+        $view = $this->getViewName();
+        $uid = $USER->GetID();
+        $siteUrl = 'http://' . $_SERVER['HTTP_HOST'];
+        $loadedInterfaces = serialize(\DigitalWand\AdminHelper\Loader::getLoadedInterfaces());
+
+        \CAgent::AddAgent(
+            'DigitalWand\AdminHelper\Agent\ExcelExport::run("' . $module . '","' . $view . '","' . $uid . '", "' . $siteUrl . '", \'' . $loadedInterfaces . '\');',
+            $module,                          // идентификатор модуля
+            "1",                         // агент не критичен к кол-ву запусков
+            1,                           // интервал запуска - 1 секунда
+            '',                          // дата первой проверки на запуск
+            "Y",                         // агент активен
+            '',                          // дата первого запуска
+            30,                          // сортировка
+            $uid
+        );
+
+        //Создаём тип почтового события, если его нет
+        $rsET = \CEventType::GetByID(ExcelExport::EXPORT_DONE, "ru");
+        if (!$rsET->Fetch()) {
+            $et = new \CEventType;
+            $et->Add(array(
+                "LID" => 'ru',
+                "EVENT_NAME" => ExcelExport::EXPORT_DONE,
+                "NAME" => 'Экспорт данных завершен',
+                "DESCRIPTION" => "#LINK# - Ссылка на сгенерированный файл
+	    #DEFAULT_EMAIL_FROM# - отправитель
+	    #EMAIL_TO# - адесат
+	    #SITE_NAME# - название сайта",
+            ));
+        }
+
+        //Создаём почтовый шаблон, если его нет
+        $rsMess = \CEventMessage::GetList($by = "site_id", $order = "desc", [
+            'EVENT_NAME' => ExcelExport::EXPORT_DONE,
+        ]);
+        if (!$rsMess->Fetch()) {
+            $arr["ACTIVE"] = "Y";
+            $arr["EVENT_NAME"] = ExcelExport::EXPORT_DONE;
+            $arr["LID"] = SITE_ID;
+            $arr["EMAIL_FROM"] = "#DEFAULT_EMAIL_FROM#";
+            $arr["EMAIL_TO"] = "#EMAIL_TO#";
+            $arr["SUBJECT"] = "#SITE_NAME#: Запрос на экспорт данных выполнен";
+            $arr["BODY_TYPE"] = "html";
+            $arr["MESSAGE"] = 'Запрос на экспорт данных в Excel выполнен. Ссылка: <a href="#LINK#">скачать</a>';
+
+            $emess = new \CEventMessage;
+            $emess->Add($arr);
+        }
+
+        $sort = new \CAdminSorting($this->getListTableID(), static::pk(), "desc");
+        $options = array(
+            'by' => $sort->by_name,
+            'order' => $sort->ord_name,
+        );
+//        \CUserOptions::SetOption("list", $this->getListTableID(), $options);
+
+        header($_SERVER['HTTP_REFERER']);
+        exit();
+    }
     /**
      * Подготавливает переменные, используемые для инициализации списка.
      */
@@ -326,6 +416,23 @@ abstract class AdminListHelper extends AdminBaseHelper
                 'LINK' => static::getEditPageURL($this->additionalUrlParams),
                 'TITLE' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_CREATE_NEW'),
                 'ICON' => 'btn_new'
+            );
+        }
+    }
+
+    protected function addContextAdditionalMenu()
+    {
+        $this->contextAdditionalMenu = array();
+
+        if (!$this->isPopup() && $this->hasRights()) {
+            $link = static::getListPageURL();
+            $message = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EXCEL_EXPORT_MESSAGE');
+
+            $this->contextAdditionalMenu[] = array(
+                'TEXT' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EXCEL_EXPORT_TITLE'),
+                'TITLE' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EXCEL_EXPORT_TITLE'),
+                'ONCLICK' => 'BX.ajax({url: "' . $link . '", method: "POST", data:{"action":"shedule_export"}}); alert("' . $message . '")',
+                'GLOBAL_ICON' => 'adm-menu-excel',
             );
         }
     }
@@ -425,11 +532,15 @@ abstract class AdminListHelper extends AdminBaseHelper
         $res = $this->getList($className, $this->arFilter, $visibleColumns, $sort, $raw);
 
         $res = new \CAdminResult($res, $this->getListTableID());
-        $res->NavStart();
 
-        $this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
+        $fetchFunction = 'Fetch';
+        if ($this->getCliMode() != 'excel_delayed') {
+            $res->NavStart();
+            $this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
+            $fetchFunction = 'NavNext';
+        }
 
-        while ($data = $res->NavNext(false)) {
+        while ($data = $res->$fetchFunction(false)) {
             $this->modifyRowData($data);
             list($link, $name) = $this->addRow($data);
             $row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
@@ -443,8 +554,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         $this->addFooter($res);
         $this->list->AddFooter($this->footer);
-        $this->list->AddGroupActionTable($this->groupActionsList, $this->groupActionsParams);
-        $this->list->AddAdminContextMenu($this->contextMenu);
+
+
+        if ($this->getCliMode() != 'excel_delayed') {
+            $this->list->AddGroupActionTable($this->groupActionsList, $this->groupActionsParams);
+            $this->list->AddAdminContextMenu($this->contextMenu, $this->contextAdditionalMenu);
+        }
 
         $this->list->BeginPrologContent();
         echo $this->prologHtml;
@@ -492,6 +607,11 @@ abstract class AdminListHelper extends AdminBaseHelper
     public function isPopup()
     {
         return $this->isPopup;
+    }
+
+    public function getCliMode()
+    {
+        return $this->cliMode;
     }
 
     /**
@@ -664,7 +784,7 @@ abstract class AdminListHelper extends AdminBaseHelper
      *
      * @return string
      */
-    protected function getListTableID()
+    public function getListTableID()
     {
         return str_replace('.', '', static::$tablePrefix . $this->table());
     }
@@ -765,5 +885,20 @@ abstract class AdminListHelper extends AdminBaseHelper
 
         $_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
         $_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
+    }
+
+    /**
+     * Очищаем переменные сессии, чтобы сортировка восстанавливалась с учетом $table_id
+     */
+    static public function sessionSortFix()
+    {
+        global $APPLICATION;
+        $uniq = md5($APPLICATION->GetCurPage());
+        if (isset($_SESSION["SESS_SORT_BY"][$uniq])) {
+            unset($_SESSION["SESS_SORT_BY"][$uniq]);
+        }
+        if (isset($_SESSION["SESS_SORT_ORDER"][$uniq])) {
+            unset($_SESSION["SESS_SORT_ORDER"][$uniq]);
+        }
     }
 }
