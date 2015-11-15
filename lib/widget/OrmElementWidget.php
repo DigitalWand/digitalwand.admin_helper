@@ -7,7 +7,7 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 /**
- * Виджет выбора записей, реализующих API ORM Битрикс
+ * Виджет выбора записей из ORM.
  *
  * Доступные опции:
  * <ul>
@@ -19,6 +19,8 @@ Loc::loadMessages(__FILE__);
  * <li> <b>WINDOW_WIDTH</b> - (int) значение width для всплывающего окна выбора элемента </li>
  * <li> <b>WINDOW_HEIGHT</b> - (int) значение height для всплывающего окна выбора элемента </li>
  *
+ * @author Nik Samokhvalov <nik@samokhvalov.info>
+ * @author Dmitry Savchenkov <bitrixdev@gmail.com>
  */
 class OrmElementWidget extends NumberWidget
 {
@@ -32,14 +34,13 @@ class OrmElementWidget extends NumberWidget
     );
 
     /**
-     * Генерирует HTML для редактирования поля
-     * @return string
+     * @inheritdoc
      */
     public function genEditHtml()
     {
-        $inputSize = (int)$this->getSettings('INPUT_SIZE');
-        $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
-        $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
+        $inputSize = (int) $this->getSettings('INPUT_SIZE');
+        $windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
+        $windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
         $module = $this->getSettings('MODULE_NAME');
         $view = $this->getSettings('LIST_VIEW_NAME');
         $additionalUrlParams = htmlentities($this->getSettings('ADDITIONAL_URL_PARAMS'));
@@ -48,15 +49,13 @@ class OrmElementWidget extends NumberWidget
         $key = $this->getCode();
 
         $entityData = $this->getOrmElementData();
-        if (!empty($entityData))
-        {
+
+        if (!empty($entityData)) {
             $elementId = $entityData['ID'];
             $elementName = $entityData[$this->getSettings('TITLE_FIELD_NAME')] ?
                 $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
                 Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
-        }
-        else
-        {
+        } else {
             $elementId = '';
         }
 
@@ -65,24 +64,23 @@ class OrmElementWidget extends NumberWidget
                      value="' . $elementId . '"
                      size="' . $inputSize . '"
                      type="text">' .
-        '<input type="button"
-                    value="..."
-                    onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=' . LANGUAGE_ID
-        . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
-        . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
-        . '&amp;n=' . $name . '&amp;k=' . $key . $additionalUrlParams.'\', ' . $windowWidth . ', ' . $windowHeight .');">' .
-        '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $elementName . '</span>';
+                '<input type="button"
+                    value="..." onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=' . LANGUAGE_ID
+                    . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
+                    . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
+                    . '&amp;n=' . $name . '&amp;k=' . $key . $additionalUrlParams . '\', ' . $windowWidth . ', '
+                    . $windowHeight . ');">' . '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $elementName
+                    . '</span>';
     }
 
     /**
-     * Генерирует HTML для редактирования множественного поля
-     * @return string
+     * @inheritdoc
      */
     public function genMultipleEditHTML()
     {
-        $inputSize = (int)$this->getSettings('INPUT_SIZE');
-        $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
-        $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
+        $inputSize = (int) $this->getSettings('INPUT_SIZE');
+        $windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
+        $windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
         $module = $this->getSettings('MODULE_NAME');
         $view = $this->getSettings('LIST_VIEW_NAME');
 
@@ -130,10 +128,10 @@ class OrmElementWidget extends NumberWidget
                 field_id: <?= $elementId ?>,
                 element_title: '<?= $elementName?>'
             });
-            <?
-        }
-    }
-    ?>
+                <?
+                }
+            }
+            ?>
             multiple.addField();
         </script>
         <?
@@ -141,14 +139,13 @@ class OrmElementWidget extends NumberWidget
     }
 
     /**
-     * Возвращает значение поля в форме "только для чтения".
-     * @return string
+     * @inheritdoc
      */
     public function getValueReadonly()
     {
         $entityData = $this->getOrmElementData();
-        if (!empty($entityData))
-        {
+
+        if (!empty($entityData)) {
             $entityName = $entityData[$this->getSettings('TITLE_FIELD_NAME')] ?
                 $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
                 Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
@@ -160,22 +157,21 @@ class OrmElementWidget extends NumberWidget
     }
 
     /**
-     * Возвращает значение множественного поля в форме "только для чтения".
-     * @return string
+     * @inheritdoc
      */
     public function getMultipleValueReadonly()
     {
         $entityListData = $this->getOrmElementData();
-        if (!empty($entityListData))
-        {
-            $multipleData = [];
-            foreach ($entityListData as $entityData)
-            {
+
+        if (!empty($entityListData)) {
+            $multipleData = array();
+
+            foreach ($entityListData as $entityData) {
                 $entityName = $entityData[$this->getSettings('TITLE_FIELD_NAME')] ?
                     $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
                     Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
 
-                $multipleData[] =  '[' . $entityData['ID'] . ']' . $entityName;
+                $multipleData[] = '[' . $entityData['ID'] . ']' . $entityName;
             }
 
             return implode('<br />', $multipleData);
@@ -185,34 +181,26 @@ class OrmElementWidget extends NumberWidget
     }
 
     /**
-     * Генерирует HTML для поля в списке
-     * @param \CAdminListRow $row
-     * @param array $data - данные текущей строки
+     * @inheritdoc
      */
     public function genListHTML(&$row, $data)
     {
-        if ($this->getSettings('MULTIPLE'))
-        {
+        if ($this->getSettings('MULTIPLE')) {
             $strElement = static::getMultipleValueReadonly();
-        }
-        else
-        {
+        } else {
             $strElement = static::getValueReadonly();
         }
         $row->AddViewField($this->getCode(), $strElement);
     }
 
     /**
-     * Генерирует HTML для поля фильтрации
+     * @inheritdoc
      */
     public function genFilterHTML()
     {
-        if ($this->getSettings('MULTIPLE'))
-        {
+        if ($this->getSettings('MULTIPLE')) {
             print '';
-        }
-        else
-        {
+        } else {
             $inputSize = (int)$this->getSettings('INPUT_SIZE');
             $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
             $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
@@ -243,73 +231,59 @@ class OrmElementWidget extends NumberWidget
     }
 
     /**
-     * Получает информацию об элементах, к которым осуществлена привязка
+     * Получает информацию о записях, к которым осуществлена привязка.
+     *
      * @return array
      * @throws \Bitrix\Main\ArgumentException
      */
     protected function getOrmElementData()
     {
-        $refInfo = [];
+        $refInfo = array();
         $valueList = null;
 
-        if ($this->getSettings('MULTIPLE'))
-        {
+        if ($this->getSettings('MULTIPLE')) {
             $entityName = $this->entityName;
 
-            $rsMultEntity = $entityName::getList([
-                'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-                'filter' => ['=ID' => $this->data['ID']]
-            ]);
+            $rsMultEntity = $entityName::getList(array(
+                'select' => array('REFERENCE_' => $this->getCode() . '.*'),
+                'filter' => array('=ID' => $this->data['ID'])
+            ));
 
-            while ($multEntity = $rsMultEntity->fetch())
-            {
+            while ($multEntity = $rsMultEntity->fetch()) {
                 $valueList[$multEntity['REFERENCE_VALUE']] = $multEntity['REFERENCE_VALUE'];
             }
-        }
-        else
-        {
+        } else {
             $value = $this->getValue();
-            if (!empty($value))
-            {
+            if (!empty($value)) {
                 $valueList[$value] = $value;
             }
         }
 
-        if ($valueList)
-        {
+        if ($valueList) {
             $model = $this->getSettings('MODEL');
 
-            $rsEntity = $model::getList([
-                'filter' => ['ID' => $valueList]
-            ]);
+            $rsEntity = $model::getList(array(
+                'filter' => array('ID' => $valueList)
+            ));
 
-            while ($entity = $rsEntity->fetch())
-            {
-                if (in_array($entity['ID'], $valueList))
-                {
+            while ($entity = $rsEntity->fetch()) {
+                if (in_array($entity['ID'], $valueList)) {
                     unset($valueList[$entity['ID']]);
                 }
 
-                if ($this->getSettings('MULTIPLE'))
-                {
+                if ($this->getSettings('MULTIPLE')) {
                     $refInfo[] = $entity;
-                }
-                else
-                {
+                } else {
                     $refInfo = $entity;
                     break;
                 }
             }
 
-            foreach ($valueList as $entityId)
-            {
-                if ($this->getSettings('MULTIPLE'))
-                {
-                    $refInfo[] = ['ID' => $entityId];
-                }
-                else
-                {
-                    $refInfo = ['ID' => $entityId];
+            foreach ($valueList as $entityId) {
+                if ($this->getSettings('MULTIPLE')) {
+                    $refInfo[] = array('ID' => $entityId);
+                } else {
+                    $refInfo = array('ID' => $entityId);
                     break;
                 }
             }

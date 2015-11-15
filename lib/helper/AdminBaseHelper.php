@@ -13,7 +13,6 @@ Loader::includeModule('highloadblock');
 Loc::loadMessages(__FILE__);
 
 /**
- * Class AdminBaseHelper
  * Данный модуль реализует подход MVC для создания административного интерфейса.
  *
  * Возможность построения административного интерфейса появляется благодаря наличию единого API для CRUD-операциями над
@@ -61,6 +60,9 @@ Loc::loadMessages(__FILE__);
  * @see AdminBaseHelper::setInterfaceSettings()
  * @package AdminHelper
  * @FIXME: Упростить обработку сообщений об ошибках: слишком запутанно.
+ *
+ * @author Nik Samokhvalov <nik@samokhvalov.info>
+ * @author Artem Yarygin <artx19@yandex.ru>
  */
 abstract class AdminBaseHelper
 {

@@ -1,12 +1,14 @@
 <?php
+
 namespace DigitalWand\AdminHelper\Helper;
+
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
+
 Loc::loadMessages(__FILE__);
+
 /**
- * Class AdminListHelper
- *
  * Базовый класс для реализации страницы списка админки.
  * При создании своего класса необходимо переопределить следующие переменные:
  * <ul>
@@ -24,6 +26,9 @@ Loc::loadMessages(__FILE__);
  * @see AdminBaseHelper::$editViewName
  * @see AdminBaseHelper::$viewName
  * @package AdminHelper
+ *
+ * @author Nik Samokhvalov <nik@samokhvalov.info>
+ * @author Artem Yarygin <artx19@yandex.ru>
  */
 abstract class AdminListHelper extends AdminBaseHelper
 {
@@ -35,6 +40,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     const OP_CREATE_FILTER_FORM = 'AdminListHelper::createFilterForm';
     const OP_CHECK_FILTER = 'AdminListHelper::checkFilter';
     const OP_EDIT_ACTION = 'AdminListHelper::editAction';
+
     /**
      * @var bool
      * Является ли список всплывающим окном для выбора элементов из списка.
@@ -126,6 +132,7 @@ abstract class AdminListHelper extends AdminBaseHelper
      * @api
      */
     public $epilogHtml;
+
     /**
      * Производится инициализация переменных, обработка запросов на редактирование
      *
@@ -136,44 +143,45 @@ abstract class AdminListHelper extends AdminBaseHelper
     public function __construct($fields, $isPopup = false)
     {
         $this->isPopup = $isPopup;
-        if ($this->isPopup)
-        {
+
+        if ($this->isPopup) {
             $this->fieldPopupResultName = preg_replace("/[^a-zA-Z0-9_:\\[\\]]/", "", $_REQUEST['n']);
             $this->fieldPopupResultIndex = preg_replace("/[^a-zA-Z0-9_:]/", "", $_REQUEST['k']);
             $this->fieldPopupResultElTitle = $_REQUEST['eltitle'];
         }
+
         parent::__construct($fields);
+
         $this->restoreLastGetQuery();
         $this->prepareAdminVariables();
-        if (isset($_REQUEST['action'])||isset($_REQUEST['action_button']))
-        {
+
+        if (isset($_REQUEST['action']) || isset($_REQUEST['action_button'])) {
             $id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
             $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
             $this->customActions($action, $id);
         }
+
         $className = static::getModel();
         $oSort = new \CAdminSorting($this->getListTableID(), static::pk(), "desc");
         $this->list = new \CAdminList($this->getListTableID(), $oSort);
         $this->list->InitFilter($this->arFilterFields);
-        if ($this->list->EditAction() AND $this->hasWriteRights())
-        {
+
+        if ($this->list->EditAction() AND $this->hasWriteRights()) {
             global $FIELDS;
-            foreach ($FIELDS as $id => $fields)
-            {
-                if (!$this->list->IsUpdated($id))
-                {
+            foreach ($FIELDS as $id => $fields) {
+                if (!$this->list->IsUpdated($id)) {
                     continue;
                 }
                 $id = intval($id);
                 $this->editAction($id, $fields);
             }
         }
-        if ($IDs = $this->list->GroupAction() AND $this->hasWriteRights())
-        {
-            if ($_REQUEST['action_target'] == 'selected')
-            {
+
+        if ($IDs = $this->list->GroupAction() AND $this->hasWriteRights()) {
+            if ($_REQUEST['action_target'] == 'selected') {
                 $this->setContext(AdminListHelper::OP_GROUP_ACTION);
                 $IDs = array();
+
                 //Текущий фильтр должен быть модифицирован виждтами
                 //для соответствия результатов фильтрации тому, что видит пользователь в интерфейсе.
                 $raw = array(
@@ -181,36 +189,39 @@ abstract class AdminListHelper extends AdminBaseHelper
                     'FILTER' => $this->arFilter,
                     'SORT' => array()
                 );
-                foreach ($this->fields as $code => $settings)
-                {
+
+                foreach ($this->fields as $code => $settings) {
                     $widget = $this->createWidgetForField($code);
                     $widget->changeGetListOptions($this->arFilter, $raw['SELECT'], $raw['SORT'], $raw);
                 }
+
                 $res = $className::getList(array(
                     'filter' => $this->arFilter,
                     'select' => array($this->pk()),
                 ));
-                while ($el = $res->Fetch())
-                {
+
+                while ($el = $res->Fetch()) {
                     $IDs[] = $el[$this->pk()];
                 }
             }
+
             $filteredIDs = array();
-            foreach ($IDs as $id)
-            {
-                if (strlen($id) <= 0)
-                {
+
+            foreach ($IDs as $id) {
+                if (strlen($id) <= 0) {
                     continue;
                 }
                 $filteredIDs[] = IntVal($id);
             }
+
             $this->groupActions($IDs, $_REQUEST['action']);
         }
-        if ($this->isPopup())
-        {
+
+        if ($this->isPopup()) {
             $this->genPopupActionJS();
         }
     }
+
     /**
      * Подготавливает переменные, используемые для инициализации списка.
      */
@@ -222,31 +233,32 @@ abstract class AdminListHelper extends AdminBaseHelper
         $arFilter = array();
         $this->filterTypes = array();
         $this->arFilterOpts = array();
-        foreach ($this->fields as $code => $settings)
-        {
+
+        foreach ($this->fields as $code => $settings) {
             $widget = $this->createWidgetForField($code);
-            if ((isset($settings['FILTER']) AND $settings['FILTER'] != false) OR !isset($settings['FILTER']))
-            {
+
+            if ((isset($settings['FILTER']) AND $settings['FILTER'] != false) OR !isset($settings['FILTER'])) {
                 $this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_FILTER);
                 $filterVarName = 'find_' . $code;
                 $this->arFilterFields[] = $filterVarName;
                 $filterType = '';
-                if (is_string($settings['FILTER']))
-                {
+
+                if (is_string($settings['FILTER'])) {
                     $filterType = $settings['FILTER'];
                 }
+
                 if (isset($_REQUEST[$filterVarName])
                     AND !isset($_REQUEST['del_filter'])
                     AND $_REQUEST['del_filter'] != 'Y'
-                )
-                {
+                ) {
                     $arFilter[$filterType . $code] = $_REQUEST[$filterVarName];
                     $this->filterTypes[$code] = $filterType;
                 }
+
                 $this->arFilterOpts[$code] = $widget->getSettings('TITLE');
             }
-            if (!isset($settings['HEADER']) OR $settings['HEADER'] != false)
-            {
+
+            if (!isset($settings['HEADER']) OR $settings['HEADER'] != false) {
                 $this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_HEADER);
                 $this->arHeader[] = array(
                     "id" => $code,
@@ -256,18 +268,20 @@ abstract class AdminListHelper extends AdminBaseHelper
                 );
             }
         }
-        if ($this->checkFilter($arFilter))
-        {
+
+        if ($this->checkFilter($arFilter)) {
             $this->arFilter = $arFilter;
         }
-        if(static::$hasSections)
-        {
+
+        if (static::$hasSections) {
             $model = $this->getModel();
             $this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
         }
     }
+
     /**
-     * Возвращает список столбцов для разделов
+     * Возвращает список столбцов для разделов.
+     *
      * @return array
      */
     public function getSectionsHeader()
@@ -275,10 +289,9 @@ abstract class AdminListHelper extends AdminBaseHelper
         $arSectionsHeaders = array();
         $sectionsInterfaceSettings = static::getInterfaceSettings(static::$sectionsEditViewName);
         $this->sectionFields = $sectionsInterfaceSettings['FIELDS'];
-        foreach($sectionsInterfaceSettings['FIELDS'] as $code => $settings)
-        {
-            if(isset($settings['HEADER']) && $settings['HEADER'] == true)
-            {
+
+        foreach ($sectionsInterfaceSettings['FIELDS'] as $code => $settings) {
+            if (isset($settings['HEADER']) && $settings['HEADER'] == true) {
                 $arSectionsHeaders[] = array(
                     "id" => $code,
                     "content" => $settings['TITLE'],
@@ -287,15 +300,18 @@ abstract class AdminListHelper extends AdminBaseHelper
                 );
             }
             unset($settings['WIDGET']);
-            foreach($settings as $c => $v)
-            {
+
+            foreach ($settings as $c => $v) {
                 $sectionsInterfaceSettings['FIELDS'][$code]['WIDGET']->setSetting($c, $v);
             }
         }
+
         return $arSectionsHeaders;
     }
+
     /**
-     * Подготавливает массив с настройками футера таблицы Bitrix
+     * Подготавливает массив с настройками футера таблицы.
+     *
      * @param \CAdminResult $res - результат выборки данных
      * @see \CAdminList::AddFooter()
      * @return array[]
@@ -304,94 +320,89 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         return array(
             static::getButton('MAIN_ADMIN_LIST_SELECTED', array("value" => $res->SelectedRowsCount())),
-            static::getButton('MAIN_ADMIN_LIST_CHECKED', array("value" => $res->SelectedRowsCount()),array(
+            static::getButton('MAIN_ADMIN_LIST_CHECKED', array("value" => $res->SelectedRowsCount()), array(
                 "counter" => true,
                 "value" => "0",
             )),
         );
     }
+
     /**
-     * Подготавливает массив с настройками контекстного меню.
-     * По-умолчанию добавлена кнопка "создать элемент".
+     * Подготавливает массив с настройками контекстного меню. По-умолчанию добавлена кнопка "создать элемент".
+     *
      * @api
      * @see $contextMenu
      */
     protected function getContextMenu()
     {
         $contextMenu = array();
-        if(static::$hasSections)
-        {
+
+        if (static::$hasSections) {
             $this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
         }
-        /**
-         * Если задан для разделов добавляем кнопку создать раздел и
-         * кнопку на уровень вверх если это не корневой раздел
-         */
-        if(!empty(static::$sectionModel) && isset($_REQUEST['ID']))
-        {
-            if($_REQUEST['ID'])
-            {
+
+        if (!empty(static::$sectionModel) && isset($_REQUEST['ID'])) {
+            if ($_REQUEST['ID']) {
                 $params = $this->additionalUrlParams;
                 $sectionModel = static::$sectionModel;
                 $section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
-                if($this->isPopup())
-                {
+
+                if ($this->isPopup()) {
                     $params = array_merge($_GET);
                 }
-                if($section[$sectionModel::getSectionField()])
-                {
+
+                if ($section[$sectionModel::getSectionField()]) {
                     $params['ID'] = $section[$sectionModel::getSectionField()];
-                }
-                else
-                {
+                } else {
                     unset($params['ID']);
                 }
                 unset($params['SECTION_ID']);
+
                 $contextMenu[] = static::getButton('LIST_SECTION_UP', array(
                     'LINK' => static::getListPageURL($params),
                     'ICON' => 'btn_list'
                 ));
             }
         }
-        /**
-         * Добавляем кнопку создать элемент и создать раздел
-         */
-        if (!$this->isPopup() && $this->hasWriteRights())
-        {
+
+        if (!$this->isPopup() && $this->hasWriteRights()) {
             $contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
                 'LINK' => static::getEditPageURL($this->additionalUrlParams),
                 'ICON' => 'btn_new'
             ));
-            if(static::$hasSections)
-            {
+
+            if (static::$hasSections) {
                 $contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
                     'LINK' => static::getSectionsEditPageURL($this->additionalUrlParams),
                     'ICON' => 'btn_new'
                 ));
             }
         }
+
         return $contextMenu;
     }
+
     /**
-     * Возвращает массив с настройками групповых действий над списком
+     * Возвращает массив с настройками групповых действий над списком.
+     *
      * @api
      * @return array
      */
     protected function getGroupActions()
     {
         $result = array();
-        if (!$this->isPopup())
-        {
-            if ($this->hasDeleteRights())
-            {
+
+        if (!$this->isPopup()) {
+            if ($this->hasDeleteRights()) {
                 $result = array('delete' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"));
             }
         }
+
         return $result;
     }
+
     /**
-     * Обработчик групповых операций.
-     * По-умолчанию прописаны операции активации/деактивации и удаления.
+     * Обработчик групповых операций. По-умолчанию прописаны операции активации/деактивации и удаления.
      *
      * @api
      * @param array $IDs
@@ -399,51 +410,39 @@ abstract class AdminListHelper extends AdminBaseHelper
      */
     protected function groupActions($IDs, $action)
     {
-        if (!isset($_REQUEST['model']))
-        {
+        if (!isset($_REQUEST['model'])) {
             $className = static::getModel();
-        }
-        else
-        {
+        } else {
             $className = $_REQUEST['model'];
         }
-        if (!isset($_REQUEST['model-section']))
-        {
+
+        if (!isset($_REQUEST['model-section'])) {
             $sectionClassName = static::$sectionModel;
-        }
-        else
-        {
+        } else {
             $sectionClassName = $_REQUEST['model-section'];
         }
-        if ($action == 'delete')
-        {
-            if ($this->hasDeleteRights())
-            {
-                foreach ($IDs as $id)
-                {
+
+        if ($action == 'delete') {
+            if ($this->hasDeleteRights()) {
+                foreach ($IDs as $id) {
                     $className::delete($id);
                 }
-            }
-            else
-            {
+            } else {
                 $this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
             }
         }
-        if ($action == 'delete-section')
-        {
-            if ($this->hasDeleteRights())
-            {
-                foreach ($IDs as $id)
-                {
+
+        if ($action == 'delete-section') {
+            if ($this->hasDeleteRights()) {
+                foreach ($IDs as $id) {
                     $sectionClassName::delete($id);
                 }
-            }
-            else
-            {
+            } else {
                 $this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
             }
         }
     }
+
     /**
      * Основной цикл отображения списка. Этапы:
      * <ul>
@@ -467,46 +466,44 @@ abstract class AdminListHelper extends AdminBaseHelper
     public function buildList($sort)
     {
         $this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
-        if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
-        {
-            /**
-             * Добавляем столбцы разделов если они используются
-             */
+
+        if (static::$hasSections && $_REQUEST['PAGEN_1'] < 2) {
+
             $this->list->AddHeaders($this->getSectionsHeader());
-            /**
-             * Добавляем разделы в выборку если не первая страница
-             */
+
             $sectionsModel = static::$sectionModel;
-            $res  = $sectionsModel::getList(['filter' => [$sectionsModel::getSectionField() => $_REQUEST['ID']]]);
+            $res = $sectionsModel::getList(array('filter' => array($sectionsModel::getSectionField() => $_REQUEST['ID'])));
             $fields = $this->fields;
             $this->fields = $this->sectionFields;
-            while($data = $res->Fetch())
-            {
+
+            while ($data = $res->Fetch()) {
                 $this->modifyRowData($data);
                 list($link, $name) = $this->getRow($data, 'getListPageUrl');
-                $row = $this->list->AddRow('s'.$data[$this->pk()], $data, $link, $name);
-                foreach ($this->fields as $code => $settings)
-                {
+                $row = $this->list->AddRow('s' . $data[$this->pk()], $data, $link, $name);
+
+                foreach ($this->fields as $code => $settings) {
                     $this->addRowCell($row, $code, $data);
                 }
-                $row->AddActions( $this->getRowActions($data, true) );
+
+                $row->AddActions($this->getRowActions($data, true));
             }
+
             $this->fields = $fields;
             $sectionsVisibleColumns = $this->list->GetVisibleHeaderColumns();
         }
+
         $this->list->AddHeaders($this->arHeader);
         $visibleColumns = $this->list->GetVisibleHeaderColumns();
-        if(static::$hasSections && $_REQUEST['PAGEN_1'] < 2)
-        {
-            foreach($visibleColumns as $k => $v)
-            {
-                if(in_array($v, $sectionsVisibleColumns))
-                {
+
+        if (static::$hasSections && $_REQUEST['PAGEN_1'] < 2) {
+            foreach ($visibleColumns as $k => $v) {
+                if (in_array($v, $sectionsVisibleColumns)) {
                     unset($visibleColumns[$k]);
                 }
             }
             $visibleColumns = array_values($visibleColumns);
         }
+
         $className = static::getModel();
         $visibleColumns[] = static::pk();
         $raw = array(
@@ -514,53 +511,53 @@ abstract class AdminListHelper extends AdminBaseHelper
             'FILTER' => $this->arFilter,
             'SORT' => $sort
         );
-        foreach ($this->fields as $name => $settings)
-        {
-            if ((isset($settings['VIRTUAL']) AND $settings['VIRTUAL'] == true))
-            {
+
+        foreach ($this->fields as $name => $settings) {
+            if ((isset($settings['VIRTUAL']) AND $settings['VIRTUAL'] == true)) {
                 $key = array_search($name, $visibleColumns);
                 unset($visibleColumns[$key]);
                 unset($this->arFilter[$name]);
                 unset($sort[$name]);
             }
-            if (isset($settings['FORCE_SELECT']) AND $settings['FORCE_SELECT'] == true)
-            {
+
+            if (isset($settings['FORCE_SELECT']) AND $settings['FORCE_SELECT'] == true) {
                 $visibleColumns[] = $name;
             }
         }
+
         $visibleColumns = array_unique($visibleColumns);
         // Поля для селекта (перевернутый массив)
         $listSelect = array_flip($visibleColumns);
-        foreach ($this->fields as $code => $settings)
-        {
+
+        foreach ($this->fields as $code => $settings) {
             $widget = $this->createWidgetForField($code);
             $widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
             // Множественные поля не должны быть в селекте
-            if (!empty($settings['MULTIPLE']))
-            {
+            if (!empty($settings['MULTIPLE'])) {
                 unset($listSelect[$code]);
             }
         }
+
         // Поля для селекта (множественные поля отфильтрованы)
         $listSelect = array_flip($listSelect);
         $res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
         $res = new \CAdminResult($res, $this->getListTableID());
         $res->NavStart();
         $this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
-        while ($data = $res->NavNext(false))
-        {
+
+        while ($data = $res->NavNext(false)) {
             $this->modifyRowData($data);
             list($link, $name) = $this->getRow($data);
             $row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
-            foreach ($this->fields as $code => $settings)
-            {
+            foreach ($this->fields as $code => $settings) {
                 $this->addRowCell($row, $code, $data);
             }
-            $row->AddActions( $this->getRowActions($data) );
+            $row->AddActions($this->getRowActions($data));
         }
-        $this->list->AddFooter( $this->getFooter($res) );
+
+        $this->list->AddFooter($this->getFooter($res));
         $this->list->AddGroupActionTable($this->getGroupActions(), $this->groupActionsParams);
-        $this->list->AddAdminContextMenu( $this->getContextMenu() );
+        $this->list->AddAdminContextMenu($this->getContextMenu());
         $this->list->BeginPrologContent();
         echo $this->prologHtml;
         $this->list->EndPrologContent();
@@ -569,6 +566,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $this->list->EndEpilogContent();
         $this->list->CheckListMode();
     }
+
     /**
      * Производит выборку данных. Функцию стоит переопределить в случае, если необходима своя логика, и её нельзя
      * вынести в класс модели.
@@ -593,6 +591,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $res = $className::getList($parameters);
         return $res;
     }
+
     /**
      * Является ли список всплывающим окном для выбора элементов из списка.
      * В этой версии не должно быть операций удаления/перехода к редактированию.
@@ -602,6 +601,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         return $this->isPopup;
     }
+
     /**
      * Настройки строки таблицы
      * @param array $data данные текущей строки БД
@@ -611,19 +611,18 @@ abstract class AdminListHelper extends AdminBaseHelper
      */
     protected function getRow($data, $method = 'getEditPageURL')
     {
-        if ($this->isPopup())
-        {
+        if ($this->isPopup()) {
             return array();
-        }
-        else
-        {
+        } else {
             $query = array_merge($this->additionalUrlParams, array(
                 'lang' => LANGUAGE_ID,
                 static::pk() => $data[static::pk()]
             ));
+
             return array(static::$method($query));
         }
     }
+
     /**
      * Преобразует данные строки, перед тем как добавлять их в список
      * @api
@@ -633,6 +632,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     protected function modifyRowData(&$data)
     {
     }
+
     /**
      * Для каждой ячейки таблицы создаёт виджет соответствующего типа.
      * Виджет подготавливает необходимый HTML для списка
@@ -648,6 +648,7 @@ abstract class AdminListHelper extends AdminBaseHelper
         $this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
         $widget->genListHTML($row, $data);
     }
+
     /**
      * Возвращает массив со списком действий при клике правой клавишей мыши на строке таблицы
      * По-умолчанию:
@@ -667,8 +668,8 @@ abstract class AdminListHelper extends AdminBaseHelper
     protected function getRowActions($data, $section = false)
     {
         $actions = array();
-        if ($this->isPopup())
-        {
+
+        if ($this->isPopup()) {
             $jsData = \CUtil::PhpToJSObject($data);
             $actions['select'] = array(
                 "ICON" => "select",
@@ -676,33 +677,32 @@ abstract class AdminListHelper extends AdminBaseHelper
                 "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_SELECT"),
                 "ACTION" => 'javascript:' . $this->popupClickFunctionName . '(' . $jsData . ')'
             );
-        }
-        else
-        {
+        } else {
             $viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName();
-            $query = array_merge($this->additionalUrlParams,
-                array($this->pk() => $data[$this->pk()]));
-            if ($this->hasWriteRights())
-            {
+            $query = array_merge($this->additionalUrlParams, array($this->pk() => $data[$this->pk()]));
+
+            if ($this->hasWriteRights()) {
                 $actions['edit'] = array(
                     "ICON" => "edit",
                     "DEFAULT" => true,
                     "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_EDIT"),
-                    "ACTION" => $this->list->ActionRedirect($section?static::getSectionsEditPageURL($query):static::getEditPageURL($query))
+                    "ACTION" => $this->list->ActionRedirect($section ? static::getSectionsEditPageURL($query) : static::getEditPageURL($query))
                 );
             }
-            if ($this->hasDeleteRights())
-            {
+
+            if ($this->hasDeleteRights()) {
                 $actions['delete'] = array(
                     "ICON" => "delete",
                     "TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),
                     "ACTION" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
-                            $section?"delete-section":"delete", $viewQueryString)
+                            $section ? "delete-section" : "delete", $viewQueryString)
                 );
             }
         }
+
         return $actions;
     }
+
     /**
      * Функция определяет js-функцию для двойонго клика по строке.
      * Вызывается в том случае, если окно открыто в режиме попапа.
@@ -732,28 +732,35 @@ abstract class AdminListHelper extends AdminBaseHelper
             }
         </script>';
     }
+
     /**
      * Выводит форму фильтрации списка
      */
     public function createFilterForm()
     {
         $this->setContext(AdminListHelper::OP_CREATE_FILTER_FORM);
+
         print ' <form name="find_form" method="GET" action="' . static::getListPageURL($this->additionalUrlParams) . '?">';
+
         $oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->arFilterOpts);
         $oFilter->Begin();
-        foreach ($this->arFilterOpts as $code => $name)
-        {
+
+        foreach ($this->arFilterOpts as $code => $name) {
             $widget = $this->createWidgetForField($code);
             $widget->genFilterHTML();
         }
+
         $oFilter->Buttons(array(
             "table_id" => $this->getListTableID(),
             "url" => static::getListPageURL($this->additionalUrlParams),
             "form" => "find_form",
         ));
+
         $oFilter->End();
+
         print '</form>';
     }
+
     /**
      * Производит проверку корректности данных (в массиве $_REQUEST), переданных в фильтр
      * @TODO: нужно сделать вывод сообщений об ошибке фильтрации.
@@ -764,18 +771,20 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         $this->setContext(AdminListHelper::OP_CHECK_FILTER);
         $filterValidationErrors = array();
-        foreach ($this->filterTypes as $code => $type)
-        {
+
+        foreach ($this->filterTypes as $code => $type) {
             $widget = $this->createWidgetForField($code);
             $value = $arFilter[$type . $code];
-            if (!$widget->checkFilter($type, $value))
-            {
+
+            if (!$widget->checkFilter($type, $value)) {
                 $filterValidationErrors = array_merge($filterValidationErrors,
                     $widget->getValidationErrors());
             }
         }
+
         return empty($filterValidationErrors);
     }
+
     /**
      * Возвращает ID таблицы, который не должен конфликтовать с ID в других разделах админки, а также нормально
      * парситься в JS
@@ -786,6 +795,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         return str_replace('.', '', static::$tablePrefix . $this->table());
     }
+
     /**
      * Сохранение полей для отной записи, отредактированной в списке.
      * Этапы:
@@ -808,45 +818,47 @@ abstract class AdminListHelper extends AdminBaseHelper
     protected function editAction($id, $fields)
     {
         $this->setContext(AdminListHelper::OP_EDIT_ACTION);
-        if (!$this->hasWriteRights())
-        {
+
+        if (!$this->hasWriteRights()) {
             $this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_WRITE_FORBIDDEN'));
             return;
         }
         $className = static::getModel();
         $el = $className::getById($id);
-        if ($el->getSelectedRowsCount() == 0)
-        {
+
+        if ($el->getSelectedRowsCount() == 0) {
             $this->list->AddGroupError(Loc::getMessage("DIGITALWAND_ADMIN_HELPER_SAVE_ERROR"), $id);
             return;
         }
+
         $allWidgets = array();
-        foreach ($fields as $key => $value)
-        {
+
+        foreach ($fields as $key => $value) {
             $widget = $this->createWidgetForField($key, $fields);
             $widget->processEditAction();
             $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
             $allWidgets[] = $widget;
         }
+
         //FIXME: может, надо добавить вывод ошибок ДО сохранения?..
         $this->addErrors($this->validationErrors);
         $result = $className::update($id, $fields);
         $errors = $result->getErrorMessages();
-        if (empty($this->validationErrors) AND !empty($errors))
-        {
+
+        if (empty($this->validationErrors) AND !empty($errors)) {
             $fieldList = implode("\n", $errors);
             $this->list->AddGroupError(Loc::getMessage("DIGITALWAND_ADMIN_HELPER_SAVE_ERROR") . " " . $fieldList, $id);
         }
-        if (!empty($errors))
-        {
-            foreach ($allWidgets as $widget)
-            {
+
+        if (!empty($errors)) {
+            foreach ($allWidgets as $widget) {
                 /** @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget */
                 $widget->setData($fields);
                 $widget->processAfterSaveAction();
             }
         }
     }
+
     /**
      * Выводит сформированный список.
      * Сохраняет обработанный GET-запрос в сессию
@@ -855,12 +867,14 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         $this->showMessages();
         $this->list->DisplayList();
-        if ($this->isPopup())
-        {
+
+        if ($this->isPopup()) {
             print $this->popupClickFunctionCode;
         }
+
         $this->saveGetQuery();
     }
+
     /**
      * Сохраняет параметры запроса для поторного использования после возврата с других страниц (к примеру, после
      * перехода с детальной обратно в список - чтобы вернуться в точности в тот раздел, с которого ранее ушли)
@@ -869,6 +883,7 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         $_SESSION['LAST_GET_QUERY'][get_called_class()] = $_GET;
     }
+
     /**
      * Восстанавливает последний GET-запрос, если в текущем задан параметр restore_query=Y
      */
@@ -877,10 +892,10 @@ abstract class AdminListHelper extends AdminBaseHelper
         if (!isset($_SESSION['LAST_GET_QUERY'][get_called_class()])
             OR !isset($_REQUEST['restore_query'])
             OR $_REQUEST['restore_query'] != 'Y'
-        )
-        {
+        ) {
             return;
         }
+
         $_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
         $_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
     }

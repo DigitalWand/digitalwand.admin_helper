@@ -538,6 +538,9 @@ abstract class HelperWidget
     public function setData(&$data)
     {
         $this->data = &$data;
+
+        //FIXME: нелепый оверхэд ради того, чтобы можно было централизованно преобразовывать значение при записи
+        $this->setValue($data[$this->getCode()]);
     }
     /**
      * Возвращает текущее значение, хранимое в поле виджета

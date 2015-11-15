@@ -1,8 +1,12 @@
 <?php
+
 namespace DigitalWand\AdminHelper\Widget;
+
 use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
 use Bitrix\Main\Localization\Loc;
+
 Loc::loadMessages(__FILE__);
+
 /**
  * Для множественного поля в таблице должен быть столбец FILE_ID
  * Настройки класса:
@@ -13,6 +17,11 @@ Loc::loadMessages(__FILE__);
  */
 class FileWidget extends HelperWidget
 {
+    static protected $defaults = array(
+        'EDIT_IN_LIST' => false,
+        'FILTER' => false
+    );
+
     /**
      * Генерирует HTML для редактирования поля
      * @return mixed
@@ -35,6 +44,7 @@ class FileWidget extends HelperWidget
             )
         );
     }
+
     protected function genMultipleEditHTML()
     {
         $style = $this->getSettings('STYLE');
@@ -42,14 +52,15 @@ class FileWidget extends HelperWidget
         $descriptionField = $this->getSettings('DESCRIPTION_FIELD');
         $uniqueId = $this->getEditInputHtmlId();
         $rsEntityData = null;
-        if (!empty($this->data['ID']))
-        {
+
+        if (!empty($this->data['ID'])) {
             $entityName = $this->entityName;
-            $rsEntityData = $entityName::getList([
-                'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-                'filter' => ['=ID' => $this->data['ID']]
-            ]);
+            $rsEntityData = $entityName::getList(array(
+                'select' => array('REFERENCE_' => $this->getCode() . '.*'),
+                'filter' => array('=ID' => $this->data['ID'])
+            ));
         }
+
         ob_start();
         // TODO Рефакторинг
         ?>
@@ -106,6 +117,7 @@ class FileWidget extends HelperWidget
         <?
         return ob_get_clean();
     }
+
     /**
      * Генерирует HTML для поля в списке
      * @see AdminListHelper::addRowCell();
@@ -115,25 +127,22 @@ class FileWidget extends HelperWidget
      */
     public function genListHTML(&$row, $data)
     {
-        if ($this->getSettings('MULTIPLE'))
-        {
-        }
-        else
-        {
+        if ($this->getSettings('MULTIPLE')) {
+        } else {
             $file = \CFile::GetPath($data[$this->code]);
             $res = \CFile::GetByID($data[$this->code]);
             $fileInfo = $res->Fetch();
-            if (!$file)
-            {
+
+            if (!$file) {
                 $html = "";
-            }
-            else
-            {
+            } else {
                 $html = '<a href="' . $file . '" >' . $fileInfo['FILE_NAME'] . ' (' . $fileInfo['FILE_DESCRIPTION'] . ')' . '</a>';
             }
+
             $row->AddViewField($this->code, $html);
         }
     }
+
     /**
      * Генерирует HTML для поля фильтрации
      * @see AdminListHelper::createFilterForm();
@@ -143,57 +152,50 @@ class FileWidget extends HelperWidget
     {
         // TODO: Implement genFilterHTML() method.
     }
+
     public function processEditAction()
     {
         parent::processEditAction();
-        if ($this->getSettings('MULTIPLE'))
-        {
-            if (!empty($_FILES[$this->getCode()]))
-            {
-                foreach ($_FILES[$this->getCode()]['name'] as $key => $fileName)
-                {
+
+        if ($this->getSettings('MULTIPLE')) {
+            if (!empty($_FILES[$this->getCode()])) {
+                foreach ($_FILES[$this->getCode()]['name'] as $key => $fileName) {
                     if (empty($fileName)
                         || empty($_FILES[$this->getCode()]['tmp_name'][$key])
-                        || !empty($_FILES[$this->getCode()]['error'][$key])) {
+                        || !empty($_FILES[$this->getCode()]['error'][$key])
+                    ) {
                         continue;
                     }
+
                     $description = null;
-                    if (isset($this->data[$this->getCode()][$key]['DESCRIPTION']))
-                    {
+
+                    if (isset($this->data[$this->getCode()][$key]['DESCRIPTION'])) {
                         $description = $this->data[$this->getCode()][$key]['DESCRIPTION'];
                         unset($this->data[$this->getCode()][$key]['DESCRIPTION']);
                     }
-                    if (empty($this->data[$this->getCode()][$key]))
-                    {
+
+                    if (empty($this->data[$this->getCode()][$key])) {
                         unset($this->data[$this->getCode()][$key]);
                     }
+
                     $fileId = $this->saveFile($fileName, $_FILES[$this->getCode()]['tmp_name'][$key], false, $description);
-                    if ($fileId)
-                    {
-                        $this->data[$this->getCode()][] = ['VALUE' => $fileId];
-                    }
-                    else
-                    {
+
+                    if ($fileId) {
+                        $this->data[$this->getCode()][] = array('VALUE' => $fileId);
+                    } else {
                         ShowError('Не удалось добавить файл ' . $_FILES[$this->getCode()]['name'][$key]);
                     }
                 }
             }
-        }
-        else
-        {
-            if (isset($_REQUEST['FIELDS_del'][$this->code . '_FILE']) AND $_REQUEST['FIELDS_del'][$this->code . '_FILE'] == 'Y')
-            {
+        } else {
+            if (isset($_REQUEST['FIELDS_del'][$this->code . '_FILE']) AND $_REQUEST['FIELDS_del'][$this->code . '_FILE'] == 'Y') {
                 \CFile::Delete(intval($this->data[$this->code]));
                 $this->data[$this->code] = 0;
-            }
-            else if (isset($_REQUEST['FIELDS']['IMAGE_ID_FILE']))
-            {
+            } else if (isset($_REQUEST['FIELDS']['IMAGE_ID_FILE'])) {
                 $name = $_FILES['FIELDS']['name'][$this->code . '_FILE'];
                 $path = $_REQUEST['FIELDS']['IMAGE_ID_FILE'];
                 $this->saveFile($name, $path);
-            }
-            else
-            {
+            } else {
                 $name = $_FILES['FIELDS']['name'][$this->code . '_FILE'];
                 $path = $_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'];
                 $type = $_FILES['FIELDS']['type'][$this->code . '_FILE'];
@@ -201,41 +203,46 @@ class FileWidget extends HelperWidget
             }
         }
     }
+
     protected function saveFile($name, $path, $type = false, $description = null)
     {
-        if (!$path)
-        {
+        if (!$path) {
             return false;
         }
+
         $fileInfo = \CFile::MakeFileArray(
             $path,
             $type
         );
+
         if (!$fileInfo) return false;
-        if (!empty($description))
-        {
+
+        if (!empty($description)) {
             $fileInfo['description'] = $description;
         }
-        if (stripos($fileInfo['type'], "image") === false)
-        {
+
+        if (stripos($fileInfo['type'], "image") === false) {
             $this->addError('FILE_FIELD_TYPE_ERROR');
             return false;
         }
+
         $fileInfo["name"] = $name;
         /** @var AdminBaseHelper $model */
         $helper = $this->helper;
         $fileId = \CFile::SaveFile($fileInfo, $helper::$module);
-        if (!$this->getSettings('MULTIPLE'))
-        {
+
+        if (!$this->getSettings('MULTIPLE')) {
             $code = $this->code;
-            if (isset($this->data[$code]))
-            {
+
+            if (isset($this->data[$code])) {
                 \CFile::Delete($this->data[$code]);
             }
+
             $this->data[$code] = $fileId;
         }
         return $fileId;
     }
+
     /**
      * {@inheritdoc}
      */
@@ -243,28 +250,23 @@ class FileWidget extends HelperWidget
     {
         $result = '';
         $values = parent::getMultipleValue();
-        if (!empty($values))
-        {
-            foreach ($values as $value)
-            {
+
+        if (!empty($values)) {
+            foreach ($values as $value) {
                 $fileInfo = \CFile::GetFileArray($value);
-                if (!empty($fileInfo))
-                {
-                    if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png'|| $fileInfo['CONTENT_TYPE'] == 'image/gif')
-                    {
+
+                if (!empty($fileInfo)) {
+                    if ($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png' || $fileInfo['CONTENT_TYPE'] == 'image/gif') {
                         $result .= '<div><img src="' . $fileInfo['SRC'] . '" alt="' . $fileInfo['ORIGINAL_NAME'] . '" width="100" height="100"></div>';
-                    }
-                    else
-                    {
+                    } else {
                         $result .= '<div>' . $fileInfo['ORIGINAL_NAME'] . '</div>';
                     }
-                }
-                else
-                {
+                } else {
                     $result .= '<div>Файл не найден</div>';
                 }
             }
         }
+
         return $result;
     }
 }
