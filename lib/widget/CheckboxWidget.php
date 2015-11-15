@@ -1,16 +1,13 @@
 <?php
 namespace DigitalWand\AdminHelper\Widget;
-
 use Bitrix\Main\Localization\Loc;
-
 Loc::loadMessages(__FILE__);
-
 /**
  * Class CheckBoxWidget
  * Виджет "галочка"
  *
  */
-class CheckBoxWidget extends HelperWidget
+class CheckboxWidget extends HelperWidget
 {
     /**
      * Типы чекбоксов
@@ -20,19 +17,16 @@ class CheckBoxWidget extends HelperWidget
     const TYPE_STRING = 'string';
     const TYPE_INT = 'integer';
     const TYPE_BOOLEAN = 'boolean';
-
     /**
      * Значения возможных вариантов для строкового чекбокса
      */
     const TYPE_STRING_YES = 'Y';
     const TYPE_STRING_NO = 'N';
-
     /**
      * Значения возможных вариантов для целочисленного чекбокса
      */
     const TYPE_INT_YES = 1;
     const TYPE_INT_NO = 0;
-
     /**
      * Генерирует HTML для редактирования поля
      *
@@ -54,10 +48,9 @@ class CheckBoxWidget extends HelperWidget
                 // Получаем результирующее html представление
                 $html = '<input type="hidden" name="'.$this->getEditInputName().'" value="'.self::TYPE_STRING_NO.'" />';
                 $html .= '<input type="checkbox" name="'.$this->getEditInputName().'" value="'.self::TYPE_STRING_YES.'" '.$checked.' />';
-
                 break;
             }
-            case self::TYPE_INT: 
+            case self::TYPE_INT:
             case self::TYPE_BOOLEAN:
             {
                 // Сравниваем со строковым значением
@@ -65,14 +58,12 @@ class CheckBoxWidget extends HelperWidget
                 // Получаем результирующее html представление
                 $html = '<input type="hidden" name="'.$this->getEditInputName().'" value="'.self::TYPE_INT_NO.'" />';
                 $html .= '<input type="checkbox" name="'.$this->getEditInputName().'" value="'.self::TYPE_INT_YES.'" '.$checked.' />';
-
                 break;
             }
         }
         // Возвращаем html представление
         return $html;
     }
-
     /**
      * Генерирует HTML для поля в списке
      *
@@ -97,14 +88,12 @@ class CheckBoxWidget extends HelperWidget
             {
                 $globalYes = self::TYPE_STRING_YES;
                 $globalNo = self::TYPE_STRING_NO;
-
                 break;
             }
             case self::TYPE_INT: case self::TYPE_BOOLEAN:
         {
             $globalYes = self::TYPE_INT_YES;
             $globalNo = self::TYPE_INT_NO;
-
             break;
         }
         }
@@ -122,11 +111,9 @@ class CheckBoxWidget extends HelperWidget
                                 name="'.$this->getEditableListInputName().'" />';
             $row->AddEditField($this->getCode(), $editHtml);
         }
-
         $value = intval($this->getValue() == $globalYes) ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
         $row->AddViewField($this->getCode(), $value);
     }
-
     /**
      * Генерирует HTML для поля фильтрации
      *
@@ -149,14 +136,12 @@ class CheckBoxWidget extends HelperWidget
             {
                 $filterHtml .= '<option value="'.self::TYPE_STRING_YES.'">'.Loc::getMessage('CHECKBOX_YES').'</option>';
                 $filterHtml .= '<option value="'.self::TYPE_STRING_NO.'">'.Loc::getMessage('CHECKBOX_NO').'</option>';
-
                 break;
             }
             case self::TYPE_INT: case self::TYPE_BOOLEAN:
         {
             $filterHtml .= '<option value="'.self::TYPE_INT_YES.'">'.Loc::getMessage('CHECKBOX_YES').'</option>';
             $filterHtml .= '<option value="'.self::TYPE_INT_NO.'">'.Loc::getMessage('CHECKBOX_NO').'</option>';
-
             break;
         }
         }
@@ -166,35 +151,27 @@ class CheckBoxWidget extends HelperWidget
         // Выводим фильтр
         print $filterHtml;
     }
-
-
     public function getValueReadonly()
     {
         $code = $this->getCode();
         $value = isset($this->data[$code]) ? $this->data[$code] : null;
-
         $modeType = $this->getCheckboxType();
-
         // Для возможного расширения поведения чекбокса
         switch($modeType)
         {
             case self::TYPE_STRING:
             {
                 $value = $value == 'Y' ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
-
                 break;
             }
             case self::TYPE_INT: case self::TYPE_BOOLEAN:
         {
             $value = $value ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
-
             break;
         }
         }
-
         return $value;
     }
-
     /**
      * Перехватчик сохранения
      * Если поле является булевым - приводим к нужному типу
@@ -207,8 +184,8 @@ class CheckBoxWidget extends HelperWidget
             $this->data[$this->getCode()] = (bool) $this->data[$this->getCode()];
         }
     }
-    
-    
+
+
     /**
      * Получить тип чекбокса по типу поля
      * @return mixed
@@ -219,7 +196,6 @@ class CheckBoxWidget extends HelperWidget
         $entity = $this->getEntityName();
         $entityMap = $entity::getMap();
         $columnName = $this->getCode();
-
         if (!isset($entityMap[$columnName]))
         {
             foreach ($entityMap as $field)
@@ -235,7 +211,6 @@ class CheckBoxWidget extends HelperWidget
         {
             $fieldType = $entityMap[$columnName]['data_type'];
         }
-
         return $fieldType;
     }
 }
