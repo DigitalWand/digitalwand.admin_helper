@@ -82,12 +82,12 @@ class FileWidget extends HelperWidget
 			{
 				while($referenceData = $rsEntityData->fetch())
 				{
-					if (empty($referenceData['REFERENCE_ID']))
+					if (empty($referenceData['REFERENCE_' . $this->getMultipleField('ID')]))
 					{
 						continue;
 					}
 
-					$fileInfo = \CFile::GetFileArray($referenceData['REFERENCE_VALUE']);
+					$fileInfo = \CFile::GetFileArray($referenceData['REFERENCE_' . $this->getMultipleField('VALUE')]);
 
 					if ($fileInfo)
 					{
@@ -103,15 +103,15 @@ class FileWidget extends HelperWidget
 
 					?>
 
-				<?if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png'|| $fileInfo['CONTENT_TYPE'] == 'image/gif'):?>
-					$htmlStr = '<span style="display: block"><img src="<?=$fileInfo['SRC']?>" alt="<?=$fileInfo['ORIGINAL_NAME']?>" width="100" height="100"></span>';
-				<?endif?>
+			<?if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png'|| $fileInfo['CONTENT_TYPE'] == 'image/gif'):?>
+			$htmlStr = '<span style="display: block"><img src="<?=$fileInfo['SRC']?>" alt="<?=$fileInfo['ORIGINAL_NAME']?>" width="100" height="100"></span>';
+			<?endif?>
 
-				$htmlStr = $htmlStr + '<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
+			$htmlStr = $htmlStr + '<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
 				'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][ID]" value="#field_id#">';
 
-				multiple.addFieldHtml($htmlStr,
-				{field_id: <?= $referenceData['REFERENCE_ID'] ?>});
+			multiple.addFieldHtml($htmlStr,
+				{field_id: <?= $referenceData['REFERENCE_' . $this->getMultipleField('ID')] ?>});
 			<?
 	   }
 	}
@@ -186,7 +186,9 @@ class FileWidget extends HelperWidget
 
 					if (empty($fileName)
 						|| empty($_FILES[$this->getCode()]['tmp_name'][$key])
-						|| !empty($_FILES[$this->getCode()]['error'][$key])) {
+						|| !empty($_FILES[$this->getCode()]['error'][$key])
+					)
+					{
 						continue;
 					}
 
@@ -194,7 +196,7 @@ class FileWidget extends HelperWidget
 
 					if ($fileId)
 					{
-						$this->data[$this->getCode()][] = ['VALUE' => $fileId];
+						$this->data[$this->getCode()][] = [$this->getMultipleField('VALUE') => $fileId];
 					}
 					else
 					{
@@ -272,35 +274,36 @@ class FileWidget extends HelperWidget
 		return $fileId;
 	}
 
-    /**
+	/**
 	 * {@inheritdoc}
 	 */
-    protected function getMultipleValueReadonly()
-    {
-        $result = '';
-        $values = parent::getMultipleValue();
-        if (!empty($values))
-        {
-            foreach ($values as $value)
-            {
-                $fileInfo = \CFile::GetFileArray($value);
-                if (!empty($fileInfo))
-                {
-                    if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png'|| $fileInfo['CONTENT_TYPE'] == 'image/gif')
-                    {
-                        $result .= '<div><img src="' . $fileInfo['SRC'] . '" alt="' . $fileInfo['ORIGINAL_NAME'] . '" width="100" height="100"></div>';
-                    }
-                    else
-                    {
-                        $result .= '<div>' . $fileInfo['ORIGINAL_NAME'] . '</div>';
-                    }
-                }
-                else
-                {
-                    $result .= '<div>Файл не найден</div>';
-                }
-            }
-        }
-        return $result;
-    }
+	protected function getMultipleValueReadonly()
+	{
+		$result = '';
+		$values = parent::getMultipleValue();
+		if (!empty($values))
+		{
+			foreach ($values as $value)
+			{
+				$fileInfo = \CFile::GetFileArray($value);
+				if (!empty($fileInfo))
+				{
+					if ($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png' || $fileInfo['CONTENT_TYPE'] == 'image/gif')
+					{
+						$result .= '<div><img src="' . $fileInfo['SRC'] . '" alt="' . $fileInfo['ORIGINAL_NAME'] . '" width="100" height="100"></div>';
+					}
+					else
+					{
+						$result .= '<div>' . $fileInfo['ORIGINAL_NAME'] . '</div>';
+					}
+				}
+				else
+				{
+					$result .= '<div>Файл не найден</div>';
+				}
+			}
+		}
+
+		return $result;
+	}
 }

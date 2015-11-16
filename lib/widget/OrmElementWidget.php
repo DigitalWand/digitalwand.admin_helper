@@ -168,7 +168,7 @@ class OrmElementWidget extends NumberWidget
         $entityListData = $this->getOrmElementData();
         if (!empty($entityListData))
         {
-            $multipleData = [];
+            $multipleData = array();
             foreach ($entityListData as $entityData)
             {
                 $entityName = $entityData[$this->getSettings('TITLE_FIELD_NAME')] ?
@@ -249,7 +249,7 @@ class OrmElementWidget extends NumberWidget
      */
     protected function getOrmElementData()
     {
-        $refInfo = [];
+        $refInfo = array();
         $valueList = null;
 
         if ($this->getSettings('MULTIPLE'))

@@ -34,7 +34,7 @@ class ComboBoxWidget extends HelperWidget
 		$style = $this->getSettings('STYLE');
 		$multiple = $this->getSettings('MULTIPLE');
 
-		$multipleSelected = [];
+		$multipleSelected = array();
         if ($multiple)
         {
             $multipleSelected = $this->getMultipleValue();
@@ -106,7 +106,7 @@ class ComboBoxWidget extends HelperWidget
 
 			foreach ($sphere as $sphereKey)
 			{
-				$this->data[$this->getCode()][] = ['VALUE' => $sphereKey];
+				$this->data[$this->getCode()][] = [$this->getMultipleField('VALUE') => $sphereKey];
 			}
 		}
 
@@ -164,7 +164,7 @@ class ComboBoxWidget extends HelperWidget
 	 */
 	protected function formatVariants($variants)
 	{
-		$formatted = [];
+		$formatted = array();
 		foreach ($variants as $id => $data)
 		{
 			if (!is_array($data))

@@ -1,11 +1,12 @@
 <?php
-// TODO Проверить, не удаляются ли поля, не имеющие отношения к управляемым связям
-// TODO Описать как хранить разные поля, разные поля разных моделей в одной таблице
+
 namespace DigitalWand\AdminHelper\Model;
 
 use Bitrix\Main\ArgumentException;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Entity;
+use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
+use DigitalWand\AdminHelper\Widget\HelperWidget;
 
 /**
  * Управление данными связей через одну модель
@@ -100,13 +101,16 @@ use Bitrix\Main\Entity;
  * # Если у вас нет возможности унаследовать данный класс, реализуйте такую же логику обработки событий в своём классе
  * и используйте трейт DataManagerTrait
  */
-// TODO Использовать PK вместо ID
 class EntityManager
 {
 	/**
 	 * @var string Класс модели
 	 */
 	protected $modelClass;
+	/**
+	 * @var Entity\Base Сущность модели
+	 */
+	protected $modelEntity;
 	/**
 	 * @var array Данные для обработки
 	 */
@@ -115,29 +119,48 @@ class EntityManager
 	 * @var integer ID модели
 	 */
 	protected $modelId = null;
+	/**
+	 * @var string Поле, в котором хранится идентификатор модели
+	 */
+	protected $modelPk = null;
 
 	/**
 	 * @var array Данные для связей
 	 */
 	protected $referencesData;
+	/**
+	 * @var AdminBaseHelper Хелпер
+	 */
+	protected $adminHelper;
 
 	/**
 	 * @param DataManager $modelClass
 	 * @param $modelData
 	 * @param null $modelId
+	 * @param AdminBaseHelper $adminHelper
 	 */
-	public function __construct($modelClass, $modelData, $modelId = null)
+	public function __construct($modelClass, $modelData, $modelId = null, AdminBaseHelper $adminHelper)
 	{
 		$this->modelClass = $modelClass;
+		$this->modelEntity = $modelClass::getEntity();
 		$this->modelData = $modelData;
-		$this->modelId = $modelId;
+		$this->modelPk = $this->modelEntity->getPrimary();
+		$this->adminHelper = $adminHelper;
 
-		if (!empty($this->modelId))
+		if (!empty($modelId))
 		{
-			/** @var Entity\Base $entity */
-			$entity = $modelClass::getEntity();
-			$this->modelData[$entity->getPrimary()] = $this->modelId;
+			$this->setModelId($modelId);
 		}
+	}
+
+	/**
+	 * Установка текущего идентификатора модели
+	 * @param $modelId
+	 */
+	public function setModelId($modelId)
+	{
+		$this->modelId = $modelId;
+		$this->modelData[$this->modelPk] = $this->modelId;
 	}
 
 	public function save()
@@ -152,7 +175,7 @@ class EntityManager
 			$result = $modelClass::add($this->modelData);
 			if ($result->isSuccess())
 			{
-				$this->modelId = $result->getId();
+				$this->setModelId($result->getId());
 			}
 		}
 		else
@@ -177,8 +200,7 @@ class EntityManager
 	 */
 	protected function getReferences()
 	{
-		echo "# Сбор списка связей\n";
-		$references = [];
+		$references = array();
 		/** @var DataManager $modelClass */
 		$modelClass = $this->modelClass;
 		$entity = $modelClass::getEntity();
@@ -188,11 +210,9 @@ class EntityManager
 		{
 			if ($field instanceof Entity\ReferenceField)
 			{
-				//echo "$fieldName, ";
 				$references[$fieldName] = $field;
 			}
 		}
-		echo "\n";
 
 		return $references;
 	}
@@ -203,22 +223,17 @@ class EntityManager
 	protected function collectReferencesData()
 	{
 		$references = $this->getReferences();
-		echo "# Сбор данных связей\n";
 
 		// Извлечение данных управляемых связей
 		foreach ($references as $fieldName => $reference)
 		{
 			if (isset($this->modelData[$fieldName]))
 			{
-				//echo "$fieldName, ";
-
 				// Извлечение данных для связи
 				$this->referencesData[$fieldName] = $this->modelData[$fieldName];
 				unset($this->modelData[$fieldName]);
 			}
 		}
-
-		echo "\n";
 	}
 
 	/**
@@ -228,8 +243,6 @@ class EntityManager
 	 */
 	protected function processReferencesData()
 	{
-		echo "# Обработка данных связей\n";
-
 		/** @var DataManager $modelClass */
 		$modelClass = $this->modelClass;
 		$entity = $modelClass::getEntity();
@@ -237,29 +250,25 @@ class EntityManager
 
 		foreach ($this->referencesData as $fieldName => $referenceDataSet)
 		{
-			echo "\n$fieldName\n";
+			$fieldWidget = $this->getFieldWidget($fieldName);
 			/** @var Entity\ReferenceField $reference */
 			$reference = $fields[$fieldName];
 			$referenceDataSet = $this->linkDataSet($reference, $referenceDataSet);
 			$referenceStaleDataSet = $this->getReferenceDataSet($reference);
 
 			// Создание и обновление привязанных данных
-			$processedDataIds = [];
+			$processedDataIds = array();
 			foreach ($referenceDataSet as $referenceData)
 			{
-				if (empty($referenceData['ID']))
+				if (empty($referenceData[$fieldWidget->getMultipleField('ID')]))
 				{
 					// Создание данных связи
-					if (!empty($referenceData['VALUE']))
+					if (!empty($referenceData[$fieldWidget->getMultipleField('VALUE')]))
 					{
 						$result = $this->createReferenceData($reference, $referenceData);
 						if ($result->isSuccess())
 						{
 							$processedDataIds[] = $result->getId();
-						}
-						else
-						{
-							echo "ЛАЖА\n";
 						}
 					}
 				}
@@ -268,16 +277,7 @@ class EntityManager
 					$updateResult = $this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet);
 					if ($updateResult !== false)
 					{
-						if (is_object($updateResult) && !$updateResult->isSuccess())
-						{
-							echo "ЛАЖА\n";
-						}
-
-						$processedDataIds[] = $referenceData['ID'];
-					}
-					else
-					{
-						echo "ЛАЖА\n";
+						$processedDataIds[] = $referenceData[$fieldWidget->getMultipleField('ID')];
 					}
 				}
 			}
@@ -285,17 +285,14 @@ class EntityManager
 			// Удаление записей, которые не были созданы или обновлены
 			foreach ($referenceStaleDataSet as $referenceData)
 			{
-				if (!in_array($referenceData['ID'], $processedDataIds))
+				if (!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds))
 				{
-					if (!$this->deleteReferenceData($reference, $referenceData['ID'])->isSuccess())
-					{
-						echo "ЛАЖА\n";
-					}
+					$this->deleteReferenceData($reference, $referenceData[$fieldWidget->getMultipleField('ID')])->isSuccess();
 				}
 			}
 		}
 
-		$this->referencesData = [];
+		$this->referencesData = array();
 	}
 
 	/**
@@ -303,7 +300,6 @@ class EntityManager
 	 */
 	protected function deleteReferencesData()
 	{
-		echo "# Удаление данных связей\n";
 		// TODO Удалять только данные связей, который описаны в интерфейсе
 		/*
 				$references = $this->getReferences();
@@ -328,15 +324,13 @@ class EntityManager
 	 */
 	protected function createReferenceData(Entity\ReferenceField $reference, array $referenceData)
 	{
-		echo "# Создание.......\n";
-		if (!empty($referenceData['ID']))
+		$fieldWidget = $this->getFieldWidget($reference->getName());
+		if (!empty($referenceData[$fieldWidget->getMultipleField('ID')]))
 		{
 			throw new ArgumentException('Аргумент data не может содержать идентификатор элемента', 'data');
 		}
 
 		$refClass = $reference->getRefEntity()->getDataClass();
-
-		print_r($referenceData);
 
 		return $refClass::add($referenceData);
 	}
@@ -352,17 +346,17 @@ class EntityManager
 	 */
 	protected function updateReferenceData(Entity\ReferenceField $reference, array $referenceData, array $referenceStaleDataSet)
 	{
-		echo "# Обновление.......\n";
-		if (empty($referenceData['ID']))
+		$fieldWidget = $this->getFieldWidget($reference->getName());
+		if (empty($referenceData[$fieldWidget->getMultipleField('ID')]))
 		{
 			throw new ArgumentException('Аргумент data должен содержать идентификатор элемента', 'data');
 		}
 
 		// Сравнение старых данных и новых, обновляется только при различиях
-		if ($this->isDifferentData($referenceStaleDataSet[$referenceData['ID']], $referenceData))
+		if ($this->isDifferentData($referenceStaleDataSet[$referenceData[$fieldWidget->getMultipleField('ID')]], $referenceData))
 		{
 			$refClass = $reference->getRefEntity()->getDataClass();
-			$result = $refClass::update($referenceData['ID'], $referenceData);
+			$result = $refClass::update($referenceData[$fieldWidget->getMultipleField('ID')], $referenceData);
 
 			return $result;
 		}
@@ -382,8 +376,6 @@ class EntityManager
 	 */
 	protected function deleteReferenceData(Entity\ReferenceField $reference, $referenceId)
 	{
-		echo "# Удаление.......\n";
-
 		$refClass = $reference->getRefEntity()->getDataClass();
 		$result = $refClass::delete($referenceId);
 
@@ -398,12 +390,11 @@ class EntityManager
 	 */
 	protected function getReferenceDataSet(Entity\ReferenceField $reference)
 	{
-		echo "# Чтение данных связи\n";
 		/** @var DataManager $modelClass */
 		$modelClass = $this->modelClass;
-		$dataSet = [];
+		$dataSet = array();
 
-		$rsData = $modelClass::getList(['select' => ['REF_' => $reference->getName() . '.*'], 'filter' => ['=ID' => $this->modelId]]);
+		$rsData = $modelClass::getList(array('select' => array('REF_' => $reference->getName() . '.*'), 'filter' => array('=ID' => $this->modelId)));
 		while ($data = $rsData->fetch())
 		{
 			if (empty($data['REF_ID']))
@@ -411,7 +402,7 @@ class EntityManager
 				continue;
 			}
 
-			$row = [];
+			$row = array();
 			foreach ($data as $key => $value)
 			{
 				$row[str_replace('REF_', '', $key)] = $value;
@@ -433,7 +424,6 @@ class EntityManager
 	protected function linkData(Entity\ReferenceField $reference, array $referenceData)
 	{
 		$referenceConditions = $this->getReferenceConditions($reference);
-		echo "# Связывание данных\n";
 
 		foreach ($referenceConditions as $refField => $refValue)
 		{
@@ -445,7 +435,6 @@ class EntityManager
 			{
 				$referenceData[$refField] = $this->modelData[$refValue['thisField']];
 			}
-			//echo "$refField = $referenceData[$refField]\n";
 		}
 
 		return $referenceData;
@@ -460,7 +449,6 @@ class EntityManager
 	 */
 	protected function linkDataSet(Entity\ReferenceField $reference, array $referenceDataSet)
 	{
-		echo "# Связывание набора данных\n";
 		foreach ($referenceDataSet as $key => $referenceData)
 		{
 			$referenceDataSet[$key] = $this->linkData($reference, $referenceData);
@@ -477,8 +465,7 @@ class EntityManager
 	 */
 	protected function getReferenceConditions(Entity\ReferenceField $reference)
 	{
-		echo "# Парсинг условий " . $reference->getName() . "\n";
-		$conditionsFields = [];
+		$conditionsFields = array();
 
 		foreach ($reference->getReference() as $leftCondition => $rightCondition)
 		{
@@ -487,8 +474,8 @@ class EntityManager
 			$customValue = null;
 
 			// Поиск this.... в левом условии
-			$thisFieldMatch = [];
-			$refFieldMatch = [];
+			$thisFieldMatch = array();
+			$refFieldMatch = array();
 			if (preg_match('/=this\.([A-z]+)/', $leftCondition, $thisFieldMatch) == 1)
 			{
 				$thisField = $thisFieldMatch[1];
@@ -500,7 +487,7 @@ class EntityManager
 			}
 
 			// Поиск expression value... в правом условии
-			$refFieldMatch = [];
+			$refFieldMatch = array();
 			if ($rightCondition instanceof \Bitrix\Main\DB\SqlExpression)
 			{
 				$customValueDirty = $rightCondition->compile();
@@ -517,8 +504,6 @@ class EntityManager
 				$refField = $refFieldMatch[1];
 			}
 
-			//echo "\n= " . $refField . ' - ' . $thisField . ' - ' . $customValue . "\n";
-
 			// Если не указано поле, которое нужно заполнить или не найдено содержимое для него, то исключаем условие
 			if (empty($refField) || (empty($thisField) && empty($customValue)))
 			{
@@ -530,11 +515,8 @@ class EntityManager
 					'thisField' => $thisField,
 					'customValue' => $customValue,
 				];
-				//echo "Принято\n";
 			}
 		}
-
-		//echo "\n";
 
 		return $conditionsFields;
 	}
@@ -549,8 +531,6 @@ class EntityManager
 	 */
 	protected function isDifferentData(array $data1 = null, array $data2 = null)
 	{
-		echo "Проверка различий данных\n";
-
 		foreach ($data1 as $key => $value)
 		{
 			if (isset($data2[$key]) && $data2[$key] != $value)
@@ -559,8 +539,24 @@ class EntityManager
 			}
 		}
 
-		echo "Данные не отличаются\n";
-
 		return false;
+	}
+
+	/**
+	 * Получение виджета привязанного к полю
+	 * @param $fieldName
+	 * @return HelperWidget|bool
+	 */
+	protected function getFieldWidget($fieldName)
+	{
+		$fields = $this->adminHelper->getFields();
+		if (isset($fields[$fieldName]) && isset($fields[$fieldName]['WIDGET']))
+		{
+			return $fields[$fieldName]['WIDGET'];
+		}
+		else
+		{
+			return false;
+		}
 	}
 }

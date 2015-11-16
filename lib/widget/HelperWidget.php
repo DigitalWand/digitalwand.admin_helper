@@ -59,6 +59,7 @@ Loc::loadMessages(__FILE__);
  * <li><b>EDIT_IN_LIST</b> - параметр не обрабатывается непосредственно виджетом, однако используется хэлпером.
  *     Указывает, можно ли редактировать данное поле в спискке</li>
  * <li><b>MULTIPLE</b> - bool является ли поле множественным</li>
+ * <li><b>MULTIPLE_FIELDS</b> - bool поля используемые в хранилище множественных значений</li>
  * </ul>
  *
  * Инструкция по реализации множественных полей:
@@ -69,11 +70,11 @@ Loc::loadMessages(__FILE__);
  * Для каждого виджета есть своё обязательное поле, например IMAGE_ID или TEXT, смотрите комментарии к классам виджетов</li>
  * <li>создайте и опишите модель для созданной таблицы</li>
  * <li>укажите связь в главной сущности с сущностью поля по шаблону:
-new Entity\ReferenceField(
-'НАЗВАНИЕ_ПОЛЯ',
-'МОДЕЛЬ_СУЩНОСТИ_С_НЕЙМСПЕЙСОМ',
-['=this.ID' => 'ref.ENTITY_ID']
-),
+ * new Entity\ReferenceField(
+ * 'НАЗВАНИЕ_ПОЛЯ',
+ * 'МОДЕЛЬ_СУЩНОСТИ_С_НЕЙМСПЕЙСОМ',
+ * ['=this.ID' => 'ref.ENTITY_ID']
+ * ),
  * </li>
  * </ul>
  *
@@ -97,7 +98,10 @@ abstract class HelperWidget
 	 * @var array $settings
 	 * Настройки виджета для данной модели
 	 */
-	protected $settings;
+	protected $settings = [
+		// Поля множественного виджета по умолчанию (array('ОРИГИНАЛЬНОЕ НАЗВАНИЕ', 'ОРИГИНАЛЬНОЕ НАЗВАНИЕ' => 'АЛИАС'))
+		'MULTIPLE_FIELDS' => ['ID', 'VALUE'/* => 'ЕСЛИ В ВАШЕЙ ТАБЛИЦЕ НЕТ ПОЛЯ VALUE, ЗДЕСЬ МОЖНО ОБЪЯВИТЬ АЛИАС' */]
+	];
 
 	/**
 	 * @var array
@@ -152,131 +156,133 @@ abstract class HelperWidget
 	 */
 	abstract protected function genEditHTML();
 
-    /**
-     * Оборачивает поле в HTML код, который в большинстве случаев менять не придется.
-     * Далее вызывается кастомизируемая часть.
-     *
-     * @param $isPKField - является ли поле первичным ключом модели
-     *
-     * @see HelperWidget::genEditHTML();
-     */
-    public function genBasicEditField($isPKField)
-    {
-        if ($this->getSettings('HIDE_WHEN_CREATE') AND !isset($this->data['ID']))
-        {
-            return;
-        }
+	/**
+	 * Оборачивает поле в HTML код, который в большинстве случаев менять не придется.
+	 * Далее вызывается кастомизируемая часть.
+	 *
+	 * @param $isPKField - является ли поле первичным ключом модели
+	 *
+	 * @see HelperWidget::genEditHTML();
+	 */
+	public function genBasicEditField($isPKField)
+	{
+		if ($this->getSettings('HIDE_WHEN_CREATE') AND !isset($this->data['ID']))
+		{
+			return;
+		}
 
-        // JS хелперы
-        $this->jsHelper();
+		// JS хелперы
+		$this->jsHelper();
 
-        if ($this->getSettings('USE_BX_API'))
-        {
-            $this->genEditHTML();
-        }
-        else
-        {
-            print '<tr>';
-            $title = $this->getSettings('TITLE');
-            if ($this->getSettings('REQUIRED') === true)
-            {
-                $title = '<b>' . $title . '</b>';
-            }
-            print '<td width="40%" style="vertical-align: top;">' . $title . ':</td>';
+		if ($this->getSettings('USE_BX_API'))
+		{
+			$this->genEditHTML();
+		}
+		else
+		{
+			print '<tr>';
+			$title = $this->getSettings('TITLE');
+			if ($this->getSettings('REQUIRED') === true)
+			{
+				$title = '<b>' . $title . '</b>';
+			}
+			print '<td width="40%" style="vertical-align: top;">' . $title . ':</td>';
 
-            $field = $this->getValue();
-            if (is_null($field))
-            {
-                $field = '';
-            }
+			$field = $this->getValue();
+			if (is_null($field))
+			{
+				$field = '';
+			}
 
-            $readOnly = $this->getSettings('READONLY');
+			$readOnly = $this->getSettings('READONLY');
 
-            if (!$readOnly AND !$isPKField)
-            {
-                if ($this->getSettings('MULTIPLE'))
-                {
-                    $field = $this->genMultipleEditHTML();
-                }
-                else
-                {
-                    $field = $this->genEditHTML();
-                }
-            }
-            else
-            {
-                if ($readOnly)
-                {
-                    if ($this->getSettings('MULTIPLE'))
-                    {
-                        $field = $this->getMultipleValueReadonly();
-                    }
-                    else
-                    {
-                        $field = $this->getValueReadonly();
-                    }
-                }
-            }
+			if (!$readOnly AND !$isPKField)
+			{
+				if ($this->getSettings('MULTIPLE'))
+				{
+					$field = $this->genMultipleEditHTML();
+				}
+				else
+				{
+					$field = $this->genEditHTML();
+				}
+			}
+			else
+			{
+				if ($readOnly)
+				{
+					if ($this->getSettings('MULTIPLE'))
+					{
+						$field = $this->getMultipleValueReadonly();
+					}
+					else
+					{
+						$field = $this->getValueReadonly();
+					}
+				}
+			}
 
-            print '<td width="60%">' . $field . '</td>';
-            print '</tr>';
-        }
-    }
+			print '<td width="60%">' . $field . '</td>';
+			print '</tr>';
+		}
+	}
 
-    /**
-     * Возвращает значение поля в форме "только для чтения" для не множественных свойств.
-     *
-     * @return mixed
-     */
-    protected function getValueReadonly()
-    {
-        return $this->getValue();
-    }
-    
-    /**
-     * Возвращает значения множественного поля 
-     * @return array
-     */
-    protected function getMultipleValue()
-    {
-        $rsEntityData = null;
-        $values = [];
-        if (!empty($this->data['ID']))
-        {
-            $entityName = $this->entityName;
-            $rsEntityData = $entityName::getList([
-                'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-                'filter' => ['=ID' => $this->data['ID']]
-            ]);
-            if ($rsEntityData)
-            {
-                while($referenceData = $rsEntityData->fetch())
-                {
-                    if (empty($referenceData['REFERENCE_ID']))
-                    {
-                        continue;
-                    }
-                    $values[] = $referenceData['REFERENCE_VALUE'];
-                }
-            }
-        }
-        else if ($this->data[$this->code])
-        {
-            $values = $this->data[$this->code];
-        }
-        return $values;
-    }
-    
-    /**
-     * Возвращает значение поля в форме "только для чтения" для множественных свойств.
-     *
-     * @return string
-     */
-    protected function getMultipleValueReadonly()
-    {
-        $values = $this->getMultipleValue();
-        return join('<br/>', $values);
-    }
+	/**
+	 * Возвращает значение поля в форме "только для чтения" для не множественных свойств.
+	 *
+	 * @return mixed
+	 */
+	protected function getValueReadonly()
+	{
+		return $this->getValue();
+	}
+
+	/**
+	 * Возвращает значения множественного поля
+	 * @return array
+	 */
+	protected function getMultipleValue()
+	{
+		$rsEntityData = null;
+		$values = array();
+		if (!empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
+			if ($rsEntityData)
+			{
+				while ($referenceData = $rsEntityData->fetch())
+				{
+					if (empty($referenceData['REFERENCE_' . $this->getMultipleField('ID')]))
+					{
+						continue;
+					}
+					$values[] = $referenceData['REFERENCE_' . $this->getMultipleField('VALUE')];
+				}
+			}
+		}
+		else if ($this->data[$this->code])
+		{
+			$values = $this->data[$this->code];
+		}
+
+		return $values;
+	}
+
+	/**
+	 * Возвращает значение поля в форме "только для чтения" для множественных свойств.
+	 *
+	 * @return string
+	 */
+	protected function getMultipleValueReadonly()
+	{
+		$values = $this->getMultipleValue();
+
+		return join('<br/>', $values);
+	}
 
 	/**
 	 * Генерирует HTML для поля в списке
@@ -612,6 +618,36 @@ abstract class HelperWidget
 	}
 
 	/**
+	 * Получения названия поля таблицы, в которой хранятся множественные данные этого виджета
+	 * @param string $fieldName Название поля
+	 * @return bool|string
+	 */
+	public function getMultipleField($fieldName)
+	{
+		$fields = $this->getSettings('MULTIPLE_FIELDS');
+		if (empty($fields))
+		{
+			return $fieldName;
+		}
+
+		// Поиск алиаса названия поля
+		if (isset($fields[$fieldName]))
+		{
+			return $fields[$fieldName];
+		}
+
+		// Поиск оригинального названия поля
+		$fieldsFlip = array_flip($fields);
+
+		if (isset($fieldsFlip[$fieldName]))
+		{
+			return $fieldsFlip[$fieldName];
+		}
+
+		return $fieldName;
+	}
+
+	/**
 	 * Выставляет значение отдельной настройки
 	 * @param string $name
 	 * @param mixed $value
@@ -822,7 +858,7 @@ abstract class HelperWidget
 					console.log('Добавление поля');
 					this.addFieldHtml(this.fieldTemplate, data);
 				},
-				addFieldHtml: function(fieldTemplate, data) {
+				addFieldHtml: function (fieldTemplate, data) {
 					this.fieldsCounter++;
 					this.$fieldsContainer.append(this._generateFieldContent(fieldTemplate, data));
 				},

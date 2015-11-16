@@ -535,7 +535,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	protected function saveElement($id = null)
 	{
 		$className = static::getModel();
-		$saveHelper = new EntityManager($className, $this->data, $id);
+		$saveHelper = new EntityManager($className, $this->data, $id, $this);
 
 		return $saveHelper->save();
 	}
