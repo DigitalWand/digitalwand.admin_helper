@@ -222,7 +222,7 @@ abstract class AdminBaseHelper
 	 * Флаг использования разделов, необходимо переопределять в дочернем классе
 	 * @var bool
 	 */
-	static protected $hasSections = false;
+	static protected $useSections = false;
 
 	/**
 	 * @param array $fields список используемых полей и виджетов для них
@@ -494,6 +494,20 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+	 * @return \Bitrix\Main\Entity\DataManager|string Возвращает имя класса используемой модели
+	 * Возвращает имя класса используемой модели раздела
+	 *
+	 * @throws \Bitrix\Main\ArgumentException
+	 * @throws \Bitrix\Main\SystemException
+	 * @throws \Exception
+	 * @api
+	 */
+	public static function getSectionModel()
+	{
+		return static::getHLEntity(static::$sectionModel);
+	}
+
+	/**
 	 * Возвращает имя модуля
 	 * @return string
 	 * @api
@@ -578,6 +592,17 @@ abstract class AdminBaseHelper
 	 * @api
 	 */
 	public function pk()
+	{
+		return 'ID';
+	}
+
+	/**
+	 * Возвращает первичный ключ таблицы используемой модели разделов
+	 * Для HL-инфоблоков битрикс - всегда ID. Но может поменяться для какой-либо другой сущности.
+	 * @return string
+	 * @api
+	 */
+	public function sectionPk()
 	{
 		return 'ID';
 	}

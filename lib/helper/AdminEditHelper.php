@@ -245,30 +245,41 @@ abstract class AdminEditHelper extends AdminBaseHelper
         return $menu;
     }
 
-    /**
-     * Выводит детальную страницу.
-     *
-     * @internal
-     */
-    public function show()
-    {
-        $context = new \CAdminContextMenu($this->getMenu());
-        $context->Show();
-        $this->tabControl->BeginPrologContent();
-        $this->showMessages();
-        $this->showProlog();
-        $this->tabControl->EndPrologContent();
-        $this->tabControl->BeginEpilogContent();
-        $this->showEpilog();
-        $this->tabControl->EndEpilogContent();
-        $query = $this->additionalUrlParams;
+	/**
+	 * Выводит детальную страницу
+	 * @internal
+	 */
+	public function show()
+	{
+		if (!$this->hasReadRights())
+		{
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACCESS_FORBIDDEN'));
+			$this->showMessages();
+			return false;
+		}
 
-        if (isset($_REQUEST[$this->pk()])) {
-            $query[$this->pk()] = $_REQUEST[$this->pk()];
-        } elseif (isset($_REQUEST['SECTION_ID']) && $_REQUEST['SECTION_ID']) {
-            $model = $this->getModel();
-            $this->data[$model::getSectionField()] = $_REQUEST['SECTION_ID'];
-        }
+		$context = new \CAdminContextMenu($this->getMenu());
+		$context->Show();
+
+		$this->tabControl->BeginPrologContent();
+		$this->showMessages();
+		$this->showProlog();
+		$this->tabControl->EndPrologContent();
+
+		$this->tabControl->BeginEpilogContent();
+		$this->showEpilog();
+		$this->tabControl->EndEpilogContent();
+
+		$query = $this->additionalUrlParams;
+		if (isset($_REQUEST[$this->pk()]))
+		{
+			$query[$this->pk()] = $_REQUEST[$this->pk()];
+		}
+		elseif (isset($_REQUEST['SECTION_ID']) && $_REQUEST['SECTION_ID'])
+		{
+			$model = $this->getModel();
+			$this->data[$model::getSectionField()] = $_REQUEST['SECTION_ID'];
+		}
 
         $this->tabControl->Begin(array(
             'FORM_ACTION' => static::getEditPageURL($query)
