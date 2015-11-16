@@ -153,16 +153,6 @@ class EntityManager
 		}
 	}
 
-	/**
-	 * Установка текущего идентификатора модели
-	 * @param $modelId
-	 */
-	public function setModelId($modelId)
-	{
-		$this->modelId = $modelId;
-		$this->modelData[$this->modelPk] = $this->modelId;
-	}
-
 	public function save()
 	{
 		ob_start();
@@ -191,6 +181,30 @@ class EntityManager
 		ShowMessage(ob_get_clean());
 
 		return $result;
+	}
+
+	/**
+	 * Удаление записи
+	 * @return Entity\DeleteResult
+	 */
+	public function delete()
+	{
+		// Удаление данных зависимостей
+		$this->deleteReferencesData();
+
+		$model = $this->modelClass;
+
+		return $model::delete($this->modelId);
+	}
+
+	/**
+	 * Установка текущего идентификатора модели
+	 * @param $modelId
+	 */
+	protected function setModelId($modelId)
+	{
+		$this->modelId = $modelId;
+		$this->modelData[$this->modelPk] = $this->modelId;
 	}
 
 	/**
@@ -300,18 +314,29 @@ class EntityManager
 	 */
 	protected function deleteReferencesData()
 	{
-		// TODO Удалять только данные связей, который описаны в интерфейсе
-		/*
-				$references = $this->getReferences();
-				foreach ($references as $fieldName => $reference)
-				{
-					$referenceStaleDataSet = $this->getReferenceDataSet($reference, $this->modelId);
-					foreach ($referenceStaleDataSet as $referenceData)
-					{
-						$this->deleteReferenceData($reference, $referenceData['ID']);
-					}
-				}
-		*/
+		$references = $this->getReferences();
+		$fields = $this->adminHelper->getFields();
+
+		/**
+		 * @var string $fieldName
+		 * @var Entity\ReferenceField $reference
+		 */
+		foreach ($references as $fieldName => $reference)
+		{
+			// Удаляются только данные связей, которые объявлены в интерфейсе
+			if (!isset($fields[$fieldName]))
+			{
+				continue;
+			}
+
+			$fieldWidget = $this->getFieldWidget($reference->getName());
+
+			$referenceStaleDataSet = $this->getReferenceDataSet($reference);
+			foreach ($referenceStaleDataSet as $referenceData)
+			{
+				$this->deleteReferenceData($reference, $referenceData[$fieldWidget->getMultipleField('ID')]);
+			}
+		}
 	}
 
 	/**

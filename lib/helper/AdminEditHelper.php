@@ -559,9 +559,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		}
 
 		$className = static::getModel();
-		$result = $className::delete($id);
+		$saveHelper = new EntityManager($className, array(), $id, $this);
 
-		return $result;
+		return $saveHelper->delete();
 	}
 
 	/**
