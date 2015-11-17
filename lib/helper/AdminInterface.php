@@ -49,9 +49,16 @@ abstract class AdminInterface
         $fieldsAndTabs = array('FIELDS' => array(), 'TABS' => array());
         $tabsWithFields = static::getFields();
 
+		$helpers = static::getHelpers();
+		$helper = $helpers[0];
+		$model = $helper::getModel(); // получаем модель из первого хелпера
         foreach ($tabsWithFields as $tabCode => $tab) {
             $fieldsAndTabs['TABS'][$tabCode] = $tab['NAME'];
             foreach ($tab['FIELDS'] as $fieldCode => $field) {
+				if(empty($field['TITLE'])) // если TITLE не задан в интерфейсе берем из модели
+				{
+					$field['TITLE'] = $model::getEntity()->getField($fieldCode)->getTitle();
+				}
                 $field['TAB'] = $tabCode;
                 $fieldsAndTabs['FIELDS'][$fieldCode] = $field;
             }
