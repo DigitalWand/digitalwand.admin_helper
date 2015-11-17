@@ -118,20 +118,76 @@ class FileWidget extends HelperWidget
         return ob_get_clean();
     }
 
-    /**
-     * Генерирует HTML для поля в списке
-     * @see AdminListHelper::addRowCell();
-     * @param \CAdminListRow $row
-     * @param array $data - данные текущей строки
-     * @return mixed
-     */
-    public function genListHTML(&$row, $data)
-    {
-        if ($this->getSettings('MULTIPLE')) {
-        } else {
-            $file = \CFile::GetPath($data[$this->code]);
-            $res = \CFile::GetByID($data[$this->code]);
-            $fileInfo = $res->Fetch();
+	protected function getMultipleValueReadonly()
+	{
+		$descriptionField = $this->getSettings('DESCRIPTION_FIELD');
+		$rsEntityData = null;
+		if (!empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
+		}
+
+		$htmlStr = '';
+		if ($rsEntityData)
+		{
+			while($referenceData = $rsEntityData->fetch())
+			{
+				if (empty($referenceData['REFERENCE_VALUE']))
+				{
+					continue;
+				}
+
+				$fileInfo = \CFile::GetFileArray($referenceData['REFERENCE_VALUE']);
+
+				if ($fileInfo)
+				{
+					$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
+					if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
+						$fileInfoHtml .= ' - '.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').'...';
+					}
+				}
+				else
+				{
+					$fileInfoHtml = 'Файл не найден';
+				}
+
+				if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' ||
+					$fileInfo['CONTENT_TYPE'] == 'image/png'||
+					$fileInfo['CONTENT_TYPE'] == 'image/gif')
+				{
+					$htmlStr = $htmlStr . '<span style="display: block"><img src="' .$fileInfo['SRC'] . '" alt="' .
+						$fileInfo['ORIGINAL_NAME'] . '" width="100" height="100"></span>';
+				}
+
+				$htmlStr = $htmlStr . '<span style="display: block; min-width: 139px;
+					margin-bottom: 10px;">' . $fileInfoHtml . '</span>';
+			}
+		}
+
+		return $htmlStr;
+	}
+
+	/**
+	 * Генерирует HTML для поля в списке
+	 * @see AdminListHelper::addRowCell();
+	 * @param \CAdminListRow $row
+	 * @param array $data - данные текущей строки
+	 * @return mixed
+	 */
+	public function genListHTML(&$row, $data)
+	{
+		if ($this->getSettings('MULTIPLE'))
+		{
+		}
+		else
+		{
+			$file = \CFile::GetPath($data[$this->code]);
+			$res = \CFile::GetByID($data[$this->code]);
+			$fileInfo = $res->Fetch();
 
             if (!$file) {
                 $html = "";

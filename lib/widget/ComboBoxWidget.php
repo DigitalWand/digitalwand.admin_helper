@@ -122,35 +122,77 @@ class ComboBoxWidget extends HelperWidget
         return $value;
     }
 
-    /**
-     * Возвращает массив в формате:
-     * <code>
-     * array(
-     *      '123' => array('ID' => 123, 'TITLE' => 'ololo'),
-     *      '456' => array('ID' => 456, 'TITLE' => 'blablabla'),
-     *      '789' => array('ID' => 789, 'TITLE' => 'pish-pish'),
-     * )
-     * </code>
-     *
-     * Результат будет выводиться в комбобоксе.
-     *
-     * @return array
-     */
-    protected function getVariants()
-    {
-        $variants = $this->getSettings('VARIANTS');
+	protected function getMultipleValueReadonly()
+	{
+		$rsEntityData = null;
+		if (!empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
+		}
 
-        if (is_array($variants) AND !empty($variants)) {
-            return $this->formatVariants($variants);
-        } else {
-            if (is_callable($variants)) {
-                $var = $variants();
+		while ($referenceData = $rsEntityData->fetch())
+		{
+			if (empty($referenceData['REFERENCE_VALUE']))
+			{
+				continue;
+			}
 
-                if (is_array($var)) {
-                    return $this->formatVariants($var);
-                }
-            }
-        }
+			$multipleSelected[] = $referenceData['REFERENCE_VALUE'];
+		}
+
+		$variants = $this->getVariants();
+		$result = '';
+		if (empty($variants))
+		{
+			$result = 'Не удалось получить данные';
+		}
+		else
+		{
+			foreach($multipleSelected as $selectId)
+			{
+				if(isset($variants[$selectId]))
+				{
+					$result .= '<div class="wrap_text" style="margin-bottom: 5px">' . $variants[$selectId]['TITLE'] .
+						'</div>';
+				}
+
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Возвращает массив в формате
+	 * <code>
+	 * array(
+	 *      '123' => array('ID' => 123, 'TITLE' => 'ololo'),
+	 *      '456' => array('ID' => 456, 'TITLE' => 'blablabla'),
+	 *      '789' => array('ID' => 789, 'TITLE' => 'pish-pish'),
+	 * )
+	 * </code>
+	 * Результат будет выводиться в комбобоксе
+	 * @return array
+	 */
+	protected function getVariants()
+	{
+		$variants = $this->getSettings('VARIANTS');
+		if (is_array($variants) AND !empty($variants))
+		{
+			return $this->formatVariants($variants);
+		}
+		else if (is_callable($variants))
+		{
+			$var = $variants();
+			if (is_array($var))
+			{
+				return $this->formatVariants($var);
+			}
+		}
 
         return array();
     }
