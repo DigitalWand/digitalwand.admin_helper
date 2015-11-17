@@ -642,40 +642,27 @@ abstract class AdminListHelper extends AdminBaseHelper
 	public function buildList($sort)
 	{
 		$this->setContext(AdminListHelper::OP_GET_DATA_BEFORE);
+
+        $headers = $this->arHeader;
+
 		$isSectionListHelper = static::getHelperClass(AdminSectionListHelper::getClass()) == static::getClass();
 
 		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::getClass());
-		if ($sectionEditHelper && $_REQUEST['PAGEN_1'] < 2)
-		{
-			$this->list->AddHeaders($this->getSectionsHeader());
-			/**
-			 * Добавляем разделы в выборку если не первая страница
-			 */
-			$sectionsModel = $sectionEditHelper::getModel();
-			$sectionFilter = array(
-				$sectionsModel::getSectionField() => $_REQUEST['ID'],
-			);
-			if($isSectionListHelper)
-			{
-				$sectionFilter = array_merge($sectionFilter, $this->arFilter);
-			}
-			$res = $sectionsModel::getList(array('filter'=>$sectionFilter));
-			$fields = $this->fields;
-			$this->fields = $this->sectionFields;
-			while ($data = $res->Fetch())
-			{
-				$this->modifyRowData($data);
-				list($link, $name) = $this->getRow($data, get_called_class());
 
-				$row = $this->list->AddRow('s' . $data[$this->pk()], $data, $link, $name);
-				foreach ($this->fields as $code => $settings)
-				{
-					$this->addRowCell($row, $code, $data);
-				}
-				$row->AddActions($this->getRowActions($data, true));
-			}
-			$this->fields = $fields;
-			$sectionsVisibleColumns = $this->list->GetVisibleHeaderColumns();
+        if ($sectionEditHelper)
+		{
+            $sectionHeaders = $this->getSectionsHeader();
+            foreach ($sectionHeaders as $sectionHeader)
+            {
+                foreach ($headers as $i => $elementHeader)
+                {
+                    if ($sectionHeader['id'] == $elementHeader['id'])
+                    {
+                        unset($headers[$i]);
+                    }
+                }
+            }
+            $headers = array_merge($headers, $sectionHeaders);
 		}
 
 		usort($headers, array('\DigitalWand\AdminHelper\Helper\AdminListHelper', 'uHeadersSort'));
