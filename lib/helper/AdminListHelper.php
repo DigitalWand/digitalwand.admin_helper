@@ -1159,6 +1159,17 @@ abstract class AdminListHelper extends AdminBaseHelper
     }
 
 	/**
+	 * Возвращает ID таблицы, который не должен конфликтовать с ID в других разделах админки, а также нормально
+	 * парситься в JS
+	 *
+	 * @return string
+	 */
+	protected function getListTableID()
+	{
+		return str_replace('.', '', static::$tablePrefix . $this->table());
+	}
+
+	/**
 	 * Выводит сформированный список.
 	 * Сохраняет обработанный GET-запрос в сессию
 	 */
