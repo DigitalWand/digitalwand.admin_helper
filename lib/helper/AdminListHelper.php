@@ -362,25 +362,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Функция сортировки стобцов
-	 * @see usort
-	 * @param $a
-	 * @param $b
-	 * @return int
-	 */
-	public static function uHeadersSort($a, $b)
-	{
-		$a = $a['admin_list_helper_sort'];
-		$b = $b['admin_list_helper_sort'];
-		if ($a == $b)
-		{
-			return 0;
-		}
-
-		return ($a < $b) ? -1 : 1;
-	}
-
-	/**
 	 * Производит проверку корректности данных (в массиве $_REQUEST), переданных в фильтр
 	 * @TODO: нужно сделать вывод сообщений об ошибке фильтрации.
 	 * @param $arFilter
@@ -665,7 +646,8 @@ abstract class AdminListHelper extends AdminBaseHelper
             $headers = array_merge($headers, $sectionHeaders);
 		}
 
-		usort($headers, array('\DigitalWand\AdminHelper\Helper\AdminListHelper', 'uHeadersSort'));
+		$this->mergeSortHeader($headers);
+
 
 		$this->list->AddHeaders($headers);
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
@@ -769,6 +751,61 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$this->list->CheckListMode();
 	}
+
+    /**
+     * Функция сортировки столбцов c сохранением порядка равнозначных элементов
+     * @param $array
+     */
+    protected function mergeSortHeader(&$array)
+    {
+        if (count($array) < 2) return;
+
+        $halfway = count($array) / 2;
+        $array1 = array_slice($array, 0, $halfway);
+        $array2 = array_slice($array, $halfway);
+
+        $this->mergeSortHeader($array1);
+        $this->mergeSortHeader($array2);
+
+        if ($this->uHeadersSort(end($array1), $array2[0]) < 1) {
+            $array = array_merge($array1, $array2);
+            return;
+        }
+
+        $array = array();
+        $ptr1 = $ptr2 = 0;
+        while ($ptr1 < count($array1) && $ptr2 < count($array2)) {
+            if ($this->uHeadersSort($array1[$ptr1], $array2[$ptr2]) < 1) {
+                $array[] = $array1[$ptr1++];
+            }
+            else {
+                $array[] = $array2[$ptr2++];
+            }
+        }
+
+        while ($ptr1 < count($array1)) $array[] = $array1[$ptr1++];
+        while ($ptr2 < count($array2)) $array[] = $array2[$ptr2++];
+        return;
+    }
+
+    /**
+     * Подфункция сортировки стобцов
+     * @see usort
+     * @param $a
+     * @param $b
+     * @return int
+     */
+    public static function uHeadersSort($a, $b)
+    {
+        $a = $a['admin_list_helper_sort'];
+        $b = $b['admin_list_helper_sort'];
+        if ($a == $b)
+        {
+            return 0;
+        }
+
+        return ($a < $b) ? -1 : 1;
+    }
 
 	/**
 	 * Получение смешанного списка из разделов и элементов
