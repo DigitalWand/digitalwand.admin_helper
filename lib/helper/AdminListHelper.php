@@ -1216,4 +1216,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
 		$_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
 	}
+
+    /**
+     * Возвращает URL для списка элементов
+     * @param array $params
+     * @return string
+     */
+    public static function getUrl($params = array())
+    {
+        return static::getViewURL(static::getViewName(), static::$listPageUrl, $params);
+    }
 }
