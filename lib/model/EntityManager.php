@@ -17,75 +17,28 @@ Loc::loadMessages(__FILE__);
  * Пример создания сущности
  *
  * $filmManager = new EntityManager(FilmTable, [
- *    // Данные сущности
- *    'TITLE' => 'Монстры на каникулах 2',
- *    'YEAR' => 2015,
- *    // У сущности FilmTable есть связь с RelatedLinksTable через поле RELATED_LINKS.
- *    // Если передать ей данные, то они будут обработаны
- *    // Представим, что у сущности RelatedLinksTable есть поля ID и VALUE (в этом поле хранится ссылка), FILM_ID
- *    'RELATED_LINKS' => [
+ *    	// Данные сущности
+ *    	'TITLE' => 'Монстры на каникулах 2',
+ *    	'YEAR' => 2015,
+ *    	// У сущности FilmTable есть связь с RelatedLinksTable через поле RELATED_LINKS.
+ *    	// Если передать ей данные, то они будут обработаны
+ *    	// Представим, что у сущности RelatedLinksTable есть поля ID и VALUE (в этом поле хранится ссылка), FILM_ID
+ *		// В большинстве случаев, данные передаваемые связям генерируются множественными виджетами
+ *    	'RELATED_LINKS' => [
  *        // Переданный ниже массив будет обработан аналогично коду RelatedLinksTable::add(['VALUE' => 'yandex.ru']);
  *        ['VALUE' => 'yandex.ru'],
  *        // Если в массив добавить ID, то запись обновится: RelatedLinksTable::update(3, ['ID' => 3, 'VALUE' => 'google.com']);
  *        ['ID' => 3, 'VALUE' => 'google.com'],
  *        // ВНИМАНИЕ: данный класс реководствуется принципом: что передано для связи, то сохранится или обновится, что не передано, будет удалено
  *        // То есть, если в поле связи RELATED_LINKS передать пустой массив, то все значения связи будут удалены
- *    ]
+ *    	]
  * ]);
- * //
  * $filmManager->save();
  *
  * Пример удаления сущности
  *
  * $articleManager = new EntityManager(ArticlesTable, [], 7, $adminHelper);
  * $articleManager->delete();
- *
- *
- *
- *
- *
- * Пример полного удаления:
- * // Будет удалена статья с ID 7 и все её комментарии
- * $articleManager = new EntityManager(ArticlesTable, [], 7, $adminHelper);
- * $articleManager->delete();
- *
- *
- * Общие пример:
- * $articleManager = new EntityManager(ArticlesTable, [
- *        'COMMENTS' => [
- *            // Комментарий будет создан
- *            [ПРИМЕР: 'EMAIL' => 'email', 'COMMENT' => 'Комментарий']
- *            // Комментарий будет обновлен
- *            [ПРИМЕР: 'ID' => 5, 'EMAIL' => 'email', 'COMMENT' => 'Комментарий']
- *            // Остальные комментарии будут удалены
- *        ]
- * ], 7, $adminHelper);
- * $articleManager->save();
- *
- *
- * Инструкция:
- * # Создайте таблицу, в которой будут хранится привязанные данные
- * # Создайте модель для этой таблицы (например ArticlesCommentsTable)
- * # Укажите связь в основной модели в методе getMap() (например в ArticlesTable)
- * # В основной модели определите метод getMapParams()
- * Метод должен возвращать массив на подобии getMap(). В нем описываются дополнительные параметры полей
- * Вам нужно указать параметр manageable => []
- * Например:
- * return [
- *        'COMMENTS' => [
- *            'manageable' => [
- *                // Необязательные свойства
- *                // bool delete (по умолчанию false) - возможность удаления записи, поставьте false, если запись ни в коем случае не может быть удалена через основной класс
- *                // bool copy (по умолчанию false) - аналогично delete, только для копирования
- *                // bool create (по умолчанию false) - аналогично delete, только для создания
- *                // bool update (по умолчанию false) - аналогично delete, только для обновления
- *            ],
- *        ],
- * ];
- *
- * Дополнительные возможности:
- * # Если у вас нет возможности унаследовать данный класс, реализуйте такую же логику обработки событий в своём классе
- * и используйте трейт DataManagerTrait
  */
 class EntityManager
 {
@@ -245,7 +198,7 @@ class EntityManager
 	}
 
 	/**
-	 * Изъятие данных для связей
+	 * Извлечение данных для связей
 	 */
 	protected function collectReferencesData()
 	{
@@ -289,7 +242,7 @@ class EntityManager
 			{
 				if (empty($referenceData[$fieldWidget->getMultipleField('ID')]))
 				{
-					// Создание данных связи
+					// Создание связанных данных
 					if (!empty($referenceData[$fieldWidget->getMultipleField('VALUE')]))
 					{
 						$result = $this->createReferenceData($reference, $referenceData);
@@ -301,6 +254,7 @@ class EntityManager
 				}
 				else
 				{
+					// Обновление связанных данных
 					$updateResult = $this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet);
 					if ($updateResult !== false)
 					{
@@ -323,7 +277,7 @@ class EntityManager
 	}
 
 	/**
-	 * Удаление всех данных связей
+	 * Удаление данных всех связей, которые указаны в полях интерфейса раздела
 	 */
 	protected function deleteReferencesData()
 	{
@@ -477,19 +431,24 @@ class EntityManager
 	}
 
 	/**
-	 * Связывает данные связи с данными основной сущности
-	 * Подставнока данных происходит на основе условий связи
+	 * В данные связи подставляются данные основной модели используя условия связи моделей из getMap()
 	 *
 	 * @param Entity\ReferenceField $reference
-	 * @param array $referenceData
+	 * @param array $referenceData Данные привязанной модели
 	 * @return array
 	 */
 	protected function linkData(Entity\ReferenceField $reference, array $referenceData)
 	{
+		// Парсим условия связи двух моделей
 		$referenceConditions = $this->getReferenceConditions($reference);
 
 		foreach ($referenceConditions as $refField => $refValue)
 		{
+			// Так как в условиях связи между моделями в основном отношения типа this.field => ref.field или
+			// ref.field => SqlExpression, мы можем использовать это для подстановки данных
+			// this.field - это поле основной модели
+			// ref.field - поле модели из связи
+			// customValue - это строка полученная из new SqlExpression('%s', ...)
 			if (empty($refValue['thisField']))
 			{
 				$referenceData[$refField] = $refValue['customValue'];
@@ -521,10 +480,15 @@ class EntityManager
 	}
 
 	/**
-	 * Парсинг условий связи
+	 * Парсинг условий связи между моделями
+	 * Ничего сложного нет, просто определяются соответствия полей основной модели и модели из связи
+	 * Например FilmLinksTable::FILM_ID => FilmTable::ID (ref.FILM_ID => this.ID)
+	 * Или например MediaTable::TYPE => 'FILM' (ref.TYPE => new DB\SqlExpression('?s', 'FILM'))
 	 *
 	 * @param Entity\ReferenceField $reference Данные поля из getMap()
-	 * @return array
+	 * @return array Условия связи преобразованные в массив вида $conditions[$refField]['thisField' => $thisField, 'customValue' => $customValue]
+	 * $customValue - это результат парсинга SqlExpression
+	 * Если шаблон SqlExpression не равен %s, то условие исключается из результата
 	 */
 	protected function getReferenceConditions(Entity\ReferenceField $reference)
 	{
