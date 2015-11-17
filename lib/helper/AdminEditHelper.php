@@ -122,27 +122,38 @@ abstract class AdminEditHelper extends AdminBaseHelper
                 }
             }
 
-            if ($this->editAction()) {
-                if (isset($_REQUEST['apply'])) {
-                    $id = $this->data[$this->pk()];
-                    $url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
-                } else {
-                    if (isset($_REQUEST['save'])) {
-                        $url = $this->getListPageURL(array_merge($this->additionalUrlParams,
-                            array(
-                                'restore_query' => 'Y'
-                            )));
-                    }
-                }
-            } else {
-                if (isset($this->data[$this->pk()])) {
-                    $id = $this->data[$this->pk()];
-                    $url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
-                } else {
-                    unset($this->data);
-                    $this->data = $_REQUEST['FIELDS']; //Заполняем, чтобы в случае ошибки сохранения поля не были пустыми
-                }
-            }
+			if ($this->editAction())
+			{
+				if (isset($_REQUEST['apply']))
+				{
+					$id = $this->data[$this->pk()];
+					$url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
+				}
+				else
+				{
+					if (isset($_REQUEST['save']))
+					{
+						$listHelperClass = static::getHelperClass(AdminListHelper::class);
+						$url = $listHelperClass::getUrl(array_merge($this->additionalUrlParams,
+							array(
+								'restore_query' => 'Y'
+							)));
+					}
+				}
+			}
+			else
+			{
+				if (isset($this->data[$this->pk()]))
+				{
+					$id = $this->data[$this->pk()];
+					$url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
+				}
+				else
+				{
+					unset($this->data);
+					$this->data = $_REQUEST['FIELDS']; //Заполняем, чтобы в случае ошибки сохранения поля не были пустыми
+				}
+			}
 
             if (isset($url)) {
                 $this->setAppException($this->app->GetException());
@@ -177,62 +188,64 @@ abstract class AdminEditHelper extends AdminBaseHelper
         $this->setElementTitle();
     }
 
-    /**
-     * Возвращает верхнее меню страницы.
-     *
-     * По-умолчанию две кнопки:
-     * <ul>
-     * <li> Возврат в список</li>
-     * <li> Удаление элемента</li>
-     * </ul>
-     *
-     * Добавляя новые кнопки, нужно указывать параметр URl "action", который будет обрабатываться в
-     * AdminEditHelper::customActions()
-     *
-     * @param bool $showDeleteButton управляет видимостью кнопки удаления элемента
-     * @see AdminEditHelper::$menu
-     * @see AdminEditHelper::customActions()
-     * @api
-     * @return array
-     */
-    protected function getMenu($showDeleteButton = true)
-    {
-        $menu = array(
-            static::getButton('RETURN_TO_LIST', array(
-                "LINK" => $this->getListPageURL(array_merge($this->additionalUrlParams,
-                    array('restore_query' => 'Y')
-                )),
-                "ICON" => "btn_list",
-            ))
-        );
+	/**
+	 * Возвращает верхнее меню страницы
+	 * По-умолчанию две кнопки:
+	 * <ul>
+	 * <li> Возврат в список</li>
+	 * <li> Удаление элемента</li>
+	 * </ul>
+	 *
+	 * Добавляя новые кнопки, нужно указывать параметр URl "action", который будет обрабатываться в
+	 * AdminEditHelper::customActions()
+	 *
+	 * @param bool $showDeleteButton управляет видимостью кнопки удаления элемента
+	 * @see AdminEditHelper::$menu
+	 * @see AdminEditHelper::customActions()
+	 * @api
+	 * @return array
+	 */
+	protected function getMenu($showDeleteButton = true)
+	{
+		$listHelper = static::getHelperClass(AdminListHelper::class);
+		$menu = array(
+			static::getButton('RETURN_TO_LIST', array(
+				"LINK" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
+					array('restore_query' => 'Y')
+				)),
+				"ICON" => "btn_list",
+			))
+		);
 
         $arSubMenu = array();
 
-        if (isset($this->data[$this->pk()]) && $this->hasWriteRights()) {
-            $arSubMenu[] = static::getButton('ADD_ELEMENT', array(
-                "LINK" => static::getEditPageURL(array_merge($this->additionalUrlParams,
-                    array(
-                        'action' => 'add',
-                        'lang' => LANGUAGE_ID,
-                        'restore_query' => 'Y',
-                    ))),
-                'ICON' => 'edit'
-            ));
-        }
+		if (isset($this->data[$this->pk()]) && $this->hasWriteRights())
+		{
+			$arSubMenu[] = static::getButton('ADD_ELEMENT', array(
+				"LINK" => static::getUrl(array_merge($this->additionalUrlParams,
+					array(
+						'action' => 'add',
+						'lang' => LANGUAGE_ID,
+						'restore_query' => 'Y',
+					))),
+				'ICON' => 'edit'
+			));
+		}
 
-        if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights()) {
-            $arSubMenu[] = static::getButton('DELETE_ELEMENT', array(
-                "ONCLICK" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM') . "')) location.href='" .
-                    static::getEditPageURL(array_merge($this->additionalUrlParams,
-                        array(
-                            'ID' => $this->data[$this->pk()],
-                            'action' => 'delete',
-                            'lang' => LANGUAGE_ID,
-                            'restore_query' => 'Y',
-                        ))) . "'",
-                'ICON' => 'delete'
-            ));
-        }
+		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights())
+		{
+			$arSubMenu[] = static::getButton('DELETE_ELEMENT', array(
+				"ONCLICK" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM') . "')) location.href='" .
+					static::getUrl(array_merge($this->additionalUrlParams,
+						array(
+							'ID' => $this->data[$this->pk()],
+							'action' => 'delete',
+							'lang' => LANGUAGE_ID,
+							'restore_query' => 'Y',
+						))) . "'",
+				'ICON' => 'delete'
+			));
+		}
 
         if (count($arSubMenu)) {
             $menu[] = array("SEPARATOR" => "Y");
@@ -281,9 +294,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->data[$model::getSectionField()] = $_REQUEST['SECTION_ID'];
 		}
 
-        $this->tabControl->Begin(array(
-            'FORM_ACTION' => static::getEditPageURL($query)
-        ));
+		$this->tabControl->Begin(array(
+			'FORM_ACTION' => static::getUrl($query)
+		));
 
         foreach ($this->tabs as $tabSettings) {
             if ($tabSettings['VISIBLE']) {
@@ -296,19 +309,21 @@ abstract class AdminEditHelper extends AdminBaseHelper
         $this->tabControl->Show();
     }
 
-    /**
-     * Отображение кнопок для управления элементом на странице редактирования.
-     */
-    protected function showEditPageButtons()
-    {
-        $this->tabControl->Buttons(array(
-            "back_url" => $this->getListPageURL(array_merge($this->additionalUrlParams,
-                array(
-                    'lang' => LANGUAGE_ID,
-                    'restore_query' => 'Y',
-                )))
-        ));
-    }
+	/**
+	 * Отображение кнопок для управления элементом на странице редактирования
+	 */
+	protected function showEditPageButtons()
+	{
+
+		$listHelper = static::getHelperClass(AdminListHelper::class);
+		$this->tabControl->Buttons(array(
+			"back_url" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
+				array(
+					'lang' => LANGUAGE_ID,
+					'restore_query' => 'Y',
+				)))
+		));
+	}
 
     /**
      * Отрисовка верхней части страницы.
@@ -446,9 +461,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
                 $widget->processAfterSaveAction();
             }
 
-            if (!$existing) {
-                LocalRedirect($this->getEditPageURL(array('ID' => $result->getId(), 'lang' => LANGUAGE_ID)));
-            }
+			if (!$existing)
+			{
+				LocalRedirect(static::getUrl(['ID' => $result->getId(), 'lang' => LANGUAGE_ID]));
+			}
 
             return true;
         }
@@ -520,24 +536,26 @@ abstract class AdminEditHelper extends AdminBaseHelper
         return $result;
     }
 
-    /**
-     * Выполнение кастомных операций над объектом в процессе редактирования.
-     *
-     * @param string $action название операции
-     * @param int|null $id ID элемента
-     * @see AdminEditHelper::fillMenu()
-     * @api
-     */
-    protected function customActions($action, $id)
-    {
-        if ($action == 'delete' AND !is_null($id)) {
-            $this->deleteElement($id);
-            LocalRedirect($this->getListPageURL(array_merge($this->additionalUrlParams,
-                array(
-                    'restore_query' => 'Y'
-                ))));
-        }
-    }
+	/**
+	 * Выполнение кастомных операций над объектом в процессе редактирования
+	 *
+	 * @param string $action название операции
+	 * @param int|null $id ID элемента
+	 * @see AdminEditHelper::fillMenu()
+	 * @api
+	 */
+	protected function customActions($action, $id)
+	{
+		if ($action == 'delete' AND !is_null($id))
+		{
+			$this->deleteElement($id);
+			$listHelper = static::getHelperClass(AdminListHelper::class);
+			LocalRedirect($listHelper::getUrl(array_merge($this->additionalUrlParams,
+				array(
+					'restore_query' => 'Y'
+				))));
+		}
+	}
 
     /**
      * Устанавливает заголовок исходя из данных текущего элемента.
@@ -557,11 +575,16 @@ abstract class AdminEditHelper extends AdminBaseHelper
         $this->setTitle($title);
     }
 
-    /**
-     * @return \CAdminForm
-     */
-    public function getTabControl()
-    {
-        return $this->tabControl;
-    }
+	/**
+	 * @return \CAdminForm
+	 */
+	public function getTabControl()
+	{
+		return $this->tabControl;
+	}
+
+	public static function getUrl($params = array())
+	{
+		return static::getViewURL(static::getViewName(), static::$editPageUrl, $params);
+	}
 }

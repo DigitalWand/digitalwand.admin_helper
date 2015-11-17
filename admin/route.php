@@ -34,22 +34,32 @@ if (!$module OR !$view OR !Loader::IncludeModule($module)) {
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
 
-// Пытаемся определить имя класса админского интерфейса
-$interfaceNameParts = explode('.', $module);
-$helperNameParts = explode('_', $view);
-$helperType = array_pop($helperNameParts);
-$entityName = array_pop($helperNameParts);
-$interfaceNameParts = array_merge($interfaceNameParts, $helperNameParts);
-$interfaceNameParts[] = $entityName;
-$interfaceNameParts[] = $entityName . 'AdminInterface';
-foreach ($interfaceNameParts as $i => $v) {
-    $interfaceNameParts[$i] = ucfirst($v);
-}
-$interfaceNameClass = implode('\\', $interfaceNameParts);
+if ($entity) // Собираем имя класса админского интерфейса
+{
+	$moduleNameParts = explode('.', $module);
+	$entityNameParts = explode('_', $entity);
+	$interfaceNameParts = array_merge($moduleNameParts, $entityNameParts);
+	$viewParts = explode('_',$view);
+	if(count($viewParts)>1) // имя сущности есть во view
+	{
+		$entity = $viewParts[0];
+	}
+	else // имя сущности есть в entity
+	{
+		$entity = $entityNameParts[0];
+	}
+	$interfaceNameParts[] = ucfirst($entity).'AdminInterface';
 
-// Регистрируем класс интерфейса если он существует
-if (class_exists($interfaceNameClass)) {
-    $interfaceNameClass::register();
+	foreach ($interfaceNameParts as $i => $v)
+	{
+		$interfaceNameParts[$i] = ucfirst($v);
+	}
+	$interfaceNameClass = implode('\\', $interfaceNameParts);
+
+	if (class_exists($interfaceNameClass)) // Регистрируем класс интерфейса если он существует
+	{
+		$interfaceNameClass::register();
+	}
 }
 
 list($helper, $interface) = AdminBaseHelper::getGlobalInterfaceSettings($module, $view);
@@ -59,22 +69,27 @@ if (!$helper OR !$interface) {
 }
 
 $isPopup = isset($_REQUEST['popup']) AND $_REQUEST['popup'] == 'Y';
-$fields = isset($interface['FIELDS']) ? $interface['FIELDS'] : array();
-$tabs = isset($interface['TABS']) ? $interface['TABS'] : array();
+$fields = isset($interface['FIELDS']) ? $interface['FIELDS'] :array();
+$tabs = isset($interface['TABS']) ? $interface['TABS'] :array();
 $helperType = false;
 
-if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper')) {
-    $helperType = 'edit';
-    /** @var AdminEditHelper $adminHelper */
-    $adminHelper = new $helper($fields, $tabs);
-} else if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper')) {
-    $helperType = 'list';
-    /** @var AdminListHelper $adminHelper */
-    $adminHelper = new $helper($fields, $isPopup);
-    $adminHelper->buildList(array($by => $order));
-} else {
-    include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
-    exit();
+if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper'))
+{
+	$helperType = 'edit';
+	/** @var AdminEditHelper $adminHelper */
+	$adminHelper = new $helper($fields, $tabs);
+}
+else if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper'))
+{
+	$helperType = 'list';
+	/** @var AdminListHelper $adminHelper */
+	$adminHelper = new $helper($fields, $isPopup);
+	$adminHelper->buildList(array($by => $order));
+}
+else
+{
+	include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
+	exit();
 }
 
 if ($isPopup) {
