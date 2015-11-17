@@ -17,21 +17,21 @@ Loc::loadMessages(__FILE__);
  * Пример создания сущности
  *
  * $filmManager = new EntityManager(FilmTable, [
- *    	// Данные сущности
- *    	'TITLE' => 'Монстры на каникулах 2',
- *    	'YEAR' => 2015,
- *    	// У сущности FilmTable есть связь с RelatedLinksTable через поле RELATED_LINKS.
- *    	// Если передать ей данные, то они будут обработаны
- *    	// Представим, что у сущности RelatedLinksTable есть поля ID и VALUE (в этом поле хранится ссылка), FILM_ID
- *		// В большинстве случаев, данные передаваемые связям генерируются множественными виджетами
- *    	'RELATED_LINKS' => [
+ *        // Данные сущности
+ *        'TITLE' => 'Монстры на каникулах 2',
+ *        'YEAR' => 2015,
+ *        // У сущности FilmTable есть связь с RelatedLinksTable через поле RELATED_LINKS.
+ *        // Если передать ей данные, то они будут обработаны
+ *        // Представим, что у сущности RelatedLinksTable есть поля ID и VALUE (в этом поле хранится ссылка), FILM_ID
+ *        // В большинстве случаев, данные передаваемые связям генерируются множественными виджетами
+ *        'RELATED_LINKS' => [
  *        // Переданный ниже массив будет обработан аналогично коду RelatedLinksTable::add(['VALUE' => 'yandex.ru']);
  *        ['VALUE' => 'yandex.ru'],
  *        // Если в массив добавить ID, то запись обновится: RelatedLinksTable::update(3, ['ID' => 3, 'VALUE' => 'google.com']);
  *        ['ID' => 3, 'VALUE' => 'google.com'],
  *        // ВНИМАНИЕ: данный класс реководствуется принципом: что передано для связи, то сохранится или обновится, что не передано, будет удалено
  *        // То есть, если в поле связи RELATED_LINKS передать пустой массив, то все значения связи будут удалены
- *    	]
+ *        ]
  * ]);
  * $filmManager->save();
  *
@@ -409,11 +409,12 @@ class EntityManager
 		/** @var DataManager $modelClass */
 		$modelClass = $this->modelClass;
 		$dataSet = array();
+		$fieldWidget = $this->getFieldWidget($reference->getName());
 
-		$rsData = $modelClass::getList(array('select' => array('REF_' => $reference->getName() . '.*'), 'filter' => array('=ID' => $this->modelId)));
+		$rsData = $modelClass::getList(array('select' => array('REF_' => $reference->getName() . '.*'), 'filter' => array('=' . $this->modelPk => $this->modelId)));
 		while ($data = $rsData->fetch())
 		{
-			if (empty($data['REF_ID']))
+			if (empty($data['REF_' . $fieldWidget->getMultipleField('ID')]))
 			{
 				continue;
 			}
@@ -424,7 +425,7 @@ class EntityManager
 				$row[str_replace('REF_', '', $key)] = $value;
 			}
 
-			$dataSet[$data['REF_ID']] = $row;
+			$dataSet[$data['REF_' . $fieldWidget->getMultipleField('ID')]] = $row;
 		}
 
 		return $dataSet;
