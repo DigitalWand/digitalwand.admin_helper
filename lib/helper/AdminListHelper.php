@@ -1250,20 +1250,4 @@ abstract class AdminListHelper extends AdminBaseHelper
     {
         $_SESSION['LAST_GET_QUERY'][get_called_class()] = $_GET;
     }
-
-    /**
-     * Восстанавливает последний GET-запрос, если в текущем задан параметр restore_query=Y
-     */
-    private function restoreLastGetQuery()
-    {
-        if (!isset($_SESSION['LAST_GET_QUERY'][get_called_class()])
-            OR !isset($_REQUEST['restore_query'])
-            OR $_REQUEST['restore_query'] != 'Y'
-        ) {
-            return;
-        }
-
-        $_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
-        $_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
-    }
 }
