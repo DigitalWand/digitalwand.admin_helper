@@ -248,23 +248,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 		);
 	}
 
-	/**
-	 * Восстанавливает последний GET-запрос, если в текущем задан параметр restore_query=Y
-	 */
-	private function restoreLastGetQuery()
-	{
-		if (!isset($_SESSION['LAST_GET_QUERY'][get_called_class()])
-			OR !isset($_REQUEST['restore_query'])
-			OR $_REQUEST['restore_query'] != 'Y'
-		)
-		{
-			return;
-		}
-
-		$_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
-		$_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
-	}
-
     /**
      * Подготавливает переменные, используемые для инициализации списка.
      */
@@ -880,7 +863,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 			$from = $this->navParams['nPageSize'] * ((int)$this->navParams['navParams']['PAGEN'] - 1);
 
-			return [$from, $this->navParams['nPageSize']];
+			return array($from, $this->navParams['nPageSize']);
 		}
 	}
 
@@ -1125,95 +1108,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает массив с настройками групповых действий над списком
-	 * @api
-	 * @return array
-	 */
-	protected function getGroupActions()
-	{
-		$result = array();
-		if (!$this->isPopup())
-		{
-			if ($this->hasDeleteRights())
-			{
-				$result = array('delete' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"));
-			}
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Подготавливает массив с настройками контекстного меню.
-	 * По-умолчанию добавлена кнопка "создать элемент".
-	 * @api
-	 * @see $contextMenu
-	 */
-	protected function getContextMenu()
-	{
-		$contextMenu = array();
-		if (static::$useSections)
-		{
-			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
-		}
-
-		/**
-		 * Если задан для разделов добавляем кнопку создать раздел и
-		 * кнопку на уровень вверх если это не корневой раздел
-		 */
-		if (!empty(static::$useSections) || isset($_REQUEST['ID']))
-		{
-			if ($_REQUEST['ID'])
-			{
-				$params = $this->additionalUrlParams;
-				if (isset(static::$sectionModel))
-				{
-					$sectionModel = static::$sectionModel;
-					$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
-					if ($this->isPopup())
-					{
-						$params = array_merge($_GET);
-					}
-					if ($section[$sectionModel::getSectionField()])
-					{
-						$params['ID'] = $section[$sectionModel::getSectionField()];
-					}
-					else
-					{
-						unset($params['ID']);
-					}
-				}
-
-				unset($params['SECTION_ID']);
-				$contextMenu[] = static::getButton('LIST_SECTION_UP', array(
-					'LINK' => static::getListPageURL($params),
-					'ICON' => 'btn_list'
-				));
-			}
-		}
-
-		/**
-		 * Добавляем кнопку создать элемент и создать раздел
-		 */
-		if (!$this->isPopup() && $this->hasWriteRights())
-		{
-			$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
-				'LINK' => static::getEditPageURL($this->additionalUrlParams),
-				'ICON' => 'btn_new'
-			));
-			if (static::$useSections)
-			{
-				$contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
-					'LINK' => static::getSectionsEditPageURL($this->additionalUrlParams),
-					'ICON' => 'btn_new'
-				));
-			}
-		}
-
-		return $contextMenu;
-	}
-
-	/**
 	 * Выводит форму фильтрации списка
 	 */
 	public function createFilterForm()
@@ -1258,8 +1152,8 @@ abstract class AdminListHelper extends AdminBaseHelper
             print $this->popupClickFunctionCode;
         }
 
-        $this->saveGetQuery();
-    }
+		$this->saveGetQuery();
+	}
 
 	/**
 	 * Сохраняет параметры запроса для поторного использования после возврата с других страниц (к примеру, после
@@ -1276,8 +1170,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	private function restoreLastGetQuery()
 	{
 		if (!isset($_SESSION['LAST_GET_QUERY'][get_called_class()])
-			OR !isset($_REQUEST['restore_query'])
-			OR $_REQUEST['restore_query'] != 'Y'
+				OR !isset($_REQUEST['restore_query'])
+				OR $_REQUEST['restore_query'] != 'Y'
 		)
 		{
 			return;
@@ -1285,10 +1179,5 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$_GET = array_merge($_GET, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
 		$_REQUEST = array_merge($_REQUEST, $_SESSION['LAST_GET_QUERY'][get_called_class()]);
-	}
-
-	public static function getUrl($params = array())
-	{
-		return static::getViewURL(static::getViewName(), static::$listPageUrl, $params);
 	}
 }
