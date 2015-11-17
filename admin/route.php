@@ -9,9 +9,12 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_ad
 
 function getRequestParams($param)
 {
-    if (!isset($_REQUEST[$param])) {
+    if (!isset($_REQUEST[$param]))
+    {
         return false;
-    } else {
+    }
+    else
+    {
         return htmlspecialcharsbx($_REQUEST[$param]);
     }
 }
@@ -20,17 +23,20 @@ function getRequestParams($param)
 /** @global CMain $APPLICATION */
 global $APPLICATION;
 $uniq = md5($APPLICATION->GetCurPage());
-if (isset($_SESSION["SESS_SORT_BY"][$uniq])) {
+if (isset($_SESSION["SESS_SORT_BY"][$uniq]))
+{
     unset($_SESSION["SESS_SORT_BY"][$uniq]);
 }
-if (isset($_SESSION["SESS_SORT_ORDER"][$uniq])) {
+if (isset($_SESSION["SESS_SORT_ORDER"][$uniq]))
+{
     unset($_SESSION["SESS_SORT_ORDER"][$uniq]);
 }
 
 $module = getRequestParams('module');
 $view = getRequestParams('view');
 
-if (!$module OR !$view OR !Loader::IncludeModule($module)) {
+if (!$module OR !$view OR !Loader::IncludeModule($module))
+{
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
 
@@ -42,14 +48,17 @@ if ($entity) // Собираем имя класса админского инт
     $viewParts = explode('_', $view);
     if (count($viewParts) > 1) // имя сущности есть во view
     {
-        $entity = $viewParts[0];
-    } else // имя сущности есть в entity
+        array_pop($viewParts);
+        $entity = implode('', array_map('ucfirst', $viewParts));
+    }
+    else // имя сущности есть в entity
     {
         $entity = $entityNameParts[0];
     }
     $interfaceNameParts[] = ucfirst($entity) . 'AdminInterface';
 
-    foreach ($interfaceNameParts as $i => $v) {
+    foreach ($interfaceNameParts as $i => $v)
+    {
         $interfaceNameParts[$i] = ucfirst($v);
     }
     $interfaceNameClass = implode('\\', $interfaceNameParts);
@@ -62,7 +71,8 @@ if ($entity) // Собираем имя класса админского инт
 
 list($helper, $interface) = AdminBaseHelper::getGlobalInterfaceSettings($module, $view);
 
-if (!$helper OR !$interface) {
+if (!$helper OR !$interface)
+{
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
 
@@ -71,33 +81,45 @@ $fields = isset($interface['FIELDS']) ? $interface['FIELDS'] : array();
 $tabs = isset($interface['TABS']) ? $interface['TABS'] : array();
 $helperType = false;
 
-if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper')) {
+if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper'))
+{
     $helperType = 'edit';
     /** @var AdminEditHelper $adminHelper */
     $adminHelper = new $helper($fields, $tabs);
-} else if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper')) {
+}
+else if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper'))
+{
     $helperType = 'list';
     /** @var AdminListHelper $adminHelper */
     $adminHelper = new $helper($fields, $isPopup);
     $adminHelper->buildList(array($by => $order));
-} else {
+}
+else
+{
     include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
     exit();
 }
 
-if ($isPopup) {
+if ($isPopup)
+{
     require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_popup_admin.php");
-} else {
+}
+else
+{
     require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_admin_after.php");
 }
 
-if ($helperType == 'list') {
+if ($helperType == 'list')
+{
     $adminHelper->createFilterForm();
 }
 $adminHelper->show();
 
-if ($isPopup) {
+if ($isPopup)
+{
     require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_popup_admin.php");
-} else {
+}
+else
+{
     require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/epilog_admin.php");
 }
