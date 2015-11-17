@@ -38,7 +38,6 @@ class DateTimeWidget extends HelperWidget
     public function genFilterHTML()
     {
         list($inputNameFrom, $inputNameTo) = $this->getFilterInputName();
-
         print '<tr>';
         print '<td>' . $this->settings['TITLE'] . '</td>';
         print '<td width="0%" nowrap>' . CalendarPeriod($inputNameFrom, $$inputNameFrom, $inputNameTo, $$inputNameTo, "find_form") . '</td>';
@@ -50,16 +49,10 @@ class DateTimeWidget extends HelperWidget
      */
     public function processEditAction()
     {
-        try
-        {
+        try {
             $this->setValue(new \Bitrix\Main\Type\Datetime($this->getValue()));
+        } catch (\Exception $e) {
         }
-        catch(\Exception $e)
-        {
-
-        }
-
-
         if (!$this->checkRequired()) {
             $this->addError('REQUIRED_FIELD_ERROR');
         }

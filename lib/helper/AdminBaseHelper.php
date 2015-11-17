@@ -3,7 +3,9 @@
 namespace DigitalWand\AdminHelper\Helper;
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\LoaderException;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\ModuleManager;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
@@ -13,7 +15,6 @@ Loader::includeModule('highloadblock');
 Loc::loadMessages(__FILE__);
 
 /**
- * Class AdminBaseHelper
  * Данный модуль реализует подход MVC для создания административного интерфейса.
  *
  * Возможность построения административного интерфейса появляется благодаря наличию единого API для CRUD-операциями над
@@ -61,6 +62,9 @@ Loc::loadMessages(__FILE__);
  * @see AdminBaseHelper::setInterfaceSettings()
  * @package AdminHelper
  * @FIXME: Упростить обработку сообщений об ошибках: слишком запутанно.
+ *
+ * @author Nik Samokhvalov <nik@samokhvalov.info>
+ * @author Artem Yarygin <artx19@yandex.ru>
  */
 abstract class AdminBaseHelper
 {
@@ -117,6 +121,12 @@ abstract class AdminBaseHelper
 	 * Привязка класса интерфеса к классу хелпера
 	 */
 	static protected $interfaceClass = array();
+
+	static protected $helperNames = array(
+		'list' => 'List',
+		'edit' => 'Edit',
+		'section' => 'Section'
+	);
 
 	/**
 	 * @var array
@@ -220,7 +230,13 @@ abstract class AdminBaseHelper
 	 * Флаг использования разделов, необходимо переопределять в дочернем классе
 	 * @var bool
 	 */
-	static protected $hasSections = false;
+	static protected $useSections = false;
+
+	/**
+	 * Правило именования хелперов для разделов по умолчанию
+	 * @var string
+	 */
+	static protected $sectionSuffix = 'Sections';
 
 	/**
 	 * @param array $fields список используемых полей и виджетов для них
@@ -311,7 +327,7 @@ abstract class AdminBaseHelper
 	 */
 	static public function getInterfaceClass()
 	{
-		return static::$interfaceClass[get_called_class()];
+		return isset(static::$interfaceClass[get_called_class()]) ? static::$interfaceClass[get_called_class()] : false;
 	}
 
 	static protected function getButton($code, $params, $keys = array('name', 'TEXT'))
@@ -450,27 +466,10 @@ abstract class AdminBaseHelper
 			 */
 			if (count($classNameParts) > 2)
 			{
-				/**
-				 * Название класса без namespace
-				 */
-				$classCaption = array_pop($classNameParts);
-				/**
-				 * Приставка Helper, тоже не нужна
-				 */
-				array_pop($classNameParts);
-				/**
-				 * Имя сущности 3-е слева в названии класса
-				 */
-				$entityName = array_pop($classNameParts);
-				/**
-				 * Тип хелпера из названия класса
-				 */
-				$viewType = str_replace(array($entityName, 'Helper'), '', $classCaption);
-
-				if ($entityName && $viewType)
-				{
-					static::$viewName[$className] = strtolower($entityName) . '_' . strtolower($viewType);
-				}
+				$classCaption = str_replace('Helper', '', array_pop($classNameParts)); // название класса без namespace и приставки Helper
+				$entityName = str_replace(static::$helperNames, '', $classCaption);
+				$viewType = str_replace($entityName, '', $classCaption);
+				static::$viewName[$className] = strtolower($entityName) . '_' . strtolower($viewType);
 			}
 		}
 
@@ -492,8 +491,24 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+	 * Возвращает имя класса модели раздела, используется при
+	 * для организации дерева каталога при static::$useSection = true
+	 * @return \Bitrix\Main\Entity\DataManager|string
+	 *
+	 * @throws \Bitrix\Main\ArgumentException
+	 * @throws \Bitrix\Main\SystemException
+	 * @throws \Exception
+	 * @api
+	 */
+	public static function getSectionModel()
+	{
+		return static::getHLEntity(static::$sectionModel);
+	}
+
+	/**
 	 * Возвращает имя модуля
 	 * @return string
+	 * @throws LoaderException
 	 * @api
 	 */
 	static public function getModule()
@@ -512,28 +527,25 @@ abstract class AdminBaseHelper
 			 * Разбираем имя класса
 			 */
 			$classNameParts = explode('\\', trim($className, '\\'));
-			/**
-			 * Получаем список модулей
-			 */
-			$rsResult = \CModule::getList();
-			$modules = array();
-			while ($arModule = $rsResult->Fetch())
-			{
-				$modules[$arModule['ID']] = $arModule['ID'];
-			}
+
 			/**
 			 * Составляем имя модуля из имени класса по частям слева направо и проверяем есть ли такой модуль
 			 */
 			$moduleNameParts = array();
+			$moduleName = false;
 			while (count($classNameParts))
 			{
 				$moduleNameParts[] = strtolower(array_shift($classNameParts));
 				$moduleName = implode('.', $moduleNameParts);
-				if (isset($modules[$moduleName]))
+				if (ModuleManager::isModuleInstalled($moduleName))
 				{
 					static::$module[$className] = $moduleName;
 					break;
 				}
+			}
+			if (empty($moduleName))
+			{
+				throw new LoaderException('Module name not found');
 			}
 		}
 
@@ -576,6 +588,17 @@ abstract class AdminBaseHelper
 	 * @api
 	 */
 	public function pk()
+	{
+		return 'ID';
+	}
+
+	/**
+	 * Возвращает первичный ключ таблицы используемой модели разделов
+	 * Для HL-инфоблоков битрикс - всегда ID. Но может поменяться для какой-либо другой сущности.
+	 * @return string
+	 * @api
+	 */
+	public function sectionPk()
 	{
 		return 'ID';
 	}
@@ -788,6 +811,71 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+	 * Возвращает класс хелпера нужного типа основываясь на переданном параметре
+	 * @param $class
+	 * @return string|bool
+	 */
+	public function getHelperClass($class)
+	{
+		$interfaceSettings = self::$interfaceSettings[static::getModule()];
+
+		foreach ($interfaceSettings as $viewName => $settings)
+		{
+			// ищем ближайшего родителя из DigitalWand\AdminHelper
+			$parentClasses = class_parents($settings['helper']);
+			array_pop($parentClasses); // AdminBaseHelper
+			$parentClass = array_pop($parentClasses);
+			$thirdClass = array_pop($parentClasses);
+			if (in_array($thirdClass, array(AdminSectionListHelper::getClass(), AdminSectionEditHelper::getClass())))
+			{
+				$parentClass = $thirdClass;
+			}
+
+			if ($parentClass == $class && class_exists($settings['helper']))
+			{
+				// получаем namespace-ы
+				$helperClassParts = explode('\\', $settings['helper']);
+				array_pop($helperClassParts);
+				$helperNamespace = implode('\\', $helperClassParts);
+
+				$сlassParts = explode('\\', get_called_class());
+				array_pop($сlassParts);
+				$classNamespace = implode('\\', $сlassParts);
+
+				// сверяем namespace-ы
+				if ($helperNamespace == $classNamespace)
+				{
+					return $settings['helper'];
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Возвращает относительный namespace до хелперов в виде URL параметра
+	 * @return string
+	 */
+	static protected function getNamespaceUrlParam()
+	{
+
+		$namespaceParts = explode('\\', get_called_class());
+		array_pop($namespaceParts); // убираем имя класс
+		array_shift($namespaceParts); // убираем namespace вендора
+		array_shift($namespaceParts); // убираем namespace модуля
+
+		return str_replace( // формируем параметр
+			'\\',
+			'_',
+			implode(
+				'\\',
+				array_map('lcfirst', $namespaceParts)
+			)
+		);
+	}
+
+	/**
 	 * Возвращает URL страницы редактирования класса данного представления
 	 * @param array $params
 	 * @return string
@@ -855,6 +943,8 @@ abstract class AdminBaseHelper
 	 */
 	static public function getViewURL($viewName, $defaultURL, $params = array())
 	{
+		$params['entity'] = static::getNamespaceUrlParam();
+
 		if (isset($defaultURL))
 		{
 			$url = $defaultURL . "?lang=" . LANGUAGE_ID;
@@ -911,23 +1001,22 @@ abstract class AdminBaseHelper
 		$widget->setCode($code);
 		$widget->setData($data);
 		$widget->setEntityName($this->getModel());
-        
-        $this->onCreateWidgetForField($widget, $data);
+
+		$this->onCreateWidgetForField($widget, $data);
 
 		return $widget;
 	}
-    
-    
-     /**
-     * Метод вызывается при создании виджета для текущего поля.
-     * Может быть использован для изменения настроек виджета на основе передаваемых данных
-     *
-     * @param \DigitalWand\AdminHelper\Widget\HelperWidget $widget
-     * @param array $data
-     */
-    protected function onCreateWidgetForField(&$widget, $data = array())
-    {
-    }
+
+	/**
+	 * Метод вызывается при создании виджета для текущего поля.
+	 * Может быть использован для изменения настроек виджета на основе передаваемых данных
+	 *
+	 * @param \DigitalWand\AdminHelper\Widget\HelperWidget $widget
+	 * @param array $data
+	 */
+	protected function onCreateWidgetForField(&$widget, $data = array())
+	{
+	}
 
 	/**
 	 * Если класс не объявлен, то битрикс генерирует новый класс в рантайме.
@@ -1003,4 +1092,9 @@ abstract class AdminBaseHelper
 	{
 		return $this->context;
 	}
+    
+    public static function getClass()
+    {
+        return get_called_class();
+    }
 }

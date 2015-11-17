@@ -1,12 +1,10 @@
 <?php
 namespace DigitalWand\AdminHelper\Widget;
-
 use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
 use DigitalWand\AdminHelper\Helper\AdminEditHelper;
 use DigitalWand\AdminHelper\Helper\AdminListHelper;
 use Bitrix\Main\Entity\DataManager;
-
 Loc::loadMessages(__FILE__);
 // TODO В мультивиджетах сделать поддержку READONLY
 /**
@@ -614,6 +612,8 @@ abstract class HelperWidget
 	public function setData(&$data)
 	{
 		$this->data = &$data;
+		//FIXME: нелепый оверхэд ради того, чтобы можно было централизованно преобразовывать значение при записи
+		$this->setValue($data[$this->getCode()]);
 	}
 
 	/**

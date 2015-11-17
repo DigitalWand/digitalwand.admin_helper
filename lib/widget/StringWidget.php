@@ -7,7 +7,6 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 /**
- * Class StringWidget
  * Виджет строки с текстом.
  *
  * Доступные опции:
@@ -21,71 +20,69 @@ Loc::loadMessages(__FILE__);
  */
 class StringWidget extends HelperWidget
 {
-	static protected $defaults = array(
-		'FILTER' => '%', //Фильтрация по подстроке, а не по точному соответствию.
-		'EDIT_IN_LIST' => true
-	);
+    static protected $defaults = array(
+        'FILTER' => '%', //Фильтрация по подстроке, а не по точному соответствию.
+        'EDIT_IN_LIST' => true
+    );
 
-	/**
-	 * Генерирует HTML для редактирования поля
-	 * @return mixed
-	 */
-	protected function genEditHTML()
-	{
-		$style = $this->getSettings('STYLE');
-		$size = $this->getSettings('SIZE');
+    /**
+     * @inheritdoc
+     */
+    protected function genEditHTML()
+    {
+        $style = $this->getSettings('STYLE');
+        $size = $this->getSettings('SIZE');
 
-		$link = '';
-		if ($this->getSettings('TRANSLIT'))
-		{
+        $link = '';
 
-			//TODO: refactor this!
-			$uniqId = get_class($this->entityName) . '_' . $this->getCode();
-			$nameId = 'name_link_' . $uniqId;
-			$linkedFunctionName = 'set_linked_' . get_class($this->entityName) . '_CODE';//FIXME: hardcode here!!!
-			if (isset($this->entityName->{$this->entityName->pk()}))
-			{
-				$pkVal = $this->entityName->{$this->entityName->pk()};
-			}
-			else
-			{
-				$pkVal = '_new_';
-			}
-			$nameId .= $pkVal;
-			$linkedFunctionName .= $pkVal;
+        if ($this->getSettings('TRANSLIT')) {
 
-			$link = '<image id="' . $nameId . '" title="' . Loc::getMessage("IBSEC_E_LINK_TIP") . '" class="linked" src="/bitrix/themes/.default/icons/iblock/link.gif" onclick="' . $linkedFunctionName . '()" />';
-		}
+            //TODO: refactor this!
+            $uniqId = get_class($this->entityName) . '_' . $this->getCode();
+            $nameId = 'name_link_' . $uniqId;
+            $linkedFunctionName = 'set_linked_' . get_class($this->entityName) . '_CODE';//FIXME: hardcode here!!!
 
-		//FIXME: тут было htmlentities, на на этом проекте оно превращает кириллицу в квакозябры.
-		return '<input type="text"
+            if (isset($this->entityName->{$this->entityName->pk()})) {
+                $pkVal = $this->entityName->{$this->entityName->pk()};
+            } else {
+                $pkVal = '_new_';
+            }
+
+            $nameId .= $pkVal;
+            $linkedFunctionName .= $pkVal;
+
+            $link = '<image id="' . $nameId . '" title="' . Loc::getMessage("IBSEC_E_LINK_TIP") . '" class="linked" src="/bitrix/themes/.default/icons/iblock/link.gif" onclick="' . $linkedFunctionName . '()" />';
+        }
+
+        //FIXME: тут было htmlentities, на на этом проекте оно превращает кириллицу в квакозябры.
+        return '<input type="text"
                        name="' . $this->getEditInputName() . '"
                        value="' . $this->getValue() . '"
                        size="' . $size . '"
                        style="' . $style . '"/>' . $link;
-	}
+    }
 
-	protected function genMultipleEditHTML()
-	{
-		$style = $this->getSettings('STYLE');
-		$size = $this->getSettings('SIZE');
-		$uniqueId = $this->getEditInputHtmlId();
+    protected function genMultipleEditHTML()
+    {
+        $style = $this->getSettings('STYLE');
+        $size = $this->getSettings('SIZE');
+        $uniqueId = $this->getEditInputHtmlId();
 
-		$rsEntityData = null;
-		if (!empty($this->data['ID']))
-		{
-			$entityName = $this->entityName;
-			$rsEntityData = $entityName::getList([
-				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-				'filter' => ['=ID' => $this->data['ID']]
-			]);
-		}
+        $rsEntityData = null;
 
-		ob_start();
-		?>
+        if (!empty($this->data['ID'])) {
+            $entityName = $this->entityName;
+            $rsEntityData = $entityName::getList(array(
+                'select' => array('REFERENCE_' => $this->getCode() . '.*'),
+                'filter' => array('=ID' => $this->data['ID'])
+            ));
+        }
 
-		<div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
-		</div>
+        ob_start();
+        ?>
+
+        <div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
+        </div>
 
 		<script>
 			var multiple = new MultipleWidgetHelper(
@@ -114,31 +111,24 @@ class StringWidget extends HelperWidget
 					   }
 					   ?>
 
-			// TODO Добавление созданных полей
-			multiple.addField();
-		</script>
-		<?
-		return ob_get_clean();
-	}
+            // TODO Добавление созданных полей
+            multiple.addField();
+        </script>
+        <?
+        return ob_get_clean();
+    }
 
-	/**
-	 * Генерирует HTML для поля в списке
-	 * @see AdminListHelper::addRowCell();
-	 * @param \CAdminListRow $row
-	 * @param array $data - данные текущей строки
-	 */
-	public function genListHTML(&$row, $data)
-	{
-		if ($this->getSettings('MULTIPLE'))
-		{
-		}
-		else
-		{
-			if ($this->getSettings('EDIT_LINK') || $this->getSettings('SECTION_LINK'))
-			{
-				$entityClass = $this->entityName;
-				$pk = $entityClass::getEntity()->getPrimary();
-				$value = '';
+    /**
+     * @inheritdoc
+     */
+    public function genListHTML(&$row, $data)
+    {
+        if ($this->getSettings('MULTIPLE')) {
+        } else {
+            if ($this->getSettings('EDIT_LINK') || $this->getSettings('SECTION_LINK')) {
+                $entityClass = $this->entityName;
+                $pk = $entityClass::getEntity()->getPrimary();
+                $value = '';
 
 				if ($this->getSettings('SECTION_LINK'))
 				{
@@ -154,41 +144,32 @@ class StringWidget extends HelperWidget
 					));
 				}
 
-				$value .= '<a href="' . $pageUrl . '">' . $this->getValue() . '</a>';
-			}
-			else
-			{
-				$value = $this->getValue();
-			}
+                $value .= '<a href="' . $pageUrl . '">' . $this->getValue() . '</a>';
+            } else {
+                $value = $this->getValue();
+            }
 
-			if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))
-			{
-				$row->AddInputField($this->getCode(), array('style' => 'width:90%'));
-			}
-			$row->AddViewField($this->getCode(), $value);
-		}
-	}
+            if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
+                $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
+            }
 
-	/**
-	 * Генерирует HTML для поля фильтрации
-	 * Если это BETWEEN, то выводит два поля для фильтрации
-	 * @see AdminListHelper::createFilterForm();
-	 * @return mixed
-	 */
-	public function genFilterHTML()
-	{
-		if ($this->getSettings('MULTIPLE'))
-		{
-		}
-		else
-		{
-			print '<tr>';
-			print '<td>' . $this->getSettings('TITLE') . '</td>';
+            $row->AddViewField($this->getCode(), $value);
+        }
+    }
 
-			if ($this->isFilterBetween())
-			{
-				list($from, $to) = $this->getFilterInputName();
-				print '<td>
+    /**
+     * @inheritdoc
+     */
+    public function genFilterHTML()
+    {
+        if ($this->getSettings('MULTIPLE')) {
+        } else {
+            print '<tr>';
+            print '<td>' . $this->getSettings('TITLE') . '</td>';
+
+            if ($this->isFilterBetween()) {
+                list($from, $to) = $this->getFilterInputName();
+                print '<td>
             <div class="adm-filter-box-sizing">
                 <span style="display: inline-block; left: 11px; top: 5px; position: relative;">От:</span>
                 <div class="adm-input-wrap" style="display: inline-block">
@@ -200,12 +181,11 @@ class StringWidget extends HelperWidget
                 </div>
             </div>
             </td> ';
-			}
-			else
-			{
-				print '<td><input type="text" name="' . $this->getFilterInputName() . '" size="47" value="' . $this->getCurrentFilterValue() . '"></td>';
-			}
-			print '</tr>';
-		}
-	}
+            } else {
+                print '<td><input type="text" name="' . $this->getFilterInputName() . '" size="47" value="' . $this->getCurrentFilterValue() . '"></td>';
+            }
+
+            print '</tr>';
+        }
+    }
 }

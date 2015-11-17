@@ -1,4 +1,5 @@
 <?php
+
 namespace DigitalWand\AdminHelper\Widget;
 
 use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
@@ -16,52 +17,56 @@ Loc::loadMessages(__FILE__);
  */
 class FileWidget extends HelperWidget
 {
-	/**
-	 * Генерирует HTML для редактирования поля
-	 * @return mixed
-	 */
-	protected function genEditHTML()
-	{
-		return \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
-			array(
-				"IMAGE" => "N",
-				"PATH" => "Y",
-				"FILE_SIZE" => "Y",
-				"ALLOW_UPLOAD" => "I",
-			), array(
-				'upload' => true,
-				'medialib' => false,
-				'file_dialog' => false,
-				'cloud' => false,
-				'del' => true,
-				'description' => false,
-			)
-		);
-	}
+    static protected $defaults = array(
+        'EDIT_IN_LIST' => false,
+        'FILTER' => false
+    );
 
-	protected function genMultipleEditHTML()
-	{
-		$style = $this->getSettings('STYLE');
-		$size = $this->getSettings('SIZE');
-		$descriptionField = $this->getSettings('DESCRIPTION_FIELD');
-		$uniqueId = $this->getEditInputHtmlId();
+    /**
+     * Генерирует HTML для редактирования поля
+     * @return mixed
+     */
+    protected function genEditHTML()
+    {
+        return \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
+            array(
+                "IMAGE" => "N",
+                "PATH" => "Y",
+                "FILE_SIZE" => "Y",
+                "ALLOW_UPLOAD" => "I",
+            ), array(
+                'upload' => true,
+                'medialib' => false,
+                'file_dialog' => false,
+                'cloud' => false,
+                'del' => true,
+                'description' => false,
+            )
+        );
+    }
 
-		$rsEntityData = null;
-		if (!empty($this->data['ID']))
-		{
-			$entityName = $this->entityName;
-			$rsEntityData = $entityName::getList([
-				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-				'filter' => ['=ID' => $this->data['ID']]
-			]);
-		}
+    protected function genMultipleEditHTML()
+    {
+        $style = $this->getSettings('STYLE');
+        $size = $this->getSettings('SIZE');
+        $descriptionField = $this->getSettings('DESCRIPTION_FIELD');
+        $uniqueId = $this->getEditInputHtmlId();
+        $rsEntityData = null;
 
-		ob_start();
-		// TODO Рефакторинг
-		?>
+        if (!empty($this->data['ID'])) {
+            $entityName = $this->entityName;
+            $rsEntityData = $entityName::getList(array(
+                'select' => array('REFERENCE_' => $this->getCode() . '.*'),
+                'filter' => array('=ID' => $this->data['ID'])
+            ));
+        }
 
-		<div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
-		</div>
+        ob_start();
+        // TODO Рефакторинг
+        ?>
+
+        <div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
+        </div>
 
 		<script>
 			var fileInputTemplate = '<span class="adm-input-file"><span>Выбрать файл</span>' +
@@ -123,45 +128,40 @@ class FileWidget extends HelperWidget
 		return ob_get_clean();
 	}
 
-	/**
-	 * Генерирует HTML для поля в списке
-	 * @see AdminListHelper::addRowCell();
-	 * @param \CAdminListRow $row
-	 * @param array $data - данные текущей строки
-	 * @return mixed
-	 */
-	public function genListHTML(&$row, $data)
-	{
-		if ($this->getSettings('MULTIPLE'))
-		{
-		}
-		else
-		{
-			$file = \CFile::GetPath($data[$this->code]);
-			$res = \CFile::GetByID($data[$this->code]);
-			$fileInfo = $res->Fetch();
+    /**
+     * Генерирует HTML для поля в списке
+     * @see AdminListHelper::addRowCell();
+     * @param \CAdminListRow $row
+     * @param array $data - данные текущей строки
+     * @return mixed
+     */
+    public function genListHTML(&$row, $data)
+    {
+        if ($this->getSettings('MULTIPLE')) {
+        } else {
+            $file = \CFile::GetPath($data[$this->code]);
+            $res = \CFile::GetByID($data[$this->code]);
+            $fileInfo = $res->Fetch();
 
-			if (!$file)
-			{
-				$html = "";
-			}
-			else
-			{
-				$html = '<a href="' . $file . '" >' . $fileInfo['FILE_NAME'] . ' (' . $fileInfo['FILE_DESCRIPTION'] . ')' . '</a>';
-			}
-			$row->AddViewField($this->code, $html);
-		}
-	}
+            if (!$file) {
+                $html = "";
+            } else {
+                $html = '<a href="' . $file . '" >' . $fileInfo['FILE_NAME'] . ' (' . $fileInfo['FILE_DESCRIPTION'] . ')' . '</a>';
+            }
 
-	/**
-	 * Генерирует HTML для поля фильтрации
-	 * @see AdminListHelper::createFilterForm();
-	 * @return mixed
-	 */
-	public function genFilterHTML()
-	{
-		// TODO: Implement genFilterHTML() method.
-	}
+            $row->AddViewField($this->code, $html);
+        }
+    }
+
+    /**
+     * Генерирует HTML для поля фильтрации
+     * @see AdminListHelper::createFilterForm();
+     * @return mixed
+     */
+    public function genFilterHTML()
+    {
+        // TODO: Implement genFilterHTML() method.
+    }
 
 	public function processEditAction()
 	{
@@ -174,15 +174,14 @@ class FileWidget extends HelperWidget
 				{
 					$description = null;
 
-					if (isset($this->data[$this->getCode()][$key]['DESCRIPTION']))
-					{
-						$description = $this->data[$this->getCode()][$key]['DESCRIPTION'];
-						unset($this->data[$this->getCode()][$key]['DESCRIPTION']);
-					}
-					if (empty($this->data[$this->getCode()][$key]))
-					{
-						unset($this->data[$this->getCode()][$key]);
-					}
+                    if (isset($this->data[$this->getCode()][$key]['DESCRIPTION'])) {
+                        $description = $this->data[$this->getCode()][$key]['DESCRIPTION'];
+                        unset($this->data[$this->getCode()][$key]['DESCRIPTION']);
+                    }
+
+                    if (empty($this->data[$this->getCode()][$key])) {
+                        unset($this->data[$this->getCode()][$key]);
+                    }
 
 					if (empty($fileName)
 						|| empty($_FILES[$this->getCode()]['tmp_name'][$key])
@@ -228,51 +227,44 @@ class FileWidget extends HelperWidget
 		}
 	}
 
-	protected function saveFile($name, $path, $type = false, $description = null)
-	{
-		if (!$path)
-		{
-			return false;
-		}
+    protected function saveFile($name, $path, $type = false, $description = null)
+    {
+        if (!$path) {
+            return false;
+        }
 
-		$fileInfo = \CFile::MakeFileArray(
-			$path,
-			$type
-		);
+        $fileInfo = \CFile::MakeFileArray(
+            $path,
+            $type
+        );
 
-		if (!$fileInfo) return false;
+        if (!$fileInfo) return false;
 
-		if (!empty($description))
-		{
-			$fileInfo['description'] = $description;
-		}
+        if (!empty($description)) {
+            $fileInfo['description'] = $description;
+        }
 
-		if (stripos($fileInfo['type'], "image") === false)
-		{
-			$this->addError('FILE_FIELD_TYPE_ERROR');
+        if (stripos($fileInfo['type'], "image") === false) {
+            $this->addError('FILE_FIELD_TYPE_ERROR');
+            return false;
+        }
 
-			return false;
-		}
+        $fileInfo["name"] = $name;
+        /** @var AdminBaseHelper $model */
+        $helper = $this->helper;
+        $fileId = \CFile::SaveFile($fileInfo, $helper::$module);
 
-		$fileInfo["name"] = $name;
+        if (!$this->getSettings('MULTIPLE')) {
+            $code = $this->code;
 
-		/** @var AdminBaseHelper $model */
-		$helper = $this->helper;
-		$fileId = \CFile::SaveFile($fileInfo, $helper::$module);
+            if (isset($this->data[$code])) {
+                \CFile::Delete($this->data[$code]);
+            }
 
-		if (!$this->getSettings('MULTIPLE'))
-		{
-			$code = $this->code;
-			if (isset($this->data[$code]))
-			{
-				\CFile::Delete($this->data[$code]);
-			}
-
-			$this->data[$code] = $fileId;
-		}
-
-		return $fileId;
-	}
+            $this->data[$code] = $fileId;
+        }
+        return $fileId;
+    }
 
 	/**
 	 * {@inheritdoc}
