@@ -3,6 +3,9 @@
 namespace DigitalWand\AdminHelper\Widget;
 
 use Bitrix\Main\Localization\Loc;
+use DigitalWand\AdminHelper\Helper\AdminEditHelper;
+use DigitalWand\AdminHelper\Helper\AdminListHelper;
+use DigitalWand\AdminHelper\Helper\AdminSectionListHelper;
 
 Loc::loadMessages(__FILE__);
 
@@ -160,7 +163,7 @@ class StringWidget extends HelperWidget
 		}
 		else
 		{
-			if ($this->getSettings('EDIT_LINK'))
+			if ($this->getSettings('EDIT_LINK') || $this->getSettings('SECTION_LINK'))
 			{
 				$entityClass = $this->entityName;
 				$pk = $entityClass::getEntity()->getPrimary();
@@ -168,10 +171,12 @@ class StringWidget extends HelperWidget
                 if ($this->getSettings('SECTION_LINK')) {
                     $params = $this->helper->isPopup() ? $_GET : array();
                     $params['ID'] = $this->data[$pk];
-                    $pageUrl = $this->helper->getListPageURL($params);
+                    $listHelper = $this->helper->getHelperClass( $this->helper->isPopup() ? AdminSectionListHelper::getClass() :AdminListHelper::getClass());
+                    $pageUrl = $listHelper::getUrl($params);
                     $value = '<span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span>';
                 } else {
-                    $pageUrl = $this->helper->getEditPageURL(array(
+                    $editHelper = $this->helper->getHelperClass(AdminEditHelper::getClass());
+                    $pageUrl = $editHelper::getUrl(array(
                         'ID' => $this->data[$pk]
                     ));
                 }

@@ -844,7 +844,7 @@ abstract class AdminBaseHelper
 			{
 				$parentClass = $thirdClass;
 			}
-
+            
 			if ($parentClass == $class && class_exists($settings['helper']))
 			{
 				// получаем namespace-ы

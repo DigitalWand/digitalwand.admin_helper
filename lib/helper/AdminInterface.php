@@ -13,6 +13,19 @@ use Bitrix\Main\Entity\DataManager;
 abstract class AdminInterface
 {
     /**
+     * Список зависимых админских интерфейсов которые будут зарегистрированы
+     * при регистраци админского интерфейса, например админские интерфейсы разделов
+     * @var string[]
+     */
+    protected static $dependencies = [];
+
+    /**
+     * Список зарегистрированных интерфейсов
+     * @var string
+     */
+    protected static $registeredInterfaces = [];
+
+    /**
      * Имя модуля для которого описывается интерфейс.
      *
      * @return string
@@ -48,6 +61,11 @@ abstract class AdminInterface
      */
     public static function register()
     {
+        // если интерфейс уже зарегистрирован ничего не делаем
+        if(in_array(get_called_class(), static::$registeredInterfaces))
+        {
+            return false;
+        }
         $fieldsAndTabs = array('FIELDS' => array(), 'TABS' => array());
         $tabsWithFields = static::getFields();
 
@@ -78,6 +96,14 @@ abstract class AdminInterface
 
         foreach (static::getHelpers() as $helperClass) {
             $helperClass::setInterfaceClass(get_called_class());
+        }
+
+        static::$registeredInterfaces[] = get_called_class();
+
+        // Регистрация зависимых админских интерфейсов
+        foreach(static::$dependencies as $adminInterfaceClass)
+        {
+            $adminInterfaceClass::register();
         }
     }
 }
