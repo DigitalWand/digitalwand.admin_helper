@@ -2,70 +2,56 @@
 
 namespace DigitalWand\AdminHelper\Model;
 
+use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ArgumentException;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\Entity;
 use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 
+Loc::loadMessages(__FILE__);
+
 /**
- * Управление данными связей через одну модель
- * Класс руководствуется принципом: что передано для связи, то и будет хранится, что не передано, будет удалено
+ * Управление сущностью и привязанными к ней данными
  *
- * Пример:
- * Представим две модели: ArticlesTable (статьи) и ArticlesCommentsTable (комментарии к статьям)
- * Поля модели ArticlesTable: ID, ... неважно
- * Поля модели ArticlesCommentsTable: ARTICLE_ID (ID статьи), NAME (имя комментатора), COMMENT (комментарий)
+ * Пример создания сущности
  *
- *
- * Пример создания комментариев:
- * // В данном случае при создании статьи будет создано 3 комментария привязанных по ARTICLE_ID к статье
- * // Почему в примере не передается ARTICLE_ID? Это поле через которое идет связь, данные для него установятся автоматически
- * ArticlesTable::add([
- *        'СВЯЗЬ КОММЕНТАРИИ' => [
- *            [МАССИВ ДЛЯ СОЗДАНИЯ ЭЛЕМЕНТА 1],
- *            [МАССИВ ДЛЯ СОЗДАНИЯ ЭЛЕМЕНТА 2],
- *            [ПРИМЕР: 'EMAIL' => 'email', 'COMMENT' => 'Комментарий']
- *        ]
+ * $filmManager = new EntityManager(FilmTable, [
+ *    // Данные сущности
+ *    'TITLE' => 'Монстры на каникулах 2',
+ *    'YEAR' => 2015,
+ *    // У сущности FilmTable есть связь с RelatedLinksTable через поле RELATED_LINKS.
+ *    // Если передать ей данные, то они будут обработаны
+ *    // Представим, что у сущности RelatedLinksTable есть поля ID и VALUE (в этом поле хранится ссылка), FILM_ID
+ *    'RELATED_LINKS' => [
+ *        // Переданный ниже массив будет обработан аналогично коду RelatedLinksTable::add(['VALUE' => 'yandex.ru']);
+ *        ['VALUE' => 'yandex.ru'],
+ *        // Если в массив добавить ID, то запись обновится: RelatedLinksTable::update(3, ['ID' => 3, 'VALUE' => 'google.com']);
+ *        ['ID' => 3, 'VALUE' => 'google.com'],
+ *        // ВНИМАНИЕ: данный класс реководствуется принципом: что передано для связи, то сохранится или обновится, что не передано, будет удалено
+ *        // То есть, если в поле связи RELATED_LINKS передать пустой массив, то все значения связи будут удалены
+ *    ]
  * ]);
+ * //
+ * $filmManager->save();
  *
- * // При обновлении статьи будет создано 3 комментария привязанных по ARTICLE_ID к статье
- * // Комментарии, которых нет в списке - будут удалены
- * ArticlesTable::update(7, [
- *        'COMMENTS' => [
- *            [МАССИВ ДЛЯ СОЗДАНИЯ ЭЛЕМЕНТА 1],
- *            [МАССИВ ДЛЯ СОЗДАНИЯ ЭЛЕМЕНТА 2],
- *            [ПРИМЕР: 'EMAIL' => 'email', 'COMMENT' => 'Комментарий']
- *        ]
- * ]);
+ * Пример удаления сущности
+ *
+ * $articleManager = new EntityManager(ArticlesTable, [], 7, $adminHelper);
+ * $articleManager->delete();
  *
  *
- * Пример обновления:
- * // При обновлении статьи будет обновлено 3 комментария привязанных по ARTICLE_ID к статье
- * // Комментарии, которых нет в списке - будут удалены
- * ArticlesTable::update(7, [
- *        'COMMENTS' => [
- *            ['ID' => x, МАССИВ ДЛЯ ОБНОВЛЕНИЯ ЭЛЕМЕНТА 1],
- *            ['ID' => x, МАССИВ ДЛЯ ОБНОВЛЕНИЯ ЭЛЕМЕНТА 2],
- *            [ПРИМЕР: 'ID' => 5, 'EMAIL' => 'email', 'COMMENT' => 'Комментарий']
- *        ]
- * ]);
  *
- *
- * Пример удаления:
- * // Будут удалены все комментарии статьи с ID 7
- *  ArticlesTable::update(7, [
- *        'COMMENTS' => []
- * ]);
  *
  *
  * Пример полного удаления:
- * // Будут удалены все комментарии статьи с ID 7
- * ArticlesTable::delete(7);
+ * // Будет удалена статья с ID 7 и все её комментарии
+ * $articleManager = new EntityManager(ArticlesTable, [], 7, $adminHelper);
+ * $articleManager->delete();
  *
  *
  * Общие пример:
- * ArticlesTable::update(7, [
+ * $articleManager = new EntityManager(ArticlesTable, [
  *        'COMMENTS' => [
  *            // Комментарий будет создан
  *            [ПРИМЕР: 'EMAIL' => 'email', 'COMMENT' => 'Комментарий']
@@ -73,8 +59,8 @@ use DigitalWand\AdminHelper\Widget\HelperWidget;
  *            [ПРИМЕР: 'ID' => 5, 'EMAIL' => 'email', 'COMMENT' => 'Комментарий']
  *            // Остальные комментарии будут удалены
  *        ]
- * ]);
- *
+ * ], 7, $adminHelper);
+ * $articleManager->save();
  *
  *
  * Инструкция:
@@ -134,6 +120,11 @@ class EntityManager
 	protected $adminHelper;
 
 	/**
+	 * @var array Предупреждения
+	 */
+	protected $notes = array();
+
+	/**
 	 * @param DataManager $modelClass
 	 * @param $modelData
 	 * @param null $modelId
@@ -153,9 +144,12 @@ class EntityManager
 		}
 	}
 
+	/**
+	 * Сохранить запись и данные связей
+	 * @return Entity\AddResult|Entity\UpdateResult
+	 */
 	public function save()
 	{
-		ob_start();
 		$this->collectReferencesData();
 
 		/** @var DataManager $modelClass */
@@ -178,13 +172,11 @@ class EntityManager
 			$this->processReferencesData();
 		}
 
-		ShowMessage(ob_get_clean());
-
 		return $result;
 	}
 
 	/**
-	 * Удаление записи
+	 * Удаление запись и данные связей
 	 * @return Entity\DeleteResult
 	 */
 	public function delete()
@@ -195,6 +187,27 @@ class EntityManager
 		$model = $this->modelClass;
 
 		return $model::delete($this->modelId);
+	}
+
+	/**
+	 * Получить список предупреждений
+	 * @return array
+	 */
+	public function getNotes()
+	{
+		return $this->notes;
+	}
+
+	/**
+	 * Добавить предупреждение
+	 * @param $note
+	 * @return bool
+	 */
+	protected function addNote($note)
+	{
+		$this->notes[] = $note;
+
+		return true;
 	}
 
 	/**
@@ -349,7 +362,10 @@ class EntityManager
 	 */
 	protected function createReferenceData(Entity\ReferenceField $reference, array $referenceData)
 	{
-		$fieldWidget = $this->getFieldWidget($reference->getName());
+		$referenceName = $reference->getName();
+		$fieldParams = $this->getFieldParams($referenceName);
+		$fieldWidget = $this->getFieldWidget($referenceName);
+
 		if (!empty($referenceData[$fieldWidget->getMultipleField('ID')]))
 		{
 			throw new ArgumentException('Аргумент data не может содержать идентификатор элемента', 'data');
@@ -357,7 +373,14 @@ class EntityManager
 
 		$refClass = $reference->getRefEntity()->getDataClass();
 
-		return $refClass::add($referenceData);
+		$createResult = $refClass::add($referenceData);
+
+		if (!$createResult->isSuccess())
+		{
+			$this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])));
+		}
+
+		return $createResult;
 	}
 
 	/**
@@ -371,7 +394,10 @@ class EntityManager
 	 */
 	protected function updateReferenceData(Entity\ReferenceField $reference, array $referenceData, array $referenceStaleDataSet)
 	{
-		$fieldWidget = $this->getFieldWidget($reference->getName());
+		$referenceName = $reference->getName();
+		$fieldParams = $this->getFieldParams($referenceName);
+		$fieldWidget = $this->getFieldWidget($referenceName);
+
 		if (empty($referenceData[$fieldWidget->getMultipleField('ID')]))
 		{
 			throw new ArgumentException('Аргумент data должен содержать идентификатор элемента', 'data');
@@ -381,9 +407,14 @@ class EntityManager
 		if ($this->isDifferentData($referenceStaleDataSet[$referenceData[$fieldWidget->getMultipleField('ID')]], $referenceData))
 		{
 			$refClass = $reference->getRefEntity()->getDataClass();
-			$result = $refClass::update($referenceData[$fieldWidget->getMultipleField('ID')], $referenceData);
+			$updateResult = $refClass::update($referenceData[$fieldWidget->getMultipleField('ID')], $referenceData);
 
-			return $result;
+			if (!$updateResult->isSuccess())
+			{
+				$this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])));
+			}
+
+			return $updateResult;
 		}
 		else
 		{
@@ -401,14 +432,20 @@ class EntityManager
 	 */
 	protected function deleteReferenceData(Entity\ReferenceField $reference, $referenceId)
 	{
+		$fieldParams = $this->getFieldParams($reference->getName());
 		$refClass = $reference->getRefEntity()->getDataClass();
-		$result = $refClass::delete($referenceId);
+		$deleteResult = $refClass::delete($referenceId);
 
-		return $result;
+		if (!$deleteResult->isSuccess())
+		{
+			$this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_DELETE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])));
+		}
+
+		return $deleteResult;
 	}
 
 	/**
-	 * Чтение связанной записи
+	 * Получение данных связи
 	 *
 	 * @param $reference
 	 * @return array
@@ -440,7 +477,8 @@ class EntityManager
 	}
 
 	/**
-	 * Связывает данные связанной модели с основной сущностью
+	 * Связывает данные связи с данными основной сущности
+	 * Подставнока данных происходит на основе условий связи
 	 *
 	 * @param Entity\ReferenceField $reference
 	 * @param array $referenceData
@@ -568,20 +606,31 @@ class EntityManager
 	}
 
 	/**
+	 * @param $fieldName
+	 * @return array|bool
+	 */
+	protected function getFieldParams($fieldName)
+	{
+		$fields = $this->adminHelper->getFields();
+		if (isset($fields[$fieldName]) && isset($fields[$fieldName]['WIDGET']))
+		{
+			return $fields[$fieldName];
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	/**
 	 * Получение виджета привязанного к полю
 	 * @param $fieldName
 	 * @return HelperWidget|bool
 	 */
 	protected function getFieldWidget($fieldName)
 	{
-		$fields = $this->adminHelper->getFields();
-		if (isset($fields[$fieldName]) && isset($fields[$fieldName]['WIDGET']))
-		{
-			return $fields[$fieldName]['WIDGET'];
-		}
-		else
-		{
-			return false;
-		}
+		$field = $this->getFieldParams($fieldName);
+
+		return isset($field['WIDGET']) ? $field['WIDGET'] : null;
 	}
 }
