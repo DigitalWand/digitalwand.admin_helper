@@ -133,7 +133,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				{
 					if (isset($_REQUEST['save']))
 					{
-						$listHelperClass = static::getHelperClass(AdminListHelper::class);
+						$listHelperClass = static::getHelperClass(AdminListHelper::getClass());
 						$url = $listHelperClass::getUrl(array_merge($this->additionalUrlParams,
 							array(
 								'restore_query' => 'Y'
@@ -207,7 +207,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	protected function getMenu($showDeleteButton = true)
 	{
-		$listHelper = static::getHelperClass(AdminListHelper::class);
+		$listHelper = static::getHelperClass(AdminListHelper::getClass());
 		$menu = array(
 			static::getButton('RETURN_TO_LIST', array(
 				"LINK" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
@@ -315,7 +315,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	protected function showEditPageButtons()
 	{
 
-		$listHelper = static::getHelperClass(AdminListHelper::class);
+		$listHelper = static::getHelperClass(AdminListHelper::getClass());
 		$this->tabControl->Buttons(array(
 			"back_url" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
 				array(
@@ -463,7 +463,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 			if (!$existing)
 			{
-				LocalRedirect(static::getUrl(['ID' => $result->getId(), 'lang' => LANGUAGE_ID]));
+				LocalRedirect(static::getUrl(array('ID' => $result->getId(), 'lang' => LANGUAGE_ID)));
 			}
 
             return true;
@@ -549,7 +549,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		if ($action == 'delete' AND !is_null($id))
 		{
 			$this->deleteElement($id);
-			$listHelper = static::getHelperClass(AdminListHelper::class);
+			$listHelper = static::getHelperClass(AdminListHelper::getClass());
 			LocalRedirect($listHelper::getUrl(array_merge($this->additionalUrlParams,
 				array(
 					'restore_query' => 'Y'

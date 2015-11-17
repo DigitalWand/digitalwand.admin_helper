@@ -825,7 +825,7 @@ abstract class AdminBaseHelper
 			array_pop($parentClasses); // AdminBaseHelper
 			$parentClass = array_pop($parentClasses);
 			$thirdClass = array_pop($parentClasses);
-			if (in_array($thirdClass, array(AdminSectionListHelper::class, AdminSectionEditHelper::class)))
+			if (in_array($thirdClass, array(AdminSectionListHelper::getClass(), AdminSectionEditHelper::getClass())))
 			{
 				$parentClass = $thirdClass;
 			}
@@ -1091,4 +1091,9 @@ abstract class AdminBaseHelper
 	{
 		return $this->context;
 	}
+    
+    public static function getClass()
+    {
+        return get_called_class();
+    }
 }
