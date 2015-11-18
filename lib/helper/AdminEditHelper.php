@@ -31,108 +31,105 @@ Loc::loadMessages(__FILE__);
  */
 abstract class AdminEditHelper extends AdminBaseHelper
 {
-    const OP_SHOW_TAB_ELEMENTS = 'AdminEditHelper::showTabElements';
-    const OP_EDIT_ACTION_BEFORE = 'AdminEditHelper::editAction_before';
-    const OP_EDIT_ACTION_AFTER = 'AdminEditHelper::editAction_after';
+	const OP_SHOW_TAB_ELEMENTS = 'AdminEditHelper::showTabElements';
+	const OP_EDIT_ACTION_BEFORE = 'AdminEditHelper::editAction_before';
+	const OP_EDIT_ACTION_AFTER = 'AdminEditHelper::editAction_after';
 
-    /**
-     * @var array
-     * Данные сущности, редактируемой в данный момент.
-     * Ключи ассива - названия полей в БД.
-     * @api
-     */
-    protected $data;
-    /**
-     * @var array
-     * Вкладки страницы редактирования
-     */
-    protected $tabs = array();
-    /**
-     * @var array
-     * Элементы верхнего меню страницы
-     * @see AdminEditHelper::fillMenu()
-     */
-    protected $menu = array();
-    /**
-     * @var \CAdminForm
-     */
-    protected $tabControl;
+	/**
+	 * @var array
+	 * Данные сущности, редактируемой в данный момент.
+	 * Ключи ассива - названия полей в БД.
+	 * @api
+	 */
+	protected $data;
+	/**
+	 * @var array
+	 * Вкладки страницы редактирования
+	 */
+	protected $tabs = array();
+	/**
+	 * @var array
+	 * Элементы верхнего меню страницы
+	 * @see AdminEditHelper::fillMenu()
+	 */
+	protected $menu = array();
+	/**
+	 * @var \CAdminForm
+	 */
+	protected $tabControl;
 
-    /**
-     * Производится инициализация переменных, обработка запросов на редактирование
-     *
-     * @param array $fields
-     * @param array $tabs
-     *
-     * @see AdminBaseHelper::setInterfaceSettings()
-     */
-    public function __construct(array $fields, array $tabs = array())
-    {
-        $this->tabs = $tabs;
+	/**
+	 * Производится инициализация переменных, обработка запросов на редактирование
+	 *
+	 * @param array $fields
+	 * @param array $tabs
+	 *
+	 * @see AdminBaseHelper::setInterfaceSettings()
+	 */
+	public function __construct(array $fields, array $tabs = array())
+	{
+		$this->tabs = $tabs;
 
-        if (empty($this->tabs)) {
-            $this->tabs = array(
-                array(
-                    'DIV' => 'DEFAULT_TAB',
-                    'TAB' => Loc::getMessage('DEFAULT_TAB'),
-                    "ICON" => "main_user_edit",
-                    'TITLE' => Loc::getMessage('DEFAULT_TAB'),
-                    'VISIBLE' => true,
-                )
-            );
-        } else {
-            if (!is_array(reset($this->tabs))) {
-                $converted = array();
+		if (empty($this->tabs)) {
+			$this->tabs = array(
+				array(
+					'DIV' => 'DEFAULT_TAB',
+					'TAB' => Loc::getMessage('DEFAULT_TAB'),
+					"ICON" => "main_user_edit",
+					'TITLE' => Loc::getMessage('DEFAULT_TAB'),
+					'VISIBLE' => true,
+				)
+			);
+		}
+		else {
+			if (!is_array(reset($this->tabs))) {
+				$converted = array();
 
-                foreach ($this->tabs as $tabCode => $tabName) {
-                    $tabVisible = true;
+				foreach ($this->tabs as $tabCode => $tabName) {
+					$tabVisible = true;
 
-                    if (is_array($tabName)) {
-                        $tabVisible = isset($tabName['VISIBLE']) ? $tabName['VISIBLE'] : $tabVisible;
-                        $tabName = $tabName['TITLE'];
-                    }
+					if (is_array($tabName)) {
+						$tabVisible = isset($tabName['VISIBLE']) ? $tabName['VISIBLE'] : $tabVisible;
+						$tabName = $tabName['TITLE'];
+					}
 
-                    $converted[] = array(
-                        'DIV' => $tabCode,
-                        'TAB' => $tabName,
-                        'ICON' => '',
-                        'TITLE' => $tabName,
-                        'VISIBLE' => $tabVisible,
-                    );
-                }
-                $this->tabs = $converted;
-            }
-        }
+					$converted[] = array(
+						'DIV' => $tabCode,
+						'TAB' => $tabName,
+						'ICON' => '',
+						'TITLE' => $tabName,
+						'VISIBLE' => $tabVisible,
+					);
+				}
+				$this->tabs = $converted;
+			}
+		}
 
-        parent::__construct($fields, $tabs);
+		parent::__construct($fields, $tabs);
 
-        $this->tabControl = new \CAdminForm(str_replace("\\", "", get_called_class()), $this->tabs);
+		$this->tabControl = new \CAdminForm(str_replace("\\", "", get_called_class()), $this->tabs);
 
-        if (isset($_REQUEST['apply']) OR isset($_REQUEST['save'])) {
-            $this->data = $_REQUEST['FIELDS'];
+		if (isset($_REQUEST['apply']) OR isset($_REQUEST['save'])) {
+			$this->data = $_REQUEST['FIELDS'];
 
-            if (isset($_REQUEST[$this->pk()])) {
-                //Первичный ключ проставляем отдельно, чтобы не вынуждать всегда указывать его в настройках интерфейса.
-                $this->data[$this->pk()] = $_REQUEST[$this->pk()];
-            }
+			if (isset($_REQUEST[$this->pk()])) {
+				//Первичный ключ проставляем отдельно, чтобы не вынуждать всегда указывать его в настройках интерфейса.
+				$this->data[$this->pk()] = $_REQUEST[$this->pk()];
+			}
 
-            foreach ($fields as $code => $settings) {
-                if (isset($_REQUEST[$code])) {
-                    $this->data[$code] = $_REQUEST[$code];
-                }
-            }
+			foreach ($fields as $code => $settings) {
+				if (isset($_REQUEST[$code])) {
+					$this->data[$code] = $_REQUEST[$code];
+				}
+			}
 
-			if ($this->editAction())
-			{
-				if (isset($_REQUEST['apply']))
-				{
+			if ($this->editAction()) {
+				if (isset($_REQUEST['apply'])) {
 					$id = $this->data[$this->pk()];
 					$url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
 				}
-				else
-				{
-					if (isset($_REQUEST['save']))
-					{
+				else {
+					if (isset($_REQUEST['save'])) {
 						$listHelperClass = static::getHelperClass(AdminListHelper::getClass());
 						$url = $listHelperClass::getUrl(array_merge($this->additionalUrlParams,
 							array(
@@ -141,52 +138,50 @@ abstract class AdminEditHelper extends AdminBaseHelper
 					}
 				}
 			}
-			else
-			{
-				if (isset($this->data[$this->pk()]))
-				{
+			else {
+				if (isset($this->data[$this->pk()])) {
 					$id = $this->data[$this->pk()];
 					$url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
 				}
-				else
-				{
+				else {
 					unset($this->data);
 					$this->data = $_REQUEST['FIELDS']; //Заполняем, чтобы в случае ошибки сохранения поля не были пустыми
 				}
 			}
 
-            if (isset($url)) {
-                $this->setAppException($this->app->GetException());
-                LocalRedirect($url);
-            }
-        } else {
-            $helperFields = $this->getFields();
-            $select = array_keys($helperFields);
+			if (isset($url)) {
+				$this->setAppException($this->app->GetException());
+				LocalRedirect($url);
+			}
+		}
+		else {
+			$helperFields = $this->getFields();
+			$select = array_keys($helperFields);
 
-            foreach ($select as $key => $field) {
-                if (isset($helperFields[$field]['VIRTUAL'])
-                    AND $helperFields[$field]['VIRTUAL'] == true
-                    AND (!isset($helperFields[$field]['FORCE_SELECT']) OR $helperFields[$field]['FORCE_SELECT'] = false)
-                ) {
-                    unset($select[$key]);
-                }
-            }
+			foreach ($select as $key => $field) {
+				if (isset($helperFields[$field]['VIRTUAL'])
+					AND $helperFields[$field]['VIRTUAL'] == true
+					AND (!isset($helperFields[$field]['FORCE_SELECT']) OR $helperFields[$field]['FORCE_SELECT'] = false)
+				) {
+					unset($select[$key]);
+				}
+			}
 
-            $this->data = $this->loadElement($select);
+			$this->data = $this->loadElement($select);
 
-            if (!$this->data) {
-                //TODO: элемент не найден
-            }
+			if (!$this->data) {
+				//TODO: элемент не найден
+			}
 
-            if (isset($_REQUEST['action']) || isset($_REQUEST['action_button'])) {
-                $id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
-                $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
-                $this->customActions($action, $id);
-            }
-        }
+			if (isset($_REQUEST['action']) || isset($_REQUEST['action_button'])) {
+				$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
+				$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
+				$this->customActions($action, $id);
+			}
+		}
 
-        $this->setElementTitle();
-    }
+		$this->setElementTitle();
+	}
 
 	/**
 	 * Возвращает верхнее меню страницы
@@ -217,10 +212,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			))
 		);
 
-        $arSubMenu = array();
+		$arSubMenu = array();
 
-		if (isset($this->data[$this->pk()]) && $this->hasWriteRights())
-		{
+		if (isset($this->data[$this->pk()]) && $this->hasWriteRights()) {
 			$arSubMenu[] = $this->getButton('ADD_ELEMENT', array(
 				"LINK" => static::getUrl(array_merge($this->additionalUrlParams,
 					array(
@@ -232,8 +226,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			));
 		}
 
-		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights())
-		{
+		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights()) {
 			$arSubMenu[] = $this->getButton('DELETE_ELEMENT', array(
 				"ONCLICK" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM') . "')) location.href='" .
 					static::getUrl(array_merge($this->additionalUrlParams,
@@ -247,16 +240,16 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			));
 		}
 
-        if (count($arSubMenu)) {
-            $menu[] = array("SEPARATOR" => "Y");
-            $menu[] = $this->getButton('ACTIONS', array(
-                "MENU" => $arSubMenu,
-                'ICON' => 'btn_new'
-            ));
-        }
+		if (count($arSubMenu)) {
+			$menu[] = array("SEPARATOR" => "Y");
+			$menu[] = $this->getButton('ACTIONS', array(
+				"MENU" => $arSubMenu,
+				'ICON' => 'btn_new'
+			));
+		}
 
-        return $menu;
-    }
+		return $menu;
+	}
 
 	/**
 	 * Выводит детальную страницу
@@ -264,10 +257,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	public function show()
 	{
-		if (!$this->hasReadRights())
-		{
+		if (!$this->hasReadRights()) {
 			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_ACCESS_FORBIDDEN'));
 			$this->showMessages();
+
 			return false;
 		}
 
@@ -284,12 +277,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		$this->tabControl->EndEpilogContent();
 
 		$query = $this->additionalUrlParams;
-		if (isset($_REQUEST[$this->pk()]))
-		{
+		if (isset($_REQUEST[$this->pk()])) {
 			$query[$this->pk()] = $_REQUEST[$this->pk()];
 		}
-		elseif (isset($_REQUEST['SECTION_ID']) && $_REQUEST['SECTION_ID'])
-		{
+		elseif (isset($_REQUEST['SECTION_ID']) && $_REQUEST['SECTION_ID']) {
 			$model = $this->getModel();
 			$this->data[$model::getSectionField()] = $_REQUEST['SECTION_ID'];
 		}
@@ -298,16 +289,16 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			'FORM_ACTION' => static::getUrl($query)
 		));
 
-        foreach ($this->tabs as $tabSettings) {
-            if ($tabSettings['VISIBLE']) {
-                $this->showTabElements($tabSettings);
-            }
-        }
+		foreach ($this->tabs as $tabSettings) {
+			if ($tabSettings['VISIBLE']) {
+				$this->showTabElements($tabSettings);
+			}
+		}
 
-        $this->showEditPageButtons();
-        $this->tabControl->ShowWarnings('editform', array()); //TODO: дописать
-        $this->tabControl->Show();
-    }
+		$this->showEditPageButtons();
+		$this->tabControl->ShowWarnings('editform', array()); //TODO: дописать
+		$this->tabControl->Show();
+	}
 
 	/**
 	 * Отображение кнопок для управления элементом на странице редактирования
@@ -325,216 +316,221 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		));
 	}
 
-    /**
-     * Отрисовка верхней части страницы.
-     * @api
-     */
-    protected function showProlog()
-    {
-    }
+	/**
+	 * Отрисовка верхней части страницы.
+	 * @api
+	 */
+	protected function showProlog()
+	{
+	}
 
-    /**
-     * Отрисовка нижней части страницы.
-     * По-умолчанию рисует все поля, которые не попали в вывод, как input hidden
-     * @api
-     */
-    protected function showEpilog()
-    {
-        echo bitrix_sessid_post();
-        $interfaceSettings = static::getInterfaceSettings();
+	/**
+	 * Отрисовка нижней части страницы.
+	 * По-умолчанию рисует все поля, которые не попали в вывод, как input hidden
+	 * @api
+	 */
+	protected function showEpilog()
+	{
+		echo bitrix_sessid_post();
+		$interfaceSettings = static::getInterfaceSettings();
 
-        foreach ($interfaceSettings['FIELDS'] as $code => $settings) {
-            if (!isset($settings['TAB']) AND
-                isset($settings['FORCE_SELECT']) AND
-                $settings['FORCE_SELECT'] == true
-            ) {
-                print '<input type="hidden" name="FIELDS[' . $code . ']" value="' . $this->data[$code] . '" />';
-            }
-        }
-    }
+		foreach ($interfaceSettings['FIELDS'] as $code => $settings) {
+			if (!isset($settings['TAB']) AND
+				isset($settings['FORCE_SELECT']) AND
+				$settings['FORCE_SELECT'] == true
+			) {
+				print '<input type="hidden" name="FIELDS[' . $code . ']" value="' . $this->data[$code] . '" />';
+			}
+		}
+	}
 
-    /**
-     * Отрисовывает вкладку со всеми привязанными к ней полями.
-     *
-     * @param $tabSettings
-     * @internal
-     */
-    private function showTabElements($tabSettings)
-    {
-        $this->setContext(AdminEditHelper::OP_SHOW_TAB_ELEMENTS);
-        $this->tabControl->BeginNextFormTab();
+	/**
+	 * Отрисовывает вкладку со всеми привязанными к ней полями.
+	 *
+	 * @param $tabSettings
+	 * @internal
+	 */
+	private function showTabElements($tabSettings)
+	{
+		$this->setContext(AdminEditHelper::OP_SHOW_TAB_ELEMENTS);
+		$this->tabControl->BeginNextFormTab();
 
-        foreach ($this->getFields() as $code => $fieldSettings) {
-            $widget = $this->createWidgetForField($code, $this->data);
-            $fieldTab = $widget->getSettings('TAB');
-            $fieldOnCurrentTab = ($fieldTab == $tabSettings['DIV'] OR $tabSettings['DIV'] == 'DEFAULT_TAB');
+		foreach ($this->getFields() as $code => $fieldSettings) {
+			$widget = $this->createWidgetForField($code, $this->data);
+			$fieldTab = $widget->getSettings('TAB');
+			$fieldOnCurrentTab = ($fieldTab == $tabSettings['DIV'] OR $tabSettings['DIV'] == 'DEFAULT_TAB');
 
-            if (!$fieldOnCurrentTab) {
-                continue;
-            }
+			if (!$fieldOnCurrentTab) {
+				continue;
+			}
 
-            $fieldSettings = $widget->getSettings();
+			$fieldSettings = $widget->getSettings();
 
-            if (isset($fieldSettings['VISIBLE']) && $fieldSettings['VISIBLE'] === false) {
-                continue;
-            }
+			if (isset($fieldSettings['VISIBLE']) && $fieldSettings['VISIBLE'] === false) {
+				continue;
+			}
 
-            $this->tabControl->BeginCustomField($code, $widget->getSettings('TITLE'));
-            $pkField = ($code == $this->pk());
-            $widget->genBasicEditField($pkField);
-            $this->tabControl->EndCustomField($code);
-        }
-    }
+			$this->tabControl->BeginCustomField($code, $widget->getSettings('TITLE'));
+			$pkField = ($code == $this->pk());
+			$widget->genBasicEditField($pkField);
+			$this->tabControl->EndCustomField($code);
+		}
+	}
 
-    /**
-     * Обработка запроса редактирования страницы. Этапы:
-     * <ul>
-     * <li> Проверка прав пользователя</li>
-     * <li> Создание виджетов для каждого поля</li>
-     * <li> Изменение данных модели каждым виджетом (исходя из его внутренней логики)</li>
-     * <li> Валидация значений каждого поля соответствующим виджетом</li>
-     * <li> Проверка на ошибики валидации</li>
-     * <li> В случае неудачи - выход из функции</li>
-     * <li> В случае успеха - обновление или добавление элемента в БД</li>
-     * <li> Постобработка данных модели каждым виджетом</li>
-     * </ul>
-     *
-     * @return bool
-     * @see HelperWidget::processEditAction();
-     * @see HelperWidget::processAfterSaveAction();
-     * @internal
-     */
-    protected function editAction()
-    {
-        $this->setContext(AdminEditHelper::OP_EDIT_ACTION_BEFORE);
+	/**
+	 * Обработка запроса редактирования страницы. Этапы:
+	 * <ul>
+	 * <li> Проверка прав пользователя</li>
+	 * <li> Создание виджетов для каждого поля</li>
+	 * <li> Изменение данных модели каждым виджетом (исходя из его внутренней логики)</li>
+	 * <li> Валидация значений каждого поля соответствующим виджетом</li>
+	 * <li> Проверка на ошибики валидации</li>
+	 * <li> В случае неудачи - выход из функции</li>
+	 * <li> В случае успеха - обновление или добавление элемента в БД</li>
+	 * <li> Постобработка данных модели каждым виджетом</li>
+	 * </ul>
+	 *
+	 * @return bool
+	 * @see HelperWidget::processEditAction();
+	 * @see HelperWidget::processAfterSaveAction();
+	 * @internal
+	 */
+	protected function editAction()
+	{
+		$this->setContext(AdminEditHelper::OP_EDIT_ACTION_BEFORE);
 
-        if (!$this->hasWriteRights()) {
-            $this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_WRITE_FORBIDDEN'));
-            return false;
-        }
+		if (!$this->hasWriteRights()) {
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_WRITE_FORBIDDEN'));
 
-        $allWidgets = array();
+			return false;
+		}
 
-        foreach ($this->getFields() as $code => $settings) {
-            $widget = $this->createWidgetForField($code, $this->data);
-            $widget->processEditAction();
-            $this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
-            $allWidgets[] = $widget;
-        }
+		$allWidgets = array();
 
-        $this->addErrors($this->validationErrors);
-        $success = empty($this->validationErrors);
+		foreach ($this->getFields() as $code => $settings) {
+			$widget = $this->createWidgetForField($code, $this->data);
+			$widget->processEditAction();
+			$this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
+			$allWidgets[] = $widget;
+		}
 
-        if ($success) {
-            $this->setContext(AdminEditHelper::OP_EDIT_ACTION_AFTER);
-            $existing = false;
-            $id = isset($_REQUEST['FIELDS'][$this->pk()]) ? $_REQUEST['FIELDS'][$this->pk()] : $_REQUEST[$this->pk()];
+		$this->addErrors($this->validationErrors);
+		$success = empty($this->validationErrors);
 
-            if ($id) {
-                /** @var DataManager $className */
-                $className = static::getModel();
-                // Если имеется primary key, то модель уже существующая, пытаемся найти ее в БД
-                $existing = $className::getById($id)->fetch();
-            }
+		if ($success) {
+			$this->setContext(AdminEditHelper::OP_EDIT_ACTION_AFTER);
+			$existing = false;
+			$id = isset($_REQUEST['FIELDS'][$this->pk()]) ? $_REQUEST['FIELDS'][$this->pk()] : $_REQUEST[$this->pk()];
 
-            if ($existing) {
-                $result = $this->saveElement($id);
-            } else {
-                $result = $this->saveElement();
-            }
+			if ($id) {
+				/** @var DataManager $className */
+				$className = static::getModel();
+				// Если имеется primary key, то модель уже существующая, пытаемся найти ее в БД
+				$existing = $className::getById($id)->fetch();
+			}
 
-            if ($result) {
-                if (!$result->isSuccess()) {
-                    $this->addErrors($result->getErrorMessages());
-                    return false;
-                }
-            } else {
-                // TODO Вывод ошибки
-                return false;
-            }
+			if ($existing) {
+				$result = $this->saveElement($id);
+			}
+			else {
+				$result = $this->saveElement();
+			}
 
-            $this->data[$this->pk()] = $result->getId();
+			if ($result) {
+				if (!$result->isSuccess()) {
+					$this->addErrors($result->getErrorMessages());
 
-            foreach ($allWidgets as $widget) {
-                /** @var HelperWidget $widget */
-                $widget->setData($this->data);
-                $widget->processAfterSaveAction();
-            }
+					return false;
+				}
+			}
+			else {
+				// TODO Вывод ошибки
+				return false;
+			}
 
-			if (!$existing)
-			{
+			$this->data[$this->pk()] = $result->getId();
+
+			foreach ($allWidgets as $widget) {
+				/** @var HelperWidget $widget */
+				$widget->setData($this->data);
+				$widget->processAfterSaveAction();
+			}
+
+			if (!$existing) {
 				LocalRedirect(static::getUrl(array('ID' => $result->getId(), 'lang' => LANGUAGE_ID)));
 			}
 
-            return true;
-        }
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    /**
-     * Функция загрузки элемента из БД. Можно переопределить, если требуется сложная логика и нет возможности
-     * определить её в модели.
-     *
-     * @param array $select
-     *
-     * @return bool
-     * @api
-     */
-    protected function loadElement($select = array())
-    {
-        if (isset($_REQUEST[$this->pk()])) {
-            $className = static::getModel();
-            $result = $className::getById($_REQUEST[$this->pk()]);
+	/**
+	 * Функция загрузки элемента из БД. Можно переопределить, если требуется сложная логика и нет возможности
+	 * определить её в модели.
+	 *
+	 * @param array $select
+	 *
+	 * @return bool
+	 * @api
+	 */
+	protected function loadElement($select = array())
+	{
+		if (isset($_REQUEST[$this->pk()])) {
+			$className = static::getModel();
+			$result = $className::getById($_REQUEST[$this->pk()]);
 
-            return $result->fetch();
-        }
+			return $result->fetch();
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    /**
-     * Сохранение элемента. Можно переопределить, если требуется сложная логика и нет возможности определить
-     * её в модели.
-     *
-     * @param bool $id
-     * @return \Bitrix\Main\Entity\AddResult|\Bitrix\Main\Entity\UpdateResult
-     * @throws \Exception
-     * @api
-     */
-    protected function saveElement($id = false)
-    {
-        $className = static::getModel();
+	/**
+	 * Сохранение элемента. Можно переопределить, если требуется сложная логика и нет возможности определить
+	 * её в модели.
+	 *
+	 * @param bool $id
+	 * @return \Bitrix\Main\Entity\AddResult|\Bitrix\Main\Entity\UpdateResult
+	 * @throws \Exception
+	 * @api
+	 */
+	protected function saveElement($id = false)
+	{
+		$className = static::getModel();
 
-        if ($id) {
-            $result = $className::update($id, $this->data);
-        } else {
-            $result = $className::add($this->data);
-        }
+		if ($id) {
+			$result = $className::update($id, $this->data);
+		}
+		else {
+			$result = $className::add($this->data);
+		}
 
-        return $result;
-    }
+		return $result;
+	}
 
-    /**
-     * Удаление элемента. Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
-     *
-     * @param $id
-     * @return bool|\Bitrix\Main\Entity\DeleteResult
-     * @throws \Exception
-     * @api
-     */
-    protected function deleteElement($id)
-    {
-        if (!$this->hasDeleteRights()) {
-            $this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_FORBIDDEN'));
-            return false;
-        }
+	/**
+	 * Удаление элемента. Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
+	 *
+	 * @param $id
+	 * @return bool|\Bitrix\Main\Entity\DeleteResult
+	 * @throws \Exception
+	 * @api
+	 */
+	protected function deleteElement($id)
+	{
+		if (!$this->hasDeleteRights()) {
+			$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_FORBIDDEN'));
 
-        $className = static::getModel();
-        $result = $className::delete($id);
+			return false;
+		}
 
-        return $result;
-    }
+		$className = static::getModel();
+		$result = $className::delete($id);
+
+		return $result;
+	}
 
 	/**
 	 * Выполнение кастомных операций над объектом в процессе редактирования
@@ -546,8 +542,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	protected function customActions($action, $id)
 	{
-		if ($action == 'delete' AND !is_null($id))
-		{
+		if ($action == 'delete' AND !is_null($id)) {
 			$this->deleteElement($id);
 			$listHelper = static::getHelperClass(AdminListHelper::getClass());
 			LocalRedirect($listHelper::getUrl(array_merge($this->additionalUrlParams,
@@ -557,23 +552,24 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		}
 	}
 
-    /**
-     * Устанавливает заголовок исходя из данных текущего элемента.
-     *
-     * @see $data
-     * @see AdminBaseHelper::setTitle()
-     * @api
-     */
-    protected function setElementTitle()
-    {
-        if (!empty($this->data)) {
-            $title = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_TITLE', array('#ID#' => $this->data[$this->pk()]));
-        } else {
-            $title = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_NEW_ELEMENT');
-        }
+	/**
+	 * Устанавливает заголовок исходя из данных текущего элемента.
+	 *
+	 * @see $data
+	 * @see AdminBaseHelper::setTitle()
+	 * @api
+	 */
+	protected function setElementTitle()
+	{
+		if (!empty($this->data)) {
+			$title = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_TITLE', array('#ID#' => $this->data[$this->pk()]));
+		}
+		else {
+			$title = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_NEW_ELEMENT');
+		}
 
-        $this->setTitle($title);
-    }
+		$this->setTitle($title);
+	}
 
 	/**
 	 * @return \CAdminForm

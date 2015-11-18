@@ -254,12 +254,10 @@ abstract class AdminBaseHelper
 			'FIELDS' => $fields,
 			'TABS' => $tabs
 		);
-		if (static::setInterfaceSettings($settings))
-		{
+		if (static::setInterfaceSettings($settings)) {
 			$this->fields = $fields;
 		}
-		else
-		{
+		else {
 			$settings = static::getInterfaceSettings();
 			$this->fields = $settings['FIELDS'];
 		}
@@ -282,8 +280,7 @@ abstract class AdminBaseHelper
 	 */
 	static public function getInterfaceSettings($viewName = '')
 	{
-		if (empty($viewName))
-		{
+		if (empty($viewName)) {
 			$viewName = static::getViewName();
 		}
 
@@ -303,9 +300,8 @@ abstract class AdminBaseHelper
 	 */
 	static public function setInterfaceSettings(array $settings, array $helpers = array(), $module = '')
 	{
-		foreach ($helpers as $helperClass => $helperSettings)
-		{
-			if(!is_array($helperSettings)) // поддержка старого формата описания хелперов
+		foreach ($helpers as $helperClass => $helperSettings) {
+			if (!is_array($helperSettings)) // поддержка старого формата описания хелперов
 			{
 				$helperClass = $helperSettings; // в значении передается класс хелпера а не настройки
 				$helperSettings = array(); // настроек в старом формате нет
@@ -345,30 +341,24 @@ abstract class AdminBaseHelper
 	 */
 	static public function registerInterfaceSettings($module, $interfaceSettings)
 	{
-		if (!is_array(static::$module))
-		{
+		if (!is_array(static::$module)) {
 			static::$module = $module;
 		}
-		elseif (empty($module))
-		{
+		elseif (empty($module)) {
 			$module = static::getModule();
-			if (empty($module))
-			{
+			if (empty($module)) {
 				return false;
 			}
 		}
-		else
-		{
+		else {
 			static::$module[get_called_class()] = $module;
 		}
 
-		if (empty($interfaceSettings))
-		{
+		if (empty($interfaceSettings)) {
 			return false;
 		}
 
-		if (isset(self::$interfaceSettings[$module][static::getViewName()]))
-		{
+		if (isset(self::$interfaceSettings[$module][static::getViewName()])) {
 			return false;
 		}
 
@@ -397,8 +387,7 @@ abstract class AdminBaseHelper
 	 */
 	static public function getGlobalInterfaceSettings($module, $view)
 	{
-		if (!isset(self::$interfaceSettings[$module][$view]))
-		{
+		if (!isset(self::$interfaceSettings[$module][$view])) {
 			return false;
 		}
 
@@ -418,16 +407,14 @@ abstract class AdminBaseHelper
 		/**
 		 * Возвращаем имя представление если оно определено в дочернем классе
 		 */
-		if (!is_array(static::$viewName))
-		{
+		if (!is_array(static::$viewName)) {
 			return static::$viewName;
 		}
 		$className = get_called_class();
 		/**
 		 * Пытаемся автоматически определить текущее представление при его отсутствии в дочернем классе
 		 */
-		if (!isset(static::$viewName[$className]))
-		{
+		if (!isset(static::$viewName[$className])) {
 			/**
 			 * Разбираем имя класса
 			 */
@@ -435,8 +422,7 @@ abstract class AdminBaseHelper
 			/**
 			 * Определяем имя сущности и формируем из нее имя класса
 			 */
-			if (count($classNameParts) > 2)
-			{
+			if (count($classNameParts) > 2) {
 				$classCaption = str_replace('Helper', '', array_pop($classNameParts)); // название класса без namespace и приставки Helper
 				$entityName = str_replace(static::$helperNames, '', $classCaption);
 				$viewType = str_replace($entityName, '', $classCaption);
@@ -484,16 +470,14 @@ abstract class AdminBaseHelper
 	 */
 	static public function getModule()
 	{
-		if (!is_array(static::$module))
-		{
+		if (!is_array(static::$module)) {
 			return static::$module;
 		}
 		$className = get_called_class();
 		/**
 		 * Пытаемся автоматически определить название модуля при его отсутствии
 		 */
-		if (!isset(static::$module[$className]))
-		{
+		if (!isset(static::$module[$className])) {
 			/**
 			 * Разбираем имя класса
 			 */
@@ -504,18 +488,15 @@ abstract class AdminBaseHelper
 			 */
 			$moduleNameParts = array();
 			$moduleName = false;
-			while (count($classNameParts))
-			{
+			while (count($classNameParts)) {
 				$moduleNameParts[] = strtolower(array_shift($classNameParts));
 				$moduleName = implode('.', $moduleNameParts);
-				if (ModuleManager::isModuleInstalled($moduleName))
-				{
+				if (ModuleManager::isModuleInstalled($moduleName)) {
 					static::$module[$className] = $moduleName;
 					break;
 				}
 			}
-			if (empty($moduleName))
-			{
+			if (empty($moduleName)) {
 				throw new LoaderException('Module name not found');
 			}
 		}
@@ -537,14 +518,11 @@ abstract class AdminBaseHelper
 		$interfaceClass = static::getInterfaceClass();
 		$interfaceSettings = static::getInterfaceSettings();
 
-		if ($interfaceClass && !empty($interfaceSettings['BUTTONS']))
-		{
+		if ($interfaceClass && !empty($interfaceSettings['BUTTONS'])) {
 			$buttons = $interfaceSettings['BUTTONS'];
 
-			if (is_array($buttons) && isset($buttons[$code]))
-			{
-				if ($buttons[$code]['VISIBLE'] == 'N')
-				{
+			if (is_array($buttons) && isset($buttons[$code])) {
+				if ($buttons[$code]['VISIBLE'] == 'N') {
 					return false;
 				}
 				$params = array_merge($params, $buttons[$code]);
@@ -556,8 +534,7 @@ abstract class AdminBaseHelper
 		 * Значения по умолчанию из настроек модуля
 		 */
 		$text = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_' . $code);
-		foreach ($keys as $key)
-		{
+		foreach ($keys as $key) {
 			$params[$key] = $text;
 		}
 
@@ -668,29 +645,29 @@ abstract class AdminBaseHelper
 		return true;
 	}
 
-    /**
-     * Проверка прав на изменение определенного элемента
-     * @param array $element Массив данных элемента
-     * @return bool
-     */
-    protected function hasWriteRightsElement($element = [])
-    {
-        if (!$this->hasWriteRights()) {
-            return false;
-        }
+	/**
+	 * Проверка прав на изменение определенного элемента
+	 * @param array $element Массив данных элемента
+	 * @return bool
+	 */
+	protected function hasWriteRightsElement($element = [])
+	{
+		if (!$this->hasWriteRights()) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    /**
-     * Выполняется проверка прав на выполнение опреаций удаления элементов
-     * @return bool
-     * @api
-     */
-    protected function hasDeleteRights()
-    {
-        return true;
-    }
+	/**
+	 * Выполняется проверка прав на выполнение опреаций удаления элементов
+	 * @return bool
+	 * @api
+	 */
+	protected function hasDeleteRights()
+	{
+		return true;
+	}
 
 	/**
 	 * Выводит сообщения об ошибках
@@ -701,24 +678,19 @@ abstract class AdminBaseHelper
 		$allErrors = $this->getErrors();
 		$notes = $this->getNotes();
 
-		if (!empty($allErrors))
-		{
+		if (!empty($allErrors)) {
 			$errorList[] = implode("\n", $allErrors);
 		}
-		if ($e = $this->getLastException())
-		{
+		if ($e = $this->getLastException()) {
 			$errorList[] = trim($e->GetString());
 		}
 
-		if (!empty($errorList))
-		{
+		if (!empty($errorList)) {
 			$errorText = implode("\n\n", $errorList);
 			\CAdminMessage::ShowOldStyleError($errorText);
 		}
-		else
-		{
-			if (!empty($notes))
-			{
+		else {
+			if (!empty($notes)) {
 				$noteText = implode("\n\n", $notes);
 				\CAdminMessage::ShowNote($noteText);
 			}
@@ -731,16 +703,14 @@ abstract class AdminBaseHelper
 	 */
 	protected function getLastException()
 	{
-		if (isset($_SESSION['APPLICATION_EXCEPTION']) AND !empty($_SESSION['APPLICATION_EXCEPTION']))
-		{
+		if (isset($_SESSION['APPLICATION_EXCEPTION']) AND !empty($_SESSION['APPLICATION_EXCEPTION'])) {
 			/** @var CApplicationException $e */
 			$e = $_SESSION['APPLICATION_EXCEPTION'];
 			unset($_SESSION['APPLICATION_EXCEPTION']);
 
 			return $e;
 		}
-		else
-		{
+		else {
 			return false;
 		}
 	}
@@ -760,17 +730,14 @@ abstract class AdminBaseHelper
 	 */
 	public function addErrors($errors)
 	{
-		if (!is_array($errors))
-		{
+		if (!is_array($errors)) {
 			$errors = array($errors);
 		}
 
-		if (isset($_SESSION['ELEMENT_SAVE_ERRORS']) AND !empty($_SESSION['ELEMENT_SAVE_ERRORS']))
-		{
+		if (isset($_SESSION['ELEMENT_SAVE_ERRORS']) AND !empty($_SESSION['ELEMENT_SAVE_ERRORS'])) {
 			$_SESSION['ELEMENT_SAVE_ERRORS'] = array_merge($_SESSION['ELEMENT_SAVE_ERRORS'], $errors);
 		}
-		else
-		{
+		else {
 			$_SESSION['ELEMENT_SAVE_ERRORS'] = $errors;
 		}
 	}
@@ -782,18 +749,15 @@ abstract class AdminBaseHelper
 	 */
 	public function addNotes($notes)
 	{
-		if (!is_array($notes))
-		{
+		if (!is_array($notes)) {
 			$notes = array($notes);
 		}
 
-		if (isset($_SESSION['ELEMENT_SAVE_NOTES']) AND !empty($_SESSION['ELEMENT_SAVE_NOTES']))
-		{
+		if (isset($_SESSION['ELEMENT_SAVE_NOTES']) AND !empty($_SESSION['ELEMENT_SAVE_NOTES'])) {
 			$_SESSION['ELEMENT_SAVE_NOTES'] = array_merge($_SESSION['ELEMENT_SAVE_NOTES'],
 				$notes);
 		}
-		else
-		{
+		else {
 			$_SESSION['ELEMENT_SAVE_NOTES'] = $notes;
 		}
 	}
@@ -804,15 +768,13 @@ abstract class AdminBaseHelper
 	 */
 	protected function getErrors()
 	{
-		if (isset($_SESSION['ELEMENT_SAVE_ERRORS']) AND !empty($_SESSION['ELEMENT_SAVE_ERRORS']))
-		{
+		if (isset($_SESSION['ELEMENT_SAVE_ERRORS']) AND !empty($_SESSION['ELEMENT_SAVE_ERRORS'])) {
 			$errors = $_SESSION['ELEMENT_SAVE_ERRORS'];
 			unset($_SESSION['ELEMENT_SAVE_ERRORS']);
 
 			return $errors;
 		}
-		else
-		{
+		else {
 			return false;
 		}
 	}
@@ -823,15 +785,13 @@ abstract class AdminBaseHelper
 	 */
 	protected function getNotes()
 	{
-		if (isset($_SESSION['ELEMENT_SAVE_NOTES']) AND !empty($_SESSION['ELEMENT_SAVE_NOTES']))
-		{
+		if (isset($_SESSION['ELEMENT_SAVE_NOTES']) AND !empty($_SESSION['ELEMENT_SAVE_NOTES'])) {
 			$notes = $_SESSION['ELEMENT_SAVE_NOTES'];
 			unset($_SESSION['ELEMENT_SAVE_NOTES']);
 
 			return $notes;
 		}
-		else
-		{
+		else {
 			return false;
 		}
 	}
@@ -845,20 +805,17 @@ abstract class AdminBaseHelper
 	{
 		$interfaceSettings = self::$interfaceSettings[static::getModule()];
 
-		foreach ($interfaceSettings as $viewName => $settings)
-		{
+		foreach ($interfaceSettings as $viewName => $settings) {
 			// ищем ближайшего родителя из DigitalWand\AdminHelper
 			$parentClasses = class_parents($settings['helper']);
 			array_pop($parentClasses); // AdminBaseHelper
 			$parentClass = array_pop($parentClasses);
 			$thirdClass = array_pop($parentClasses);
-			if (in_array($thirdClass, array(AdminSectionListHelper::getClass(), AdminSectionEditHelper::getClass())))
-			{
+			if (in_array($thirdClass, array(AdminSectionListHelper::getClass(), AdminSectionEditHelper::getClass()))) {
 				$parentClass = $thirdClass;
 			}
 
-			if ($parentClass == $class && class_exists($settings['helper']))
-			{
+			if ($parentClass == $class && class_exists($settings['helper'])) {
 				// получаем namespace-ы
 				$helperClassParts = explode('\\', $settings['helper']);
 				array_pop($helperClassParts);
@@ -869,8 +826,7 @@ abstract class AdminBaseHelper
 				$classNamespace = implode('\\', $сlassParts);
 
 				// сверяем namespace-ы
-				if ($helperNamespace == $classNamespace)
-				{
+				if ($helperNamespace == $classNamespace) {
 					return $settings['helper'];
 				}
 			}
@@ -910,12 +866,10 @@ abstract class AdminBaseHelper
 	static public function getEditPageURL($params = array())
 	{
 		$editHelperClass = str_replace('List', 'Edit', get_called_class());
-		if (empty(static::$editViewName) && class_exists($editHelperClass))
-		{
+		if (empty(static::$editViewName) && class_exists($editHelperClass)) {
 			return $editHelperClass::getViewURL($editHelperClass::getViewName(), static::$editPageUrl, $params);
 		}
-		else
-		{
+		else {
 			return static::getViewURL(static::$editViewName, static::$editPageUrl, $params);
 		}
 	}
@@ -929,12 +883,10 @@ abstract class AdminBaseHelper
 	static public function getSectionsEditPageURL($params = array())
 	{
 		$sectionEditHelperClass = str_replace('List', 'SectionsEdit', get_called_class());
-		if (empty(static::$sectionsEditViewName) && class_exists($sectionEditHelperClass))
-		{
+		if (empty(static::$sectionsEditViewName) && class_exists($sectionEditHelperClass)) {
 			return $sectionEditHelperClass::getViewURL($sectionEditHelperClass::getViewName(), static::$sectionsEditPageUrl, $params);
 		}
-		else
-		{
+		else {
 			return static::getViewURL(static::$sectionsEditViewName, static::$sectionsEditPageUrl, $params);
 		}
 	}
@@ -948,12 +900,10 @@ abstract class AdminBaseHelper
 	static public function getListPageURL($params = array())
 	{
 		$listHelperClass = str_replace('Edit', 'List', get_called_class());
-		if (empty(static::$listViewName) && class_exists($listHelperClass))
-		{
+		if (empty(static::$listViewName) && class_exists($listHelperClass)) {
 			return $listHelperClass::getViewURL($listHelperClass::getViewName(), static::$listPageUrl, $params);
 		}
-		else
-		{
+		else {
 			return static::getViewURL(static::$listViewName, static::$listPageUrl, $params);
 		}
 	}
@@ -971,17 +921,14 @@ abstract class AdminBaseHelper
 	{
 		$params['entity'] = static::getNamespaceUrlParam();
 
-		if (isset($defaultURL))
-		{
+		if (isset($defaultURL)) {
 			$url = $defaultURL . "?lang=" . LANGUAGE_ID;
 		}
-		else
-		{
+		else {
 			$url = static::getRouterURL() . '?lang=' . LANGUAGE_ID . '&module=' . static::getModule() . '&view=' . $viewName;
 		}
 
-		if (!empty($params))
-		{
+		if (!empty($params)) {
 			unset($params['lang']);
 			unset($params['module']);
 			unset($params['view']);
@@ -1014,8 +961,7 @@ abstract class AdminBaseHelper
 	 */
 	public function createWidgetForField($code, &$data = array())
 	{
-		if (!isset($this->fields[$code]['WIDGET']))
-		{
+		if (!isset($this->fields[$code]['WIDGET'])) {
 			$error = str_replace('#CODE#', $code, 'Can\'t create widget for the code "#CODE#"');
 			throw new Exception($error, Exception::CODE_NO_WIDGET);
 		}
@@ -1030,13 +976,12 @@ abstract class AdminBaseHelper
 
 		$this->onCreateWidgetForField($widget, $data);
 
-        if (!$this->hasWriteRightsElement($data))
-        {
-            $widget->setSetting('READONLY', true);
-        }
+		if (!$this->hasWriteRightsElement($data)) {
+			$widget->setSetting('READONLY', true);
+		}
 
-        return $widget;
-    }
+		return $widget;
+	}
 
 	/**
 	 * Метод вызывается при создании виджета для текущего поля.
@@ -1063,17 +1008,14 @@ abstract class AdminBaseHelper
 	 */
 	public static function getHLEntity($className)
 	{
-		if (!class_exists($className))
-		{
+		if (!class_exists($className)) {
 			$info = static::getHLEntityInfo($className);
-			if ($info)
-			{
+			if ($info) {
 				$entity = HL\HighloadBlockTable::compileEntity($info);
 
 				return $entity->getDataClass();
 			}
-			else
-			{
+			else {
 				$error = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_GETMODEL_EXCEPTION', array('#CLASS#' => $className));
 				$exception = new Exception($error, Exception::CODE_NO_HL_ENTITY_INFORMATION);
 
@@ -1095,8 +1037,7 @@ abstract class AdminBaseHelper
 	{
 		$className = str_replace('\\', '', $className);
 		$pos = strripos($className, 'Table', -5);
-		if ($pos !== false)
-		{
+		if ($pos !== false) {
 			$className = substr($className, 0, $pos);
 		}
 		$parameters = array(
@@ -1124,8 +1065,8 @@ abstract class AdminBaseHelper
 		return $this->context;
 	}
 
-    public static function getClass()
-    {
-        return get_called_class();
-    }
+	public static function getClass()
+	{
+		return get_called_class();
+	}
 }
