@@ -417,7 +417,7 @@ abstract class AdminBaseHelper
 				$classCaption = str_replace('Helper', '', array_pop($classNameParts)); // название класса без namespace и приставки Helper
 				$entityName = str_replace(static::$helperNames, '', $classCaption);
 				$viewType = str_replace($entityName, '', $classCaption);
-				static::$viewName[$className] = strtolower($entityName) . '_' . strtolower($viewType);
+				static::$viewName[$className] = lcfirst($entityName) . '_' . strtolower($viewType);
 			}
 		}
 
