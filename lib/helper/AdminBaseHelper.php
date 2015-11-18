@@ -301,8 +301,7 @@ abstract class AdminBaseHelper
 	static public function setInterfaceSettings(array $settings, array $helpers = array(), $module = '')
 	{
 		foreach ($helpers as $helperClass => $helperSettings) {
-			if (!is_array($helperSettings)) // поддержка старого формата описания хелперов
-			{
+			if (!is_array($helperSettings)) { // поддержка старого формата описания хелперов
 				$helperClass = $helperSettings; // в значении передается класс хелпера а не настройки
 				$helperSettings = array(); // настроек в старом формате нет
 			}
@@ -404,24 +403,16 @@ abstract class AdminBaseHelper
 	 */
 	public static function getViewName()
 	{
-		/**
-		 * Возвращаем имя представление если оно определено в дочернем классе
-		 */
+		// Возвращаем имя представление если оно определено в дочернем классе
 		if (!is_array(static::$viewName)) {
 			return static::$viewName;
 		}
 		$className = get_called_class();
-		/**
-		 * Пытаемся автоматически определить текущее представление при его отсутствии в дочернем классе
-		 */
+		// Пытаемся автоматически определить текущее представление при его отсутствии в дочернем классе
 		if (!isset(static::$viewName[$className])) {
-			/**
-			 * Разбираем имя класса
-			 */
+			// Разбираем имя класса
 			$classNameParts = explode('\\', trim($className, '\\'));
-			/**
-			 * Определяем имя сущности и формируем из нее имя класса
-			 */
+			// Определяем имя сущности и формируем из нее имя класса
 			if (count($classNameParts) > 2) {
 				$classCaption = str_replace('Helper', '', array_pop($classNameParts)); // название класса без namespace и приставки Helper
 				$entityName = str_replace(static::$helperNames, '', $classCaption);
