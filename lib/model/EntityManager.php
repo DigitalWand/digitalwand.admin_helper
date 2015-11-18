@@ -154,11 +154,19 @@ class EntityManager
 	/**
 	 * Добавить предупреждение
 	 * @param $note
+	 * @param string $key Ключ для избежания дублирования сообщений
 	 * @return bool
 	 */
-	protected function addNote($note)
+	protected function addNote($note, $key = null)
 	{
-		$this->notes[] = $note;
+		if ($key)
+		{
+			$this->notes[$key] = $note;
+		}
+		else
+		{
+			$this->notes[] = $note;
+		}
 
 		return true;
 	}
@@ -331,7 +339,10 @@ class EntityManager
 
 		if (!$createResult->isSuccess())
 		{
-			$this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])));
+			$this->addNote(
+				Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])),
+				'CREATE_' . $referenceName
+			);
 		}
 
 		return $createResult;
@@ -365,7 +376,10 @@ class EntityManager
 
 			if (!$updateResult->isSuccess())
 			{
-				$this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])));
+				$this->addNote(
+					Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])),
+					'UPDATE_' . $referenceName
+				);
 			}
 
 			return $updateResult;
@@ -392,7 +406,10 @@ class EntityManager
 
 		if (!$deleteResult->isSuccess())
 		{
-			$this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_DELETE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])));
+			$this->addNote(
+				Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_DELETE_ERROR', array('#FIELD#' => $fieldParams['TITLE'])),
+				'DELETE_' . $reference->getName()
+			);
 		}
 
 		return $deleteResult;
