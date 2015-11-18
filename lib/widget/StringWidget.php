@@ -3,6 +3,9 @@
 namespace DigitalWand\AdminHelper\Widget;
 
 use Bitrix\Main\Localization\Loc;
+use DigitalWand\AdminHelper\Helper\AdminEditHelper;
+use DigitalWand\AdminHelper\Helper\AdminListHelper;
+use DigitalWand\AdminHelper\Helper\AdminSectionListHelper;
 
 Loc::loadMessages(__FILE__);
 
@@ -62,11 +65,12 @@ class StringWidget extends HelperWidget
                        style="' . $style . '"/>' . $link;
     }
 
-    protected function genMultipleEditHTML()
-    {
-        $style = $this->getSettings('STYLE');
-        $size = $this->getSettings('SIZE');
-        $uniqueId = $this->getEditInputHtmlId();
+
+	protected function genMultipleEditHTML()
+	{
+		$style = $this->getSettings('STYLE');
+		$size = $this->getSettings('SIZE');
+		$uniqueId = $this->getEditInputHtmlId();
 
         $rsEntityData = null;
 
@@ -118,28 +122,62 @@ class StringWidget extends HelperWidget
         return ob_get_clean();
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function genListHTML(&$row, $data)
-    {
-        if ($this->getSettings('MULTIPLE')) {
-        } else {
-            if ($this->getSettings('EDIT_LINK') || $this->getSettings('SECTION_LINK')) {
-                $entityClass = $this->entityName;
-                $pk = $entityClass::getEntity()->getPrimary();
-                $value = '';
+	protected function getMultipleValueReadonly()
+	{
+		$rsEntityData = null;
+		if (!empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList([
+				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
+				'filter' => ['=ID' => $this->data['ID']]
+			]);
+		}
+
+		$result = '';
+		if ($rsEntityData)
+		{
+			while($referenceData = $rsEntityData->fetch())
+			{
+				if (empty($referenceData['REFERENCE_VALUE']))
+				{
+					continue;
+				}
+
+				$result .= '<div class="wrap_text" style="margin-bottom: 5px">' . $referenceData['REFERENCE_VALUE'] . '</div>';
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * Генерирует HTML для поля в списке
+	 * @see AdminListHelper::addRowCell();
+	 * @param \CAdminListRow $row
+	 * @param array $data - данные текущей строки
+	 */
+	public function genListHTML(&$row, $data)
+	{
+		if ($this->getSettings('MULTIPLE'))
+		{
+		}
+		else
+		{
+			if ($this->getSettings('EDIT_LINK') || $this->getSettings('SECTION_LINK'))
+			{
+				$entityClass = $this->entityName;
+				$pk = $entityClass::getEntity()->getPrimary();
 
 				if ($this->getSettings('SECTION_LINK'))
 				{
 					$params = $this->helper->isPopup() ? $_GET : array();
 					$params['ID'] = $this->data[$pk];
-					$pageUrl = $this->helper->getListPageURL($params);
+                    $listHelper = $this->helper->getHelperClass( $this->helper->isPopup() ? AdminSectionListHelper::getClass() :AdminListHelper::getClass());
+                    $pageUrl = $listHelper::getUrl($params);
 					$value = '<span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span>';
-				}
-				else
-				{
-					$pageUrl = $this->helper->getEditPageURL(array(
+                } else {
+                    $editHelper = $this->helper->getHelperClass(AdminEditHelper::getClass());
+                    $pageUrl = $editHelper::getUrl(array(
 						'ID' => $this->data[$pk]
 					));
 				}

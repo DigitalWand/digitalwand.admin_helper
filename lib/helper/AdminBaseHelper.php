@@ -656,15 +656,29 @@ abstract class AdminBaseHelper
 		return true;
 	}
 
-	/**
-	 * Выполняется проверка прав на выполнение опреаций удаления элементов
-	 * @return bool
-	 * @api
-	 */
-	protected function hasDeleteRights()
-	{
-		return true;
-	}
+    /**
+     * Проверка прав на изменение определенного элемента
+     * @param array $element Массив данных элемента
+     * @return bool
+     */
+    protected function hasWriteRightsElement($element = [])
+    {
+        if (!$this->hasWriteRights()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Выполняется проверка прав на выполнение опреаций удаления элементов
+     * @return bool
+     * @api
+     */
+    protected function hasDeleteRights()
+    {
+        return true;
+    }
 
 	/**
 	 * Выводит сообщения об ошибках
@@ -830,7 +844,7 @@ abstract class AdminBaseHelper
 			{
 				$parentClass = $thirdClass;
 			}
-
+            
 			if ($parentClass == $class && class_exists($settings['helper']))
 			{
 				// получаем namespace-ы
@@ -1004,8 +1018,13 @@ abstract class AdminBaseHelper
 
 		$this->onCreateWidgetForField($widget, $data);
 
-		return $widget;
-	}
+        if (!$this->hasWriteRightsElement($data))
+        {
+            $widget->setSetting('READONLY', true);
+        }
+
+        return $widget;
+    }
 
 	/**
 	 * Метод вызывается при создании виджета для текущего поля.
