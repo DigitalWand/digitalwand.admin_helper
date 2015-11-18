@@ -209,7 +209,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	{
 		$listHelper = static::getHelperClass(AdminListHelper::getClass());
 		$menu = array(
-			static::getButton('RETURN_TO_LIST', array(
+			$this->getButton('RETURN_TO_LIST', array(
 				"LINK" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
 					array('restore_query' => 'Y')
 				)),
@@ -221,7 +221,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 		if (isset($this->data[$this->pk()]) && $this->hasWriteRights())
 		{
-			$arSubMenu[] = static::getButton('ADD_ELEMENT', array(
+			$arSubMenu[] = $this->getButton('ADD_ELEMENT', array(
 				"LINK" => static::getUrl(array_merge($this->additionalUrlParams,
 					array(
 						'action' => 'add',
@@ -234,7 +234,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights())
 		{
-			$arSubMenu[] = static::getButton('DELETE_ELEMENT', array(
+			$arSubMenu[] = $this->getButton('DELETE_ELEMENT', array(
 				"ONCLICK" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM') . "')) location.href='" .
 					static::getUrl(array_merge($this->additionalUrlParams,
 						array(
@@ -249,7 +249,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
         if (count($arSubMenu)) {
             $menu[] = array("SEPARATOR" => "Y");
-            $menu[] = static::getButton('ACTIONS', array(
+            $menu[] = $this->getButton('ACTIONS', array(
                 "MENU" => $arSubMenu,
                 'ICON' => 'btn_new'
             ));

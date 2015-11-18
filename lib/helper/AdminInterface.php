@@ -13,77 +13,70 @@ use Bitrix\Main\Entity\DataManager;
 abstract class AdminInterface
 {
     /**
-     * Список зависимых админских интерфейсов которые будут зарегистрированы
-     * при регистраци админского интерфейса, например админские интерфейсы разделов
-     * @var string[]
-     */
-    protected static $dependencies = [];
-
-    /**
      * Список зарегистрированных интерфейсов
      * @var string
      */
-    protected static $registeredInterfaces = [];
-
-    /**
-     * Имя модуля для которого описывается интерфейс.
-     *
-     * @return string
-     */
-    abstract public static function getModuleName();
+    public static $registeredInterfaces = array();
 
     /**
      * Описание полей.
      *
      * @return array[]
      */
-    abstract public static function getFields();
+    abstract protected function getFields();
 
     /**
      * Названия классов для хелперов.
      *
      * @return string[]
      */
-    abstract public static function getHelpers();
+    abstract protected function getHelpers();
 
     /**
-     * Описание кнопок интерфейса, false - набор по умолчанию.
-     *
-     * @return array|bool
+     * Список зависимых админских интерфейсов которые будут зарегистрированы
+     * при регистраци админского интерфейса, например админские интерфейсы разделов
+     * @return string[]
      */
-    public static function getButtons()
-    {
-        return false;
+    public function getDependencies()
+	{
+        return array();
     }
 
     /**
      * Регистрируем поля, табы и кнопки в AdminBaseHelper::setInterfaceSettings.
      */
-    public static function register()
+    public function registerData()
     {
-        // если интерфейс уже зарегистрирован ничего не делаем
-        if(in_array(get_called_class(), static::$registeredInterfaces))
-        {
-            return false;
-        }
         $fieldsAndTabs = array('FIELDS' => array(), 'TABS' => array());
-        $tabsWithFields = static::getFields();
+        $tabsWithFields = $this->getFields();
 
-        $helpers = static::getHelpers();
-        /**
-         * @var AdminBaseHelper $helper
-         */
-        $helper = $helpers[0];
-        /**
-         * @var DataManager $model
-         */
-        $model = $helper::getModel();
+		// приводим массив хелперов к формату класс => настройки
+		$helpers = array();
+		foreach($this->getHelpers() as $key => $value)
+		{
+			if(is_array($value)) {
+				$helpers[$key] = $value;
+			}
+			else {
+				$helpers[$value] = array();
+			}
+		}
 
+		// список классов хелперов
+		$helperClasses = array_keys($helpers);
+
+        /*
+         * Получаем модель для автоподстановки TITLE из getMap, так как модель одинаковая
+         * для всех хелперов, то просто берем модель из первого хелпера
+         */
+        $model = $helperClasses[0]::getModel();
+
+        // разделяем описание полей на табы и поля
         foreach ($tabsWithFields as $tabCode => $tab) {
             $fieldsAndTabs['TABS'][$tabCode] = $tab['NAME'];
-            
+
             foreach ($tab['FIELDS'] as $fieldCode => $field) {
-                if (empty($field['TITLE']))
+                if (empty($field['TITLE'])) // если TITLE не задан то берем его из getMap модели
                 {
                     $field['TITLE'] = $model::getEntity()->getField($fieldCode)->getTitle();
                 }
@@ -92,18 +85,34 @@ abstract class AdminInterface
             }
         }
 
-        AdminBaseHelper::setInterfaceSettings($fieldsAndTabs, static::getHelpers(), static::getModuleName());
+        /*
+         * Регистрируем настройки интерфейса в базовом классе, код модуля берем из хелпера,
+         * так как все хелперы из одного модуля то просто получаем модуль первого хелпера
+         */
+        AdminBaseHelper::setInterfaceSettings($fieldsAndTabs, $helpers, $helperClasses[0]::getModule());
 
-        foreach (static::getHelpers() as $helperClass) {
+        // привязываем хелперы к классу их админ интерфейса
+        foreach ($helperClasses as $helperClass) {
             $helperClass::setInterfaceClass(get_called_class());
         }
+    }
 
-        static::$registeredInterfaces[] = get_called_class();
-
-        // Регистрация зависимых админских интерфейсов
-        foreach(static::$dependencies as $adminInterfaceClass)
+    /**
+     * Регистрация интерфейса
+     */
+    public static function register()
+    {
+        // регистрируем интерфейс если он еще не зарегистрирован
+        if(!in_array(get_called_class(), static::$registeredInterfaces))
         {
-            $adminInterfaceClass::register();
+            static::$registeredInterfaces[] = get_called_class(); // добавляем админ интерфейс в список зарегистрированных
+            $adminInterface = new static();
+            $adminInterface->registerData(); // собственно регистрация
+
+            foreach($adminInterface->getDependencies() as $adminInterfaceClass)
+            {
+                $adminInterfaceClass::register(); // регистрируем зависимые админ интерфейсы
+            }
         }
     }
 }

@@ -303,9 +303,14 @@ abstract class AdminBaseHelper
 	 */
 	static public function setInterfaceSettings(array $settings, array $helpers = array(), $module = '')
 	{
-		foreach ($helpers as $helper/**@var AdminBaseHelper $helper */)
+		foreach ($helpers as $helperClass => $helperSettings)
 		{
-			$success = $helper::registerInterfaceSettings($module, $settings);
+			if(!is_array($helperSettings)) // поддержка старого формата описания хелперов
+			{
+				$helperClass = $helperSettings; // в значении передается класс хелпера а не настройки
+				$helperSettings = array(); // настроек в старом формате нет
+			}
+			$success = $helperClass::registerInterfaceSettings($module, array_merge($settings, $helperSettings));
 			if (!$success) return false;
 		}
 
@@ -328,40 +333,6 @@ abstract class AdminBaseHelper
 	static public function getInterfaceClass()
 	{
 		return isset(static::$interfaceClass[get_called_class()]) ? static::$interfaceClass[get_called_class()] : false;
-	}
-
-	static protected function getButton($code, $params, $keys = array('name', 'TEXT'))
-	{
-
-		$class = '\\' . ltrim(get_called_class(), '\\');
-
-		$interfaceClass = static::getInterfaceClass();
-
-		if ($interfaceClass)
-		{
-			$buttons = $interfaceClass::getButtons();
-
-			if (is_array($buttons) && isset($buttons[$class]) && isset($buttons[$class][$code]))
-			{
-				if ($buttons[$class][$code]['VISIBLE'] == 'N')
-				{
-					return false;
-				}
-				$params = array_merge($params, $buttons[$class][$code]);
-
-				return $params;
-			}
-		}
-		/**
-		 * Значения по умолчанию из настроек модуля
-		 */
-		$text = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_' . $code);
-		foreach ($keys as $key)
-		{
-			$params[$key] = $text;
-		}
-
-		return $params;
 	}
 
 	/**
@@ -550,6 +521,47 @@ abstract class AdminBaseHelper
 		}
 
 		return static::$module[$className];
+	}
+
+	/**
+	 * Возвращает модифцированный массив с описанием элемента управления по его коду.
+	 * Берет название и настройки из админ интерфейса, если они не заданы используются
+	 * значения по умолчанию
+	 * @param $code
+	 * @param $params
+	 * @param array $keys
+	 * @return array|bool
+	 */
+	protected function getButton($code, $params, $keys = array('name', 'TEXT'))
+	{
+		$interfaceClass = static::getInterfaceClass();
+		$interfaceSettings = static::getInterfaceSettings();
+
+		if ($interfaceClass && !empty($interfaceSettings['BUTTONS']))
+		{
+			$buttons = $interfaceSettings['BUTTONS'];
+
+			if (is_array($buttons) && isset($buttons[$code]))
+			{
+				if ($buttons[$code]['VISIBLE'] == 'N')
+				{
+					return false;
+				}
+				$params = array_merge($params, $buttons[$code]);
+
+				return $params;
+			}
+		}
+		/**
+		 * Значения по умолчанию из настроек модуля
+		 */
+		$text = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_' . $code);
+		foreach ($keys as $key)
+		{
+			$params[$key] = $text;
+		}
+
+		return $params;
 	}
 
 	/**
@@ -844,7 +856,7 @@ abstract class AdminBaseHelper
 			{
 				$parentClass = $thirdClass;
 			}
-            
+
 			if ($parentClass == $class && class_exists($settings['helper']))
 			{
 				// получаем namespace-ы
@@ -1111,7 +1123,7 @@ abstract class AdminBaseHelper
 	{
 		return $this->context;
 	}
-    
+
     public static function getClass()
     {
         return get_called_class();

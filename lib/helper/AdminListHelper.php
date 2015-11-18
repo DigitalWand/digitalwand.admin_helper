@@ -424,7 +424,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					unset($params['ID']);
 				}
 				unset($params['SECTION_ID']);
-				$contextMenu[] = static::getButton('LIST_SECTION_UP', array(
+				$contextMenu[] = $this->getButton('LIST_SECTION_UP', array(
 					'LINK' => static::getUrl($params),
 					'ICON' => 'btn_list'
 				));
@@ -439,7 +439,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$editHelperClass = static::getHelperClass(AdminEditHelper::getClass());
 			if ($editHelperClass)
 			{
-				$contextMenu[] = static::getButton('LIST_CREATE_NEW', array(
+				$contextMenu[] = $this->getButton('LIST_CREATE_NEW', array(
 					'LINK' => $editHelperClass::getUrl($this->additionalUrlParams),
 					'ICON' => 'btn_new'
 				));
@@ -447,7 +447,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$sectionsHelperClass = static::getHelperClass(AdminSectionEditHelper::getClass());
 			if ($sectionsHelperClass)
 			{
-				$contextMenu[] = static::getButton('LIST_CREATE_NEW_SECTION', array(
+				$contextMenu[] = $this->getButton('LIST_CREATE_NEW_SECTION', array(
 					'LINK' => $sectionsHelperClass::getUrl($this->additionalUrlParams),
 					'ICON' => 'btn_new'
 				));
@@ -1199,8 +1199,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getFooter($res)
 	{
 		return array(
-			static::getButton('MAIN_ADMIN_LIST_SELECTED', array("value" => $res->SelectedRowsCount())),
-			static::getButton('MAIN_ADMIN_LIST_CHECKED', array("value" => $res->SelectedRowsCount()), array(
+			$this->getButton('MAIN_ADMIN_LIST_SELECTED', array("value" => $res->SelectedRowsCount())),
+			$this->getButton('MAIN_ADMIN_LIST_CHECKED', array("value" => $res->SelectedRowsCount()), array(
 				"counter" => true,
 				"value" => "0",
 			)),
