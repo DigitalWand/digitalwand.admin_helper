@@ -203,11 +203,11 @@ class OrmElementWidget extends NumberWidget
     public function getMultipleValueReadonly()
     {
         $entityListData = $this->getOrmElementData();
-
-        if (!empty($entityListData)) {
+        if (!empty($entityListData))
+        {
             $multipleData = array();
-
-            foreach ($entityListData as $entityData) {
+            foreach ($entityListData as $entityData)
+            {
                 $entityName = $entityData[$this->getSettings('TITLE_FIELD_NAME')] ?
                     $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
                     Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');

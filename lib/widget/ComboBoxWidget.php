@@ -43,10 +43,10 @@ class ComboBoxWidget extends HelperWidget
 		$multiple = $this->getSettings('MULTIPLE');
 		$multipleSelected = array();
 
-		if ($multiple)
-		{
-			$multipleSelected = $this->getMultipleValue();
-		}
+        if ($multiple)
+        {
+            $multipleSelected = $this->getMultipleValue();
+        }
 
 		$variants = $this->getVariants();
 
