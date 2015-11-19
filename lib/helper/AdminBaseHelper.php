@@ -32,24 +32,29 @@ Loc::loadMessages(__FILE__);
  * сущностей. В списке и на детальной.</li>
  * </ul>
  *
- * Схема работы с модулем следующя:
+ * Схема работы с модулем следующая:
  * <ul>
  * <li>Реализация класса AdminListHelper - для управления страницей списка элементов</li>
  * <li>Реализация класса AdminEditHelper - для управления страницей просмотра/редактирования элемента</li>
- * <li>Создание файла Interface.php с вызовом AdminBaseHelper::setInterfaceSettings(), в которую передается
- * конфигурация
- * полей админки и классы, используемые для её построения.</li>
+ * <li>Реализация класса AdminInterface - для описания конфигурации полей админки и классы интерфейсов</li>
+ * <li>Реализация класса AdminSectionListHelper - для описания странице списка разделов(если они используются)</li>
+ * <li>Реализация класса AdminSectionEditHelper - для управления страницей просмотра/редактирования раздела(если они используются)</li>
  * <li>Если не хватает возможностей виджетов, идущих с модулем, можно реализовать свой виджет, унаследованный от любого
  * другого готового виджета или от абстрактного класса HelperWidget</li>
  * </ul>
+ *
+ * Устаревший функционал:
+ * <ul>
+ * <li>Файл Interface.php с вызовом AdminBaseHelper::setInterfaceSettings(), в который передается
+ * конфигурация полей админки и классы.</li>
  *
  * Рекомендуемая файловая структура для модулей, использующих данный функционал:
  * <ul>
  * <li>Каталог <b>admin</b>. Достаточно поместить в него файл menu.php, отдельные файлы для списка и детальной
  * создавать не надо благодаря единому роутингу.</li>
  * <li>Каталог <b>classes</b> (или lib): содержит классы модли, представлений и делегатов.</li>
- * <li> -- <b>classes/helper</b>: каталог, содержащий классы "view", унаследованные от AdminListHelper и
- * AdminEditHelper.</li>
+ * <li> -- <b>classes/admininterface</b>: каталог, содержащий классы "view", унаследованные от AdminListHelper,
+ * AdminEditHelper, AdminInterface, AdminSectionListHelper и AdminSectionEditHelper.</li>
  * <li> -- <b>classes/widget</b>: каталог, содержащий виджеты ("delegate"), если для модуля пришлось создавать
  * свои.</li>
  * <li> -- <b>classes/model</b>: каталог с моделями, если пришлось переопределять поведение стандартынх функций getList
@@ -58,6 +63,9 @@ Loc::loadMessages(__FILE__);
  *
  * Использовать данную структуру не обязательно, это лишь рекомендация, основанная на успешном опыте применения модуля
  * в ряде проектов.
+ *
+ * Единственное <b>обязательное</b> условие - расположение  всех реализуемых классов админ хелперов и админ интерфейсов
+ * в одном неймспейсе
  *
  * @see AdminBaseHelper::setInterfaceSettings()
  * @package AdminHelper
@@ -156,6 +164,7 @@ abstract class AdminBaseHelper
 	 * @var string
 	 * $viewName представления, отвечающего за страницу списка. Необходимо указывать только для классов, уналедованных
 	 * от AdminEditHelper.
+	 * Необязательное, сгенерируется автоматически если не определено
 	 *
 	 * @see AdminBaseHelper::getViewName()
 	 * @see AdminBaseHelper::getListPageUrl
@@ -201,7 +210,8 @@ abstract class AdminBaseHelper
 	/**
 	 * @var string
 	 * $viewName представления, отвечающего за страницу редактирования/просмотра раздела. Необходимо указывать только
-	 *     для классов, уналедованных от AdminListHelper.
+	 * для классов, уналедованных от AdminListHelper.
+	 * Необязательное, сгенерируется автоматически если не определено
 	 *
 	 * @see AdminBaseHelper::getViewName()
 	 * @see AdminBaseHelper::getEditPageUrl
@@ -209,9 +219,6 @@ abstract class AdminBaseHelper
 	 * @api
 	 */
 	static protected $sectionsEditViewName;
-
-	// TODO Описать
-	static protected $sectionModel = null;
 
 	/**
 	 * @var array
@@ -313,7 +320,8 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Привязка класса интерфеса к хелперам
+	 * Привязывает класса хелпера из которого вызывается к интерфесу, используется при получении
+	 * данных об элементах управления из интерфейса.
 	 * @param $class
 	 */
 	static public function setInterfaceClass($class)
@@ -322,7 +330,7 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает класс интерфейса к которому привязан хелпер
+	 * Возвращает класс интерфейса к которому привязан хелпер из которого вызван метод
 	 * @return array
 	 */
 	static public function getInterfaceClass()
@@ -340,24 +348,9 @@ abstract class AdminBaseHelper
 	 */
 	static public function registerInterfaceSettings($module, $interfaceSettings)
 	{
-		if (!is_array(static::$module)) {
-			static::$module = $module;
-		}
-		elseif (empty($module)) {
-			$module = static::getModule();
-			if (empty($module)) {
-				return false;
-			}
-		}
-		else {
-			static::$module[get_called_class()] = $module;
-		}
-
-		if (empty($interfaceSettings)) {
-			return false;
-		}
-
-		if (isset(self::$interfaceSettings[$module][static::getViewName()])) {
+		if (isset(self::$interfaceSettings[$module][static::getViewName()]) || empty($module)
+			|| empty($interfaceSettings)
+		) {
 			return false;
 		}
 
@@ -439,22 +432,8 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает имя класса модели раздела, используется при
-	 * для организации дерева каталога при static::$useSection = true
-	 * @return \Bitrix\Main\Entity\DataManager|string
-	 *
-	 * @throws \Bitrix\Main\ArgumentException
-	 * @throws \Bitrix\Main\SystemException
-	 * @throws \Exception
-	 * @api
-	 */
-	public static function getSectionModel()
-	{
-		return static::getHLEntity(static::$sectionModel);
-	}
-
-	/**
-	 * Возвращает имя модуля
+	 * Возвращает имя модуля, если оно не задано то определяет
+	 * автоматически из namespace
 	 * @return string
 	 * @throws LoaderException
 	 * @api
@@ -465,18 +444,12 @@ abstract class AdminBaseHelper
 			return static::$module;
 		}
 		$className = get_called_class();
-		/**
-		 * Пытаемся автоматически определить название модуля при его отсутствии
-		 */
+		// Пытаемся автоматически определить название модуля при его отсутствии
 		if (!isset(static::$module[$className])) {
-			/**
-			 * Разбираем имя класса
-			 */
+			// Разбираем имя класса
 			$classNameParts = explode('\\', trim($className, '\\'));
 
-			/**
-			 * Составляем имя модуля из имени класса по частям слева направо и проверяем есть ли такой модуль
-			 */
+			// Составляем имя модуля из имени класса по частям слева направо и проверяем есть ли такой модуль
 			$moduleNameParts = array();
 			$moduleName = false;
 			while (count($classNameParts)) {
@@ -511,7 +484,10 @@ abstract class AdminBaseHelper
 
 		if ($interfaceClass && !empty($interfaceSettings['BUTTONS'])) {
 			$buttons = $interfaceSettings['BUTTONS'];
-
+			/*
+			 * Если элемент управления описан в классе интерфейсе, то совмещаем настройки
+			 * описание при использовании кнопки и описанные в классе интерфейса
+			 */
 			if (is_array($buttons) && isset($buttons[$code])) {
 				if ($buttons[$code]['VISIBLE'] == 'N') {
 					return false;
@@ -521,9 +497,7 @@ abstract class AdminBaseHelper
 				return $params;
 			}
 		}
-		/**
-		 * Значения по умолчанию из настроек модуля
-		 */
+		// Значения по умолчанию из настроек модуля
 		$text = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_' . $code);
 		foreach ($keys as $key) {
 			$params[$key] = $text;
@@ -533,7 +507,7 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает список полей, переданных через AdminBaseHelper::setInterfaceSettings()
+	 * Возвращает список полей элемента, переданных через AdminBaseHelper::setInterfaceSettings()
 	 * @see AdminBaseHelper::setInterfaceSettings()
 	 * @return array
 	 * @api
@@ -641,7 +615,7 @@ abstract class AdminBaseHelper
 	 * @param array $element Массив данных элемента
 	 * @return bool
 	 */
-	protected function hasWriteRightsElement($element = [])
+	protected function hasWriteRightsElement($element = array())
 	{
 		if (!$this->hasWriteRights()) {
 			return false;
@@ -788,30 +762,45 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает класс хелпера нужного типа основываясь на переданном параметре
+	 * Возвращает класс хелпера нужного типа из всех зарегистрированных хелперов в модуле и находящихся
+	 * в том же неймспейсе что класс хелпера из которого вызван этот метод
+	 *
+	 * Под типом понимается ближайший родитель из модуля AdminHelper.
+	 *
+	 * Например если нам нужно получить ListHelper для формирования ссылки на список из EditHelper,
+	 * то это будет вглядеть так $listHelperClass = static::getHelperClass(AdminListHelper::getClass())
+	 *
 	 * @param $class
 	 * @return string|bool
 	 */
 	public function getHelperClass($class)
 	{
+		// получаем настройки интерфейса для текущего модуля, там есть классы хелперов они нам и нужны
 		$interfaceSettings = self::$interfaceSettings[static::getModule()];
 
+		// перебираем все хелперы в модули
 		foreach ($interfaceSettings as $viewName => $settings) {
-			// ищем ближайшего родителя из DigitalWand\AdminHelper
+			// ищем среди них ближайшего родителя из DigitalWand\AdminHelper
 			$parentClasses = class_parents($settings['helper']);
 			array_pop($parentClasses); // AdminBaseHelper
+
+			// первый класс в цепочке родителей хелпера, по умолчанию считаем что
 			$parentClass = array_pop($parentClasses);
-			$thirdClass = array_pop($parentClasses);
+			$thirdClass = array_pop($parentClasses); // третий класс в цепочке родителей хелпера
+
+			// проверяем а не унаследован ли хелпер от хелперов-заглушек используемых для разделов
 			if (in_array($thirdClass, array(AdminSectionListHelper::getClass(), AdminSectionEditHelper::getClass()))) {
-				$parentClass = $thirdClass;
+				$parentClass = $thirdClass; // хелпер потомок AdminSectionEditHelper или AdminSectionListHelper
 			}
 
+			// проверяем соответствует ли хелпер запрошуенному типу
 			if ($parentClass == $class && class_exists($settings['helper'])) {
-				// получаем namespace-ы
+				// получаем неймспейсы для хелпера
 				$helperClassParts = explode('\\', $settings['helper']);
 				array_pop($helperClassParts);
 				$helperNamespace = implode('\\', $helperClassParts);
 
+				// получаем неймспейсы для хелпера из которого вызван этот метод
 				$сlassParts = explode('\\', get_called_class());
 				array_pop($сlassParts);
 				$classNamespace = implode('\\', $сlassParts);
