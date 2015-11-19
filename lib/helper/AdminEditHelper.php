@@ -3,6 +3,7 @@
 namespace DigitalWand\AdminHelper\Helper;
 
 use Bitrix\Main\Localization\Loc;
+use DigitalWand\AdminHelper\Model\EntityManager;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 
@@ -488,26 +489,23 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Сохранение элемента. Можно переопределить, если требуется сложная логика и нет возможности определить
-	 * её в модели.
+	 * Сохранение элемента.
+	 * Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
 	 *
 	 * @param bool $id
 	 * @return \Bitrix\Main\Entity\AddResult|\Bitrix\Main\Entity\UpdateResult
 	 * @throws \Exception
 	 * @api
 	 */
-	protected function saveElement($id = false)
+	protected function saveElement($id = null)
 	{
 		$className = static::getModel();
+		$entityManager = new EntityManager($className, $this->data, $id, $this);
 
-		if ($id) {
-			$result = $className::update($id, $this->data);
-		}
-		else {
-			$result = $className::add($this->data);
-		}
+		$saveResult = $entityManager->save();
+		$this->addNotes($entityManager->getNotes());
 
-		return $result;
+		return $saveResult;
 	}
 
 	/**
@@ -527,9 +525,12 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		}
 
 		$className = static::getModel();
-		$result = $className::delete($id);
+		$entityManager = new EntityManager($className, array(), $id, $this);
 
-		return $result;
+		$deleteResult = $entityManager->delete();
+		$this->addNotes($entityManager->getNotes());
+
+		return $deleteResult;
 	}
 
 	/**

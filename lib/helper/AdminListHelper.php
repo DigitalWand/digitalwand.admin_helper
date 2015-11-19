@@ -5,6 +5,7 @@ namespace DigitalWand\AdminHelper\Helper;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
+use DigitalWand\AdminHelper\Model\EntityManager;
 
 Loc::loadMessages(__FILE__);
 
@@ -493,8 +494,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 					}
 				}
 
-				foreach ($IDs as $id) {
-					$className::delete($id);
+				foreach ($IDs as $id)
+				{
+					$entityManager = new EntityManager($className, array(), $id, $this);
+					$entityManager->delete();
+					$this->addNotes($entityManager->getNotes());
 				}
 
 				if ($sectionEditHelperClass) {

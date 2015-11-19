@@ -88,32 +88,32 @@ class StringWidget extends HelperWidget
         <div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
         </div>
 
-        <script>
-            var multiple = new MultipleWidgetHelper(
-                '#<?= $uniqueId ?>-field-container',
-                '#field_original_id#<input type="text" name="<?= $this->getCode()?>[#field_id#][VALUE]" style="<?=$style?>" size="<?=$size?>" value="#value#">'
-            );
-            <?
-            if ($rsEntityData)
-            {
-                while($referenceData = $rsEntityData->fetch())
-                {
-                    if (empty($referenceData['REFERENCE_ID']))
-                    {
-                        continue;
-                    }
+		<script>
+			var multiple = new MultipleWidgetHelper(
+				'#<?= $uniqueId ?>-field-container',
+				'#field_original_id#<input type="text" name="<?= $this->getCode()?>[#field_id#][<?=$this->getMultipleField('VALUE')?>]" style="<?=$style?>" size="<?=$size?>" value="#value#">'
+			);
+			<?
+			if ($rsEntityData)
+			{
+				while($referenceData = $rsEntityData->fetch())
+				{
+					if (empty($referenceData['REFERENCE_' . $this->getMultipleField('ID')]))
+					{
+						continue;
+					}
 
-                    ?>
-            multiple.addField({
-                value: '<?= $referenceData['REFERENCE_VALUE'] ?>',
-                field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[#field_id#][ID]"' +
-                ' value="<?= $referenceData['REFERENCE_ID'] ?>">',
-                field_id: <?= $referenceData['REFERENCE_ID'] ?>
-            });
-            <?
-                           }
-                       }
-                       ?>
+					?>
+			multiple.addField({
+				value: '<?= $referenceData['REFERENCE_' . $this->getMultipleField('VALUE')] ?>',
+				field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[#field_id#][<?= $this->getMultipleField('ID') ?>]"' +
+				' value="<?= $referenceData['REFERENCE_' . $this->getMultipleField('ID')] ?>">',
+				field_id: <?= $referenceData['REFERENCE_' . $this->getMultipleField('ID')] ?>
+			});
+			<?
+						   }
+					   }
+					   ?>
 
             // TODO Добавление созданных полей
             multiple.addField();
@@ -168,18 +168,19 @@ class StringWidget extends HelperWidget
 				$entityClass = $this->entityName;
 				$pk = $entityClass::getEntity()->getPrimary();
 
-                if ($this->getSettings('SECTION_LINK')) {
-                    $params = $this->helper->isPopup() ? $_GET : array();
-                    $params['ID'] = $this->data[$pk];
+				if ($this->getSettings('SECTION_LINK'))
+				{
+					$params = $this->helper->isPopup() ? $_GET : array();
+					$params['ID'] = $this->data[$pk];
                     $listHelper = $this->helper->getHelperClass( $this->helper->isPopup() ? AdminSectionListHelper::getClass() :AdminListHelper::getClass());
                     $pageUrl = $listHelper::getUrl($params);
-                    $value = '<span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span>';
+					$value = '<span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span>';
                 } else {
                     $editHelper = $this->helper->getHelperClass(AdminEditHelper::getClass());
                     $pageUrl = $editHelper::getUrl(array(
-                        'ID' => $this->data[$pk]
-                    ));
-                }
+						'ID' => $this->data[$pk]
+					));
+				}
 
                 $value .= '<a href="' . $pageUrl . '">' . $this->getValue() . '</a>';
             } else {
