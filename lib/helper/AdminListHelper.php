@@ -174,25 +174,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->restoreLastGetQuery();
 		$this->prepareAdminVariables();
 
-		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button'])) {
-			$listHelperClass = $this->getHelperClass(AdminListHelper::getClass());
-			$className = $listHelperClass::getModel();
-			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
-			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
-			$params = $_GET;
-			unset($params['action']);
-			unset($params['action_button']);
-			$this->customActions($action, $id);
-			$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::getClass());
-			if ($sectionEditHelperClass) {
-				$element = $className::getById($id)->Fetch();
-				if ($element[$className::getSectionField()]) {
-					$params['ID'] = $element[$className::getSectionField()];
-				}
-			}
-			LocalRedirect($listHelperClass::getUrl($params));
-		}
-
 		$className = static::getModel();
 		$oSort = new \CAdminSorting($this->getListTableID(), static::pk(), "desc");
 		$this->list = new \CAdminList($this->getListTableID(), $oSort);
@@ -247,6 +228,26 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 
 			$this->groupActions($IDs, $_REQUEST['action']);
+		}
+
+
+		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors())==0) {
+			$listHelperClass = $this->getHelperClass(AdminListHelper::getClass());
+			$className = $listHelperClass::getModel();
+			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
+			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
+			$params = $_GET;
+			unset($params['action']);
+			unset($params['action_button']);
+			$this->customActions($action, $id);
+			$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::getClass());
+			if ($sectionEditHelperClass) {
+				$element = $className::getById($id)->Fetch();
+				if ($element[$className::getSectionField()]) {
+					$params['ID'] = $element[$className::getSectionField()];
+				}
+			}
+			LocalRedirect($listHelperClass::getUrl($params));
 		}
 
 		if ($this->isPopup()) {
@@ -534,7 +535,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				foreach ($IDs as $id) {
 					$sectionClassName::delete($id);
 				}
-				LocalRedirect($sectionEditHelperClass::getUrl($params));
+				LocalRedirect($listHelperClass::getUrl($params));
 			}
 			else {
 				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
