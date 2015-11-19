@@ -68,6 +68,7 @@ Loc::loadMessages(__FILE__);
  * в одном неймспейсе
  *
  * @see AdminBaseHelper::setInterfaceSettings()
+ * @see AdminInterface::getFields
  * @package AdminHelper
  * @FIXME: Упростить обработку сообщений об ошибках: слишком запутанно.
  *

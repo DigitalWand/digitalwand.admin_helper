@@ -75,6 +75,10 @@ abstract class AdminInterface
 	 * )
 	 * ```
 	 * Где TAB_1..2 - символьные коды табов, FIELD_1..4 - название столбцов в таблице сущности.
+	 *
+	 * TITLE для поля задавать не обязательно, в этому случае он будет получаться из DataManager::getMap()
+	 * через getField($code)->getTitle().
+	 *
 	 * Более подробная информация о формате описания полей в классе HelperWidget
 	 * @see DigitalWand\AdminHelper\Widget\HelperWidget
 	 *
