@@ -824,6 +824,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$raw['SELECT'] = array_unique($raw['SELECT']);
 		$sectionModel = $sectionEditHelperClass::getModel();
 		$sectionFilter = array($sectionModel::getSectionField() => $_REQUEST['ID']);
+		if(!empty($_REQUEST['self_id']))
+		{
+			$sectionFilter['!'.$this->sectionPk()] = $_REQUEST['self_id'];
+		}
 		$sectionSort = array();
 		$limitData = $this->getLimits();
 		$this->totalRowsCount = $sectionModel::getCount($sectionFilter);
