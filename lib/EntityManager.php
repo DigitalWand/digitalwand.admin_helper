@@ -15,7 +15,8 @@ Loc::loadMessages(__FILE__);
  * Управление сущностью и привязанными к ней данными
  *
  * Пример создания сущности
- * $filmManager = new EntityManager(FilmTable, [
+ * ```
+ * $filmManager = new EntityManager(FilmTable, array(
  *        // Данные сущности
  *        'TITLE' => 'Монстры на каникулах 2',
  *        'YEAR' => 2015,
@@ -23,67 +24,77 @@ Loc::loadMessages(__FILE__);
  *        // Если передать ей данные, то они будут обработаны
  *        // Представим, что у сущности RelatedLinksTable есть поля ID и VALUE (в этом поле хранится ссылка), FILM_ID
  *        // В большинстве случаев, данные передаваемые связям генерируются множественными виджетами
- *        'RELATED_LINKS' => [
- *        	// Переданный ниже массив будет обработан аналогично коду RelatedLinksTable::add(['VALUE' => 'yandex.ru']);
- *        	['VALUE' => 'yandex.ru'],
- *        	// Если в массив добавить ID, то запись обновится: RelatedLinksTable::update(3, ['ID' => 3, 'VALUE' => 'google.com']);
- *        	['ID' => 3, 'VALUE' => 'google.com'],
+ *        'RELATED_LINKS' => array(
+ *        	// Переданный ниже массив будет обработан аналогично коду RelatedLinksTable::add(array('VALUE' => 'yandex.ru'));
+ *        	array('VALUE' => 'yandex.ru'),
+ *        	// Если в массив добавить ID, то запись обновится: RelatedLinksTable::update(3, array('ID' => 3, 'VALUE' => 'google.com'));
+ *        	array('ID' => 3, 'VALUE' => 'google.com'),
  *        	// ВНИМАНИЕ: данный класс реководствуется принципом: что передано для связи, то сохранится или обновится, что не передано, будет удалено
  *        	// То есть, если в поле связи RELATED_LINKS передать пустой массив, то все значения связи будут удалены
- *        ]
- * ]);
+ *        )
+ * ));
  * $filmManager->save();
+ * ```
  *
  * Пример удаления сущности
- * $articleManager = new EntityManager(ArticlesTable, [], 7, $adminHelper);
+ * ```
+ * $articleManager = new EntityManager(ArticlesTable, array(), 7, $adminHelper);
  * $articleManager->delete();
- *
+ * ```
  *
  * Как работает сохранение данных ? Дополнительный пример
  * Допустим, что есть модели NewsTable (новости) и NewsLinksTable (ссылки на дополнительную информацию о новости)
  *
  * У модели NewsTable есть связь с моделью NewsLinksTable через поле NEWS_LINKS:
+ * ```
  * DataManager::getMap() {
  * ...
  * new Entity\ReferenceField(
  *        'NEWS_LINKS',
  *        'namespace\NewsLinksTable',
- *        ['=this.ID' => 'ref.NEWS_ID'],
+ *        array('=this.ID' => 'ref.NEWS_ID'),
  *        'ref.FIELD' => new DB\SqlExpression('?s', 'NEWS_LINKS'),
  *        'ref.ENTITY' => new DB\SqlExpression('?s', 'news'),
  * ),
  * ...
  * }
- * 
+ * ```
+ *
  * Попробуем сохранить
+ * ```
  * $newsManager = new EntityManager(
  *        'NewsTable',
- *        [
+ *        array(
  *            'TITLE' => 'News title',
  *            'CONTENT' => 'News content',
- *            'NEWS_LINKS' => [
- *                ['LINK' => 'test.ru'],
- *                ['LINK' => 'test2.ru'],
- *                ['ID' => 'id ссылки', 'LINK' => 'test3.ru'],
- *            ]
- *        ],
+ *            'NEWS_LINKS' => array(
+ *                array('LINK' => 'test.ru'),
+ *                array('LINK' => 'test2.ru'),
+ *                array('ID' => 'id ссылки', 'LINK' => 'test3.ru'),
+ *            )
+ *        ),
  * 		null,
  * 		$adminHelper
  * );
  * $newsManager->save();
+ * ```
  * В данном примере передаются данные для новости (заголовок и содержимое) и данные для поля-связи NEWS_LINKS.
  * 
  * Далее EntityManager:
  * 1. Вырезает данные, которые предназначены связям
  * 2. Подставляет в них данные из основной модели на основе условий связи
  * Например для связи с полем NEWS_LINKS подставятся данные:
+ * ```
  * NewsLinksTable::ENTITY_ID => NewsTable::ID,
  * NewsLinksTable::FIELD => 'NEWS_LINKS',
  * NewsLinksTable::ENTITY => 'news'
+ * ```
  * 3. После подстановки данных они будут переданы модели связи подобно коду ниже:
- * NewsLinksTable::add(['ENTITY' => 'news', 'FIELD' => 'NEWS_LINKS', 'ENTITY_ID' => 'id сущности, например новости', 'LINK' => 'test.ru']);
- * NewsLinksTable::add(['ENTITY' => 'news', 'FIELD' => 'NEWS_LINKS', 'ENTITY_ID' => 'id сущности', 'LINK' => 'test2.ru']);
- * NewsLinksTable::update('id ссылки', ['ENTITY' => 'news', 'FIELD' => 'NEWS_LINKS', 'ENTITY_ID' => 'id сущности', 'LINK' => 'test3.ru']);
+ * ```
+ * NewsLinksTable::add(array('ENTITY' => 'news', 'FIELD' => 'NEWS_LINKS', 'ENTITY_ID' => 'id сущности, например новости', 'LINK' => 'test.ru'));
+ * NewsLinksTable::add(array('ENTITY' => 'news', 'FIELD' => 'NEWS_LINKS', 'ENTITY_ID' => 'id сущности', 'LINK' => 'test2.ru'));
+ * NewsLinksTable::update('id ссылки', array('ENTITY' => 'news', 'FIELD' => 'NEWS_LINKS', 'ENTITY_ID' => 'id сущности', 'LINK' => 'test3.ru'));
+ * ```
  * Обратите внимание, что в метод EntityManager::save() были изначально передано только поле LINK, поля ENTITY, ENTITY_ID и FIELD
  * были подставлены классом EntityManager автоматически (предыдущий пункт)
  * А так же важно, что для третьей ссылки был передан идентификатор, поэтому выполнился NewsLinksTable::update, а не NewsLinksTable::add
@@ -98,9 +109,11 @@ Loc::loadMessages(__FILE__);
  * Примечание
  * EntityManager управляет только данными, которые получает при помощи связи стандартными средставами битрикса
  * Например при удалении NewsTable будут удалены только NewsLinksTable, где
+ * ```
  * NewsLinksTable::ENTITY_ID => NewsTable::ID,
  * NewsLinksTable::FIELD => 'NEWS_LINKS',
  * NewsLinksTable::ENTITY => 'news'
+ * ```
  */
 class EntityManager
 {
