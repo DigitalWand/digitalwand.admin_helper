@@ -830,7 +830,7 @@ abstract class AdminBaseHelper
 	 * Возвращает относительный namespace до хелперов в виде URL параметра
 	 * @return string
 	 */
-	static protected function getNamespaceUrlParam()
+	static public function getNamespaceUrlParam()
 	{
 
 		$namespaceParts = explode('\\', get_called_class());
