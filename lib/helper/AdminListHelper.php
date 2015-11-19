@@ -473,7 +473,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::getClass());
 		$listHelperClass = $this->getHelperClass(AdminListHelper::getClass());
 
-		if (!isset($_REQUEST['model-section'])) {
+		if ($sectionEditHelperClass && !isset($_REQUEST['model-section'])) {
 			$sectionClassName = $sectionEditHelperClass::getModel();
 		}
 		else {
