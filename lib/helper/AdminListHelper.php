@@ -14,9 +14,6 @@ Loc::loadMessages(__FILE__);
  * При создании своего класса необходимо переопределить следующие переменные:
  * <ul>
  * <li> static protected $model </Li>
- * <li> static public $module </li>
- * <li> static protected $editViewName </li>
- * <li> static protected $viewName </li>
  * </ul>
  *
  * Этого будет дастаточно для получения минимальной функциональности
@@ -590,12 +587,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * <li> Модификация параметров запроса каждым из виджетов </li>
 	 * <li> Выборка данных </li>
 	 * <li> Вывод строк таблицы. Во время итерации по строкам возможна модификация данных строки. </li>
-	 * <li> Отрисовка футера таблиы, добавление контекстного меню </li>
+	 * <li> Отрисовка футера таблицы, добавление контекстного меню </li>
 	 * </ul>
 	 *
 	 * @param array $sort Настройки сортировки.
 	 *
 	 * @see AdminListHelper::getList();
+	 * @see AdminListHelper::getMixedData();
 	 * @see AdminListHelper::modifyRowData();
 	 * @see AdminListHelper::addRowCell();
 	 * @see AdminListHelper::addRow();
@@ -607,11 +605,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$headers = $this->arHeader;
 
-		$isSectionListHelper = static::getHelperClass(AdminSectionListHelper::getClass()) == static::getClass();
-
 		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::getClass());
 
-		if ($sectionEditHelper) {
+		if ($sectionEditHelper) { // если есть реализация класса AdminSectionEditHelper, значит используются разделы
 			$sectionHeaders = $this->getSectionsHeader();
 			foreach ($sectionHeaders as $sectionHeader) {
 				foreach ($headers as $i => $elementHeader) {
@@ -623,6 +619,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$headers = array_merge($headers, $sectionHeaders);
 		}
 
+		// сортировка столбцов с сохранением исходной позиции в
+		// массиве для развнозначных элементов
+		// массив $headers модифицируется
 		$this->mergeSortHeader($headers);
 
 		$this->list->AddHeaders($headers);
@@ -685,13 +684,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$res->InitFromArray($mixedData);
 			$res = new \CAdminResult($res, $this->getListTableID());
 			$res->nSelectedCount = $this->totalRowsCount;
+			// используем кастомный NavStart что бы определить правильное количество страниц и элементов в списке
 			$this->customNavStart($res);
 			$this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
 			while ($data = $res->NavNext(false)) {
 				$this->modifyRowData($data);
 				if ($data['IS_SECTION']) // для разделов своя обработка
 				{
-					list($link, $name) = $this->getRow($data);
+					list($link, $name) = $this->getRow($data, $this->getHelperClass(AdminSectionEditHelper::getClass()));
 					$row = $this->list->AddRow('s' . $data[$this->pk()], $data, $link, $name);
 					foreach ($this->sectionFields as $code => $settings) {
 						if (in_array($code, $sectionsVisibleColumns)) {
@@ -757,25 +757,32 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function mergeSortHeader(&$array)
 	{
+		// для сортировки нужно хотя бы 2 элемента
 		if (count($array) < 2) return;
 
+		// делим массив пополам
 		$halfway = count($array) / 2;
 		$array1 = array_slice($array, 0, $halfway);
 		$array2 = array_slice($array, $halfway);
 
+		// реукрсивно сортируем каждую половину
 		$this->mergeSortHeader($array1);
 		$this->mergeSortHeader($array2);
 
-		if ($this->uHeadersSort(end($array1), $array2[0]) < 1) {
+		// если последний элемент первой половины меньше или равен первому элементу
+		// второй половины, то просто соединяем массивы
+		if ($this->mergeSortHeaderCompare(end($array1), $array2[0]) < 1) {
 			$array = array_merge($array1, $array2);
-
 			return;
 		}
 
+		// соединяем 2 отсортированных половины в один отсортированный массив
 		$array = array();
 		$ptr1 = $ptr2 = 0;
 		while ($ptr1 < count($array1) && $ptr2 < count($array2)) {
-			if ($this->uHeadersSort($array1[$ptr1], $array2[$ptr2]) < 1) {
+			// собираем в 1 массив последовательную цепочку
+			// элементов из 2-х отсортированных половинок
+			if ($this->mergeSortHeaderCompare($array1[$ptr1], $array2[$ptr2]) < 1) {
 				$array[] = $array1[$ptr1++];
 			}
 			else {
@@ -783,6 +790,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 		}
 
+		// если в исходных массивах что-то осталось забираем в основной массив
 		while ($ptr1 < count($array1)) $array[] = $array1[$ptr1++];
 		while ($ptr2 < count($array2)) $array[] = $array2[$ptr2++];
 
@@ -790,13 +798,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Подфункция сортировки стобцов
-	 * @see usort
+	 * Функция сравнения столбцов по их весу в сортировке
 	 * @param $a
 	 * @param $b
 	 * @return int
 	 */
-	public static function uHeadersSort($a, $b)
+	public function mergeSortHeaderCompare($a, $b)
 	{
 		$a = $a['admin_list_helper_sort'];
 		$b = $b['admin_list_helper_sort'];
@@ -823,18 +830,22 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sectionModel = $sectionEditHelperClass::getModel();
 		$sectionFilter = array($sectionModel::getSectionField() => $_REQUEST['ID']);
 
+		// при использовании в качестве popup окна исключаем раздел из выборке
+		// что бы не было возможности сделать раздел родителем самого себя
 		if (!empty($_REQUEST['self_id'])) {
 			$sectionFilter['!' . $this->sectionPk()] = $_REQUEST['self_id'];
 		}
 
 		$sectionSort = array();
 		$limitData = $this->getLimits();
+		// добавляем к общему количеству элементов количество разделов
 		$this->totalRowsCount = $sectionModel::getCount($sectionFilter);
 		foreach ($sort as $field => $direction) {
 			if (in_array($field, $sectionsVisibleColumns)) {
 				$sectionSort[$field] = $direction;
 			}
 		}
+		// добавляем к выборке разделы
 		$res = $sectionModel::getList(array(
 			'filter' => $sectionFilter,
 			'select' => $sectionsVisibleColumns,
@@ -863,9 +874,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$elementModel = static::$model;
 		$elementFilter = $this->arFilter;
 		$elementFilter[$elementModel::getSectionField()] = $_REQUEST['ID'];
+		// добавляем к общему количеству элементов количество элементов
 		$this->totalRowsCount += $elementModel::getCount($elementFilter);
 
-		// возвращае данные без элементов если занимаются всю страницу выборки
+		// возвращае данные без элементов если разделы занимают всю страницу выборки
 		if (!empty($returnData) && $limitData[0] == 0 && $limitData[1] == $this->totalRowsCount) {
 			return $returnData;
 		}
@@ -885,7 +897,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		if ($elementLimit > 0 && $elementOffset >= 0) {
 			$elementParams['limit'] = $elementLimit;
 			$elementParams['offset'] = $elementOffset;
-
+			// добавляем к выборке элементы
 			$res = $elementModel::getList($elementParams);
 			while ($arElement = $res->Fetch()) {
 				$arElement['IS_SECTION'] = false;
@@ -969,14 +981,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 	/**
 	 * Настройки строки таблицы
 	 * @param array $data данные текущей строки БД
-	 * @param string $method метод через который идет получение ссылки
+	 * @param bool|string $class класс хелпера через метод getUrl которого идет получение ссылки
 	 * @return array возвращает ссылку на детальную страницу и её название
 	 * @api
 	 */
 	protected function getRow($data, $class = false)
 	{
 		if (empty($class)) {
-			$class = static::getHelperClass(AdminListHelper::getClass());
+			$class = static::getHelperClass(AdminEditHelper::getClass());
 		}
 		if ($this->isPopup()) {
 			return array();

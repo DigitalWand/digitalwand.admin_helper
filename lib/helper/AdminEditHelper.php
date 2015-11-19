@@ -14,9 +14,6 @@ Loc::loadMessages(__FILE__);
  * При создании своего класса необходимо переопределить следующие переменные:
  * <ul>
  * <li> static protected $model</li>
- * <li> static public $module</li>
- * <li> static protected $listViewName</li>
- * <li> static protected $viewName</li>
  * </ul>
  *
  * Этого будет дастаточно для получения минимальной функциональности
