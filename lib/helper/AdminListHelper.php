@@ -5,7 +5,7 @@ namespace DigitalWand\AdminHelper\Helper;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
-use DigitalWand\AdminHelper\Model\EntityManager;
+use DigitalWand\AdminHelper\EntityManager;
 
 Loc::loadMessages(__FILE__);
 

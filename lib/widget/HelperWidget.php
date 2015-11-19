@@ -80,41 +80,47 @@ Loc::loadMessages(__FILE__);
  * - Если поля, которые требует виджет есть в вашей таблице, но они имеют другие названия,
  * можно настроить виджет для работы с вашими полями.
  * Для этого переопределите настройку MULTIPLE_FIELDS при объявлении поля в интерфейсе следующим способом:
- * 'RELATED_LINKS' => [
+ * ```
+ * 'RELATED_LINKS' => array(
  * 		'WIDGET' => new StringWidget(),
  * 		'TITLE' => 'Ссылки',
  * 		'MULTIPLE' => true,
  * 		// Обратите внимание, именно тут переопределяются поля виджета
- * 		'MULTIPLE_FIELDS' => [
+ * 		'MULTIPLE_FIELDS' => array(
  * 			'ID', // Должны быть прописаны все поля, даже те, которые не нужно переопределять
  * 			'ENTITY_ID' => 'NEWS_ID', // ENTITY_ID - поле, которое требует виджет, NEWS_ID - пример поля, которое будет использоваться вместо ENTITY_ID
  * 			'VALUE' => 'LINK', // VALUE - поле, которое требует виджет, LINK - пример поля, которое будет использоваться вместо VALUE
- * 		]
- * 	],
+ * 		)
+ * 	),
+ * ```
  * </li>
  *
  * <li>
  * Далее в основной модели (та, которая указана в AdminBaseHelper::$model) нужно прописать связь с моделью,
  * в которой вы хотите хранить данные поля
  * Пример объявления связи:
+ * ```
  * new Entity\ReferenceField(
  *        'RELATED_LINKS',
  *        'namespace\NewsLinksTable',
- *        ['=this.ID' => 'ref.NEWS_ID'],
+ *        array('=this.ID' => 'ref.NEWS_ID'),
  * 		  // Условия FIELD и ENTITY не обязательны, подробности смотрите в комментариях к классу @see EntityManager
  *        'ref.FIELD' => new DB\SqlExpression('?s', 'NEWS_LINKS'),
  *        'ref.ENTITY' => new DB\SqlExpression('?s', 'news'),
  * ),
+ * ```
  * </li>
  *
  * <li>
  * Что бы виджет работал во множественном режиме, нужно при описании интерфейса поля указать параметр MULTIPLE => true
- * 'RELATED_LINKS' => [
+ * ```
+ * 'RELATED_LINKS' => array(
  * 		'WIDGET' => new StringWidget(),
  * 		'TITLE' => 'Ссылки',
  * 		// Включаем режим множественного ввода
  * 		'MULTIPLE' => true,
- * ]
+ * )
+ * ```
  * </li>
  *
  * <li>
