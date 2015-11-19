@@ -230,8 +230,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$this->groupActions($IDs, $_REQUEST['action']);
 		}
 
-
-		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors())==0) {
+		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0) {
 			$listHelperClass = $this->getHelperClass(AdminListHelper::getClass());
 			$className = $listHelperClass::getModel();
 			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
@@ -508,8 +507,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					}
 				}
 
-				foreach ($IDs as $id)
-				{
+				foreach ($IDs as $id) {
 					$entityManager = new EntityManager($className, array(), $id, $this);
 					$entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
@@ -824,10 +822,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$raw['SELECT'] = array_unique($raw['SELECT']);
 		$sectionModel = $sectionEditHelperClass::getModel();
 		$sectionFilter = array($sectionModel::getSectionField() => $_REQUEST['ID']);
-		if(!empty($_REQUEST['self_id']))
-		{
-			$sectionFilter['!'.$this->sectionPk()] = $_REQUEST['self_id'];
+
+		if (!empty($_REQUEST['self_id'])) {
+			$sectionFilter['!' . $this->sectionPk()] = $_REQUEST['self_id'];
 		}
+
 		$sectionSort = array();
 		$limitData = $this->getLimits();
 		$this->totalRowsCount = $sectionModel::getCount($sectionFilter);
