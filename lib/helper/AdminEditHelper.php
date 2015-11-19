@@ -3,7 +3,7 @@
 namespace DigitalWand\AdminHelper\Helper;
 
 use Bitrix\Main\Localization\Loc;
-use DigitalWand\AdminHelper\Model\EntityManager;
+use DigitalWand\AdminHelper\EntityManager;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 

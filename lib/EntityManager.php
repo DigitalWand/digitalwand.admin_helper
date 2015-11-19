@@ -1,6 +1,6 @@
 <?php
 
-namespace DigitalWand\AdminHelper\Model;
+namespace DigitalWand\AdminHelper;
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ArgumentException;
