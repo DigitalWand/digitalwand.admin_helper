@@ -17,82 +17,92 @@ use Bitrix\Main\UserTable;
  */
 class UserWidget extends NumberWidget
 {
-    /**
-     * @inheritdoc
-     */
-    public function genEditHtml()
-    {
-        $style = $this->getSettings('STYLE');
-        $size = $this->getSettings('SIZE');
+	/**
+	 * @inheritdoc
+	 */
+	public function genEditHtml()
+	{
+		$style = $this->getSettings('STYLE');
+		$size = $this->getSettings('SIZE');
 
-        $userId = $this->getValue();
+		$userId = $this->getValue();
 
-        $htmlUser = '';
+		$htmlUser = '';
 
-        if (!empty($userId) && $userId != 0) {
-            $rsUser = UserTable::getById($userId);
-            $user = $rsUser->fetch();
+		if (!empty($userId) && $userId != 0)
+		{
+			$rsUser = UserTable::getById($userId);
+			$user = $rsUser->fetch();
 
-            $htmlUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>] ('
-                . $user['EMAIL'] . ') ' . $user['NAME'] . '&nbsp;' . $user['LAST_NAME'];
-        }
+			$htmlUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>] ('
+				. $user['EMAIL'] . ') ' . $user['NAME'] . '&nbsp;' . $user['LAST_NAME'];
+		}
 
-        return '<input type="text"
+		return '<input type="text"
                        name="' . $this->getEditInputName() . '"
                        value="' . htmlentities($this->getValue(), ENT_QUOTES) . '"
                        size="' . $size . '"
                        style="' . $style . '"/>' . $htmlUser;
-    }
+	}
 
-    /**
-     * @inheritdoc
-     */
-    public function getValueReadonly()
-    {
-        $userId = $this->getValue();
-        $htmlUser = '';
+	/**
+	 * @inheritdoc
+	 */
+	public function getValueReadonly()
+	{
+		$userId = $this->getValue();
+		$htmlUser = '';
 
-        if (!empty($userId) && $userId != 0) {
-            $rsUser = UserTable::getById($userId);
-            $user = $rsUser->fetch();
+		if (!empty($userId) && $userId != 0)
+		{
+			$rsUser = UserTable::getById($userId);
+			$user = $rsUser->fetch();
 
-            $htmlUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>]';
+			$htmlUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>]';
 
-            if ($user['EMAIL']) {
-                $htmlUser .= ' (' . $user['EMAIL'] . ')';
-            }
+			if ($user['EMAIL'])
+			{
+				$htmlUser .= ' (' . $user['EMAIL'] . ')';
+			}
 
-            $htmlUser .= ' ' . $user['NAME'] . '&nbsp;' . $user['LAST_NAME'];
-        }
+			$htmlUser .= ' ' . static::prepareToOutput($user['NAME'])
+				. '&nbsp;' . static::prepareToOutput($user['LAST_NAME']);
+		}
 
-        return $htmlUser;
-    }
+		return $htmlUser;
+	}
 
-    /**
-     * @inheritdoc
-     */
-    public function genListHTML(&$row, $data)
-    {
-        $userId = $this->getValue();
-        $strUser = '';
+	/**
+	 * @inheritdoc
+	 */
+	public function genListHTML(&$row, $data)
+	{
+		$userId = $this->getValue();
+		$strUser = '';
 
-        if (!empty($userId) && $userId != 0) {
-            $rsUser = UserTable::getById($userId);
-            $user = $rsUser->fetch();
+		if (!empty($userId) && $userId != 0)
+		{
+			$rsUser = UserTable::getById($userId);
+			$user = $rsUser->fetch();
 
-            $strUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>]';
+			$strUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>]';
 
-            if ($user['EMAIL']) {
-                $strUser .= ' (' . $user['EMAIL'] . ')';
-            }
+			if ($user['EMAIL'])
+			{
+				$strUser .= ' (' . $user['EMAIL'] . ')';
+			}
 
-            $strUser .= ' ' . $user['NAME'] . '&nbsp;' . $user['LAST_NAME'];
-        }
+			$strUser .= ' ' . static::prepareToOutput($user['NAME'])
+				. '&nbsp;' . static::prepareToOutput($user['LAST_NAME']);
+		}
 
-        if ($strUser) {
-            $row->AddViewField($this->getCode(), $strUser);
-        } else {
-            $row->AddViewField($this->getCode(), '');
-        }
-    }
+		if ($strUser)
+		{
+			$row->AddViewField($this->getCode(), $strUser);
+		}
+		else
+		{
+			$row->AddViewField($this->getCode(), '');
+		}
+	}
 }

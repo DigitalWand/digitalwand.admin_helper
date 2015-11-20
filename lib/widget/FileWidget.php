@@ -17,56 +17,57 @@ Loc::loadMessages(__FILE__);
  */
 class FileWidget extends HelperWidget
 {
-    static protected $defaults = array(
-        'EDIT_IN_LIST' => false,
-        'FILTER' => false
-    );
+	static protected $defaults = array(
+		'EDIT_IN_LIST' => false,
+		'FILTER' => false
+	);
 
-    /**
-     * Генерирует HTML для редактирования поля
-     * @return mixed
-     */
-    protected function genEditHTML()
-    {
-        return \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
-            array(
-                "IMAGE" => "N",
-                "PATH" => "Y",
-                "FILE_SIZE" => "Y",
-                "ALLOW_UPLOAD" => "I",
-            ), array(
-                'upload' => true,
-                'medialib' => false,
-                'file_dialog' => false,
-                'cloud' => false,
-                'del' => true,
-                'description' => false,
-            )
-        );
-    }
+	/**
+	 * Генерирует HTML для редактирования поля
+	 * @return mixed
+	 */
+	protected function genEditHTML()
+	{
+		return \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
+			array(
+				"IMAGE" => "N",
+				"PATH" => "Y",
+				"FILE_SIZE" => "Y",
+				"ALLOW_UPLOAD" => "I",
+			), array(
+				'upload' => true,
+				'medialib' => false,
+				'file_dialog' => false,
+				'cloud' => false,
+				'del' => true,
+				'description' => false,
+			)
+		);
+	}
 
-    protected function genMultipleEditHTML()
-    {
-        $style = $this->getSettings('STYLE');
-        $size = $this->getSettings('SIZE');
-        $descriptionField = $this->getSettings('DESCRIPTION_FIELD');
-        $uniqueId = $this->getEditInputHtmlId();
-        $rsEntityData = null;
+	protected function genMultipleEditHTML()
+	{
+		$style = $this->getSettings('STYLE');
+		$size = $this->getSettings('SIZE');
+		$descriptionField = $this->getSettings('DESCRIPTION_FIELD');
+		$uniqueId = $this->getEditInputHtmlId();
+		$rsEntityData = null;
 
-        if (!empty($this->data['ID'])) {
-            $entityName = $this->entityName;
-            $rsEntityData = $entityName::getList(array(
-                'select' => array('REFERENCE_' => $this->getCode() . '.*'),
-                'filter' => array('=ID' => $this->data['ID'])
-            ));
-        }
+		if (!empty($this->data['ID']))
+		{
+			$entityName = $this->entityName;
+			$rsEntityData = $entityName::getList(array(
+				'select' => array('REFERENCE_' => $this->getCode() . '.*'),
+				'filter' => array('=ID' => $this->data['ID'])
+			));
+		}
 
-        ob_start();
-        // TODO Рефакторинг
-        ?>
+		ob_start();
+		// TODO Рефакторинг
+		?>
 
-        <div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
-        </div>
+		<div id="<?= $uniqueId ?>-field-container" class="<?= $uniqueId ?>">
+		</div>
 
 		<script>
 			var fileInputTemplate = '<span class="adm-input-file"><span>Выбрать файл</span>' +
@@ -96,9 +97,9 @@ class FileWidget extends HelperWidget
 
 					if ($fileInfo)
 					{
-						$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
+						$fileInfoHtml = static::prepareToOutput($fileInfo['ORIGINAL_NAME']);
 						if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
-							$fileInfoHtml .= ' - '.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').'...';
+							$fileInfoHtml .= ' - ' . static::prepareToOutput(mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8')).'...';
 						}
 					}
 					else
@@ -146,25 +147,29 @@ class FileWidget extends HelperWidget
 			$res = \CFile::GetByID($data[$this->code]);
 			$fileInfo = $res->Fetch();
 
-            if (!$file) {
-                $html = "";
-            } else {
-                $html = '<a href="' . $file . '" >' . $fileInfo['FILE_NAME'] . ' (' . $fileInfo['FILE_DESCRIPTION'] . ')' . '</a>';
-            }
+			if (!$file)
+			{
+				$html = "";
+			}
+			else
+			{
+				$html = '<a href="' . $file . '" >' . static::prepareToTag($fileInfo['FILE_NAME']
+						. ' (' . $fileInfo['FILE_DESCRIPTION']) . ')' . '</a>';
+			}
 
-            $row->AddViewField($this->code, $html);
-        }
-    }
+			$row->AddViewField($this->code, $html);
+		}
+	}
 
-    /**
-     * Генерирует HTML для поля фильтрации
-     * @see AdminListHelper::createFilterForm();
-     * @return mixed
-     */
-    public function genFilterHTML()
-    {
-        // TODO: Implement genFilterHTML() method.
-    }
+	/**
+	 * Генерирует HTML для поля фильтрации
+	 * @see AdminListHelper::createFilterForm();
+	 * @return mixed
+	 */
+	public function genFilterHTML()
+	{
+		// TODO: Implement genFilterHTML() method.
+	}
 
 	public function processEditAction()
 	{
@@ -177,14 +182,16 @@ class FileWidget extends HelperWidget
 				{
 					$description = null;
 
-                    if (isset($this->data[$this->getCode()][$key]['DESCRIPTION'])) {
-                        $description = $this->data[$this->getCode()][$key]['DESCRIPTION'];
-                        unset($this->data[$this->getCode()][$key]['DESCRIPTION']);
-                    }
+					if (isset($this->data[$this->getCode()][$key]['DESCRIPTION']))
+					{
+						$description = $this->data[$this->getCode()][$key]['DESCRIPTION'];
+						unset($this->data[$this->getCode()][$key]['DESCRIPTION']);
+					}
 
-                    if (empty($this->data[$this->getCode()][$key])) {
-                        unset($this->data[$this->getCode()][$key]);
-                    }
+					if (empty($this->data[$this->getCode()][$key]))
+					{
+						unset($this->data[$this->getCode()][$key]);
+					}
 
 					if (empty($fileName)
 						|| empty($_FILES[$this->getCode()]['tmp_name'][$key])
@@ -230,44 +237,51 @@ class FileWidget extends HelperWidget
 		}
 	}
 
-    protected function saveFile($name, $path, $type = false, $description = null)
-    {
-        if (!$path) {
-            return false;
-        }
+	protected function saveFile($name, $path, $type = false, $description = null)
+	{
+		if (!$path)
+		{
+			return false;
+		}
 
-        $fileInfo = \CFile::MakeFileArray(
-            $path,
-            $type
-        );
+		$fileInfo = \CFile::MakeFileArray(
+			$path,
+			$type
+		);
 
-        if (!$fileInfo) return false;
+		if (!$fileInfo) return false;
 
-        if (!empty($description)) {
-            $fileInfo['description'] = $description;
-        }
+		if (!empty($description))
+		{
+			$fileInfo['description'] = $description;
+		}
 
-        if (stripos($fileInfo['type'], "image") === false) {
-            $this->addError('FILE_FIELD_TYPE_ERROR');
-            return false;
-        }
+		if (stripos($fileInfo['type'], "image") === false)
+		{
+			$this->addError('FILE_FIELD_TYPE_ERROR');
 
-        $fileInfo["name"] = $name;
-        /** @var AdminBaseHelper $model */
-        $helper = $this->helper;
-        $fileId = \CFile::SaveFile($fileInfo, $helper::$module);
+			return false;
+		}
 
-        if (!$this->getSettings('MULTIPLE')) {
-            $code = $this->code;
+		$fileInfo["name"] = $name;
+		/** @var AdminBaseHelper $model */
+		$helper = $this->helper;
+		$fileId = \CFile::SaveFile($fileInfo, $helper::$module);
 
-            if (isset($this->data[$code])) {
-                \CFile::Delete($this->data[$code]);
-            }
+		if (!$this->getSettings('MULTIPLE'))
+		{
+			$code = $this->code;
 
-            $this->data[$code] = $fileId;
-        }
-        return $fileId;
-    }
+			if (isset($this->data[$code]))
+			{
+				\CFile::Delete($this->data[$code]);
+			}
+
+			$this->data[$code] = $fileId;
+		}
+
+		return $fileId;
+	}
 
 	/**
 	 * {@inheritdoc}
@@ -275,6 +289,7 @@ class FileWidget extends HelperWidget
 	protected function getMultipleValueReadonly()
 	{
 		$result = '';
+		$descriptionField = $this->getSettings('DESCRIPTION_FIELD');
 		$values = parent::getMultipleValue();
 		if (!empty($values))
 		{
@@ -283,14 +298,29 @@ class FileWidget extends HelperWidget
 				$fileInfo = \CFile::GetFileArray($value);
 				if (!empty($fileInfo))
 				{
-					if ($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png' || $fileInfo['CONTENT_TYPE'] == 'image/gif')
+					if (
+						$fileInfo['CONTENT_TYPE'] == 'image/jpeg'
+						|| $fileInfo['CONTENT_TYPE'] == 'image/png'
+						|| $fileInfo['CONTENT_TYPE'] == 'image/gif'
+					)
 					{
-						$result .= '<div><img src="' . $fileInfo['SRC'] . '" alt="' . $fileInfo['ORIGINAL_NAME'] . '" width="100" height="100"></div>';
+						$result .= '<div><img src="' . $fileInfo['SRC'] . '"
+						alt="' . static::prepareToTag($fileInfo['ORIGINAL_NAME']) . '" width="100" height="100"></div>';
 					}
-					else
+
+					$fileDetails = $fileInfo['ORIGINAL_NAME'];
+
+					if ($descriptionField && !empty($fileInfo['DESCRIPTION']))
 					{
-						$result .= '<div>' . $fileInfo['ORIGINAL_NAME'] . '</div>';
+						$description = mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8');
+						if (mb_strlen($fileInfo['DESCRIPTION'], 'UTF-8') > 30)
+						{
+							$description .= '...';
+						}
+						$fileDetails .= ' - ' . $description;
 					}
+
+					$result .= '<p>' . static::prepareToOutput($fileDetails) . '</p>';
 				}
 				else
 				{
@@ -299,62 +329,6 @@ class FileWidget extends HelperWidget
 			}
 		}
 
-        return $result;
-    }
-
-	/*
-	 * TRICKY: При слиянии этот метод оказался дублем. Если точно знаешь, что он устарел, можно удалить
-	protected function getMultipleValueReadonly()
-	{
-		$descriptionField = $this->getSettings('DESCRIPTION_FIELD');
-		$rsEntityData = null;
-		if (!empty($this->data['ID']))
-		{
-			$entityName = $this->entityName;
-			$rsEntityData = $entityName::getList([
-				'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-				'filter' => ['=ID' => $this->data['ID']]
-			]);
-		}
-
-		$htmlStr = '';
-		if ($rsEntityData)
-		{
-			while($referenceData = $rsEntityData->fetch())
-			{
-				if (empty($referenceData['REFERENCE_VALUE']))
-				{
-					continue;
-				}
-
-				$fileInfo = \CFile::GetFileArray($referenceData['REFERENCE_VALUE']);
-
-				if ($fileInfo)
-				{
-					$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
-					if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
-						$fileInfoHtml .= ' - '.mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').'...';
-					}
-				}
-				else
-				{
-					$fileInfoHtml = 'Файл не найден';
-				}
-
-				if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' ||
-					$fileInfo['CONTENT_TYPE'] == 'image/png'||
-					$fileInfo['CONTENT_TYPE'] == 'image/gif')
-				{
-					$htmlStr = $htmlStr . '<span style="display: block"><img src="' .$fileInfo['SRC'] . '" alt="' .
-						$fileInfo['ORIGINAL_NAME'] . '" width="100" height="100"></span>';
-				}
-
-				$htmlStr = $htmlStr . '<span style="display: block; min-width: 139px;
-					margin-bottom: 10px;">' . $fileInfoHtml . '</span>';
-			}
-		}
-
-		return $htmlStr;
+		return $result;
 	}
-	*/
 }

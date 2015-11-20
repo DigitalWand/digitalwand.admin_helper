@@ -18,51 +18,55 @@ Loc::loadMessages(__FILE__);
  */
 class TextAreaWidget extends StringWidget
 {
-    /**
-     * количество отображаемых символов в режиме списка.
-     */
-    const LIST_TEXT_SIZE = 150;
+	/**
+	 * количество отображаемых символов в режиме списка.
+	 */
+	const LIST_TEXT_SIZE = 150;
 
-    static protected $defaults = array(
-        'COLS' => 65,
-        'ROWS' => 5,
-        'EDIT_IN_LIST' => false
-    );
+	static protected $defaults = array(
+		'COLS' => 65,
+		'ROWS' => 5,
+		'EDIT_IN_LIST' => false
+	);
 
-    /**
-     * @inheritdoc
-     */
-    protected function genEditHTML()
-    {
-        $cols = $this->getSettings('COLS');
-        $rows = $this->getSettings('ROWS');
+	/**
+	 * @inheritdoc
+	 */
+	protected function genEditHTML()
+	{
+		$cols = $this->getSettings('COLS');
+		$rows = $this->getSettings('ROWS');
 
-        return '<textarea cols="' . $cols . '" rows="' . $rows . '" name="' . $this->getEditInputName() . '">'
-            . $this->getValue() . '</textarea>';
-    }
+		return '<textarea cols="' . $cols . '" rows="' . $rows . '" name="' . $this->getEditInputName() . '">'
+		. static::prepareToTag($this->getValue()) . '</textarea>';
+	}
 
-    /**
-     * @inheritdoc
-     */
-    public function genListHTML(&$row, $data)
-    {
-        $text = $this->getValue();
+	/**
+	 * @inheritdoc
+	 */
+	public function genListHTML(&$row, $data)
+	{
+		$text = $this->getValue();
 
-        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
-            $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
-        } else {
-            if (strlen($text) > self::LIST_TEXT_SIZE && !$this->isExcelView()) {
-                $pos = false;
-                $pos = $pos === false ? stripos($text, " ", self::LIST_TEXT_SIZE) : $pos;
-                $pos = $pos === false ? stripos($text, "\n", self::LIST_TEXT_SIZE) : $pos;
-                $pos = $pos === false ? stripos($text, "</", self::LIST_TEXT_SIZE) : $pos;
-                $pos = $pos === false ? 300 : $pos;
-                $text = substr($text, 0, $pos) . " ...";
-            }
+		if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))
+		{
+			$row->AddInputField($this->getCode(), array('style' => 'width:90%'));
+		}
+		else
+		{
+			if (strlen($text) > self::LIST_TEXT_SIZE && !$this->isExcelView())
+			{
+				$pos = false;
+				$pos = $pos === false ? stripos($text, " ", self::LIST_TEXT_SIZE) : $pos;
+				$pos = $pos === false ? stripos($text, "\n", self::LIST_TEXT_SIZE) : $pos;
+				$pos = $pos === false ? stripos($text, "</", self::LIST_TEXT_SIZE) : $pos;
+				$pos = $pos === false ? 300 : $pos;
+				$text = substr($text, 0, $pos) . " ...";
+			}
 
-            $text = preg_replace('/<.+>/mU', '', $text);
+			$text = static::prepareToOutput($text);
 
-            $row->AddViewField($this->code, $text);
-        }
-    }
+			$row->AddViewField($this->code, $text);
+		}
+	}
 }

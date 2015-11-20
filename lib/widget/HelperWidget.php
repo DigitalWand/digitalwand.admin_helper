@@ -1,10 +1,12 @@
 <?php
 namespace DigitalWand\AdminHelper\Widget;
+
 use Bitrix\Main\Localization\Loc;
 use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
 use DigitalWand\AdminHelper\Helper\AdminEditHelper;
 use DigitalWand\AdminHelper\Helper\AdminListHelper;
 use Bitrix\Main\Entity\DataManager;
+
 Loc::loadMessages(__FILE__);
 // TODO В мультивиджетах сделать поддержку READONLY
 /**
@@ -83,16 +85,16 @@ Loc::loadMessages(__FILE__);
  * Для этого переопределите настройку MULTIPLE_FIELDS при объявлении поля в интерфейсе следующим способом:
  * ```
  * 'RELATED_LINKS' => array(
- * 		'WIDGET' => new StringWidget(),
- * 		'TITLE' => 'Ссылки',
- * 		'MULTIPLE' => true,
- * 		// Обратите внимание, именно тут переопределяются поля виджета
- * 		'MULTIPLE_FIELDS' => array(
- * 			'ID', // Должны быть прописаны все поля, даже те, которые не нужно переопределять
- * 			'ENTITY_ID' => 'NEWS_ID', // ENTITY_ID - поле, которое требует виджет, NEWS_ID - пример поля, которое будет использоваться вместо ENTITY_ID
- * 			'VALUE' => 'LINK', // VALUE - поле, которое требует виджет, LINK - пример поля, которое будет использоваться вместо VALUE
- * 		)
- * 	),
+ *        'WIDGET' => new StringWidget(),
+ *        'TITLE' => 'Ссылки',
+ *        'MULTIPLE' => true,
+ *        // Обратите внимание, именно тут переопределяются поля виджета
+ *        'MULTIPLE_FIELDS' => array(
+ *            'ID', // Должны быть прописаны все поля, даже те, которые не нужно переопределять
+ *            'ENTITY_ID' => 'NEWS_ID', // ENTITY_ID - поле, которое требует виджет, NEWS_ID - пример поля, которое будет использоваться вместо ENTITY_ID
+ *            'VALUE' => 'LINK', // VALUE - поле, которое требует виджет, LINK - пример поля, которое будет использоваться вместо VALUE
+ *        )
+ *    ),
  * ```
  * </li>
  *
@@ -105,7 +107,7 @@ Loc::loadMessages(__FILE__);
  *        'RELATED_LINKS',
  *        'namespace\NewsLinksTable',
  *        array('=this.ID' => 'ref.NEWS_ID'),
- * 		  // Условия FIELD и ENTITY не обязательны, подробности смотрите в комментариях к классу @see EntityManager
+ *          // Условия FIELD и ENTITY не обязательны, подробности смотрите в комментариях к классу @see EntityManager
  *        'ref.FIELD' => new DB\SqlExpression('?s', 'NEWS_LINKS'),
  *        'ref.ENTITY' => new DB\SqlExpression('?s', 'news'),
  * ),
@@ -116,10 +118,10 @@ Loc::loadMessages(__FILE__);
  * Что бы виджет работал во множественном режиме, нужно при описании интерфейса поля указать параметр MULTIPLE => true
  * ```
  * 'RELATED_LINKS' => array(
- * 		'WIDGET' => new StringWidget(),
- * 		'TITLE' => 'Ссылки',
- * 		// Включаем режим множественного ввода
- * 		'MULTIPLE' => true,
+ *        'WIDGET' => new StringWidget(),
+ *        'TITLE' => 'Ссылки',
+ *        // Включаем режим множественного ввода
+ *        'MULTIPLE' => true,
  * )
  * ```
  * </li>
@@ -288,7 +290,8 @@ abstract class HelperWidget
 	 */
 	protected function getValueReadonly()
 	{
-		return $this->getValue();
+		// Вырезаем теги
+		return static::prepareToOutput($this->getValue());
 	}
 
 	/**
@@ -335,7 +338,35 @@ abstract class HelperWidget
 	{
 		$values = $this->getMultipleValue();
 
+		foreach ($values as &$value)
+		{
+			$value = static::prepareToOutput($value);
+		}
+
 		return join('<br/>', $values);
+	}
+
+	/**
+	 * Обработка строки для безопасного отображения
+	 * Если нужно отобразить текст как аттрибут тега, используйте static::prepareToTag();
+	 * @param string $string
+	 * @return string
+	 */
+	public static function prepareToOutput($string)
+	{
+		// Вырезаем теги
+		return preg_replace('/<.+>/mU', '', $string);
+	}
+
+	/**
+	 * Подготовка строки для использования в аттрибутах тегов
+	 * Например <input name="test" value="<?= HelperWidget::prepareToTag($value) ?>"/>
+	 * @param $string
+	 * @return mixed
+	 */
+	public static function prepareToTag($string)
+	{
+		return htmlspecialcharsEx($string);
 	}
 
 	/**

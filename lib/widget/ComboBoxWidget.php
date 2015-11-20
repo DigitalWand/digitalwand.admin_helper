@@ -43,10 +43,10 @@ class ComboBoxWidget extends HelperWidget
 		$multiple = $this->getSettings('MULTIPLE');
 		$multipleSelected = array();
 
-        if ($multiple)
-        {
-            $multipleSelected = $this->getMultipleValue();
-        }
+		if ($multiple)
+		{
+			$multipleSelected = $this->getMultipleValue();
+		}
 
 		$variants = $this->getVariants();
 
@@ -98,7 +98,11 @@ class ComboBoxWidget extends HelperWidget
 					}
 				}
 
-				$result .= "<option value='" . $id . "' " . ($selected ? "selected" : "") . ">" . $name . "</option>";
+				$result .= "<option value='" .
+					static::prepareToTag($id)
+					. "' " . ($selected ? "selected" : "") . ">" .
+					static::prepareToTag($name)
+					. "</option>";
 			}
 
 			$result .= "</select>";
@@ -133,7 +137,7 @@ class ComboBoxWidget extends HelperWidget
 		$variants = $this->getVariants();
 		$value = $variants[$this->getValue()]['TITLE'];
 
-		return $value;
+		return static::prepareToOutput($value);
 	}
 
 	/**
@@ -265,7 +269,7 @@ class ComboBoxWidget extends HelperWidget
 
 				if (in_array($id, $values))
 				{
-					$result .= $name . '<br/>';
+					$result .= static::prepareToOutput($name) . '<br/>';
 				}
 			}
 		}
