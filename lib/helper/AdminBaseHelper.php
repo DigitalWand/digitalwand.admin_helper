@@ -68,7 +68,7 @@ Loc::loadMessages(__FILE__);
  * в одном неймспейсе
  *
  * @see AdminBaseHelper::setInterfaceSettings()
- * @see AdminInterface::getFields
+ * @see AdminInterface::fields()
  * @package AdminHelper
  * @FIXME: Упростить обработку сообщений об ошибках: слишком запутанно.
  *
@@ -790,7 +790,7 @@ abstract class AdminBaseHelper
 			$thirdClass = array_pop($parentClasses); // третий класс в цепочке родителей хелпера
 
 			// проверяем а не унаследован ли хелпер от хелперов-заглушек используемых для разделов
-			if (in_array($thirdClass, array(AdminSectionListHelper::getClass(), AdminSectionEditHelper::getClass()))) {
+			if (in_array($thirdClass, array(AdminSectionListHelper::className(), AdminSectionEditHelper::className()))) {
 				$parentClass = $thirdClass; // хелпер потомок AdminSectionEditHelper или AdminSectionListHelper
 			}
 
@@ -1046,7 +1046,7 @@ abstract class AdminBaseHelper
 		return $this->context;
 	}
 
-	public static function getClass()
+	public static function className()
 	{
 		return get_called_class();
 	}

@@ -228,7 +228,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0) {
-			$listHelperClass = $this->getHelperClass(AdminListHelper::getClass());
+			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 			$className = $listHelperClass::getModel();
 			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
 			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
@@ -236,7 +236,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			unset($params['action']);
 			unset($params['action_button']);
 			$this->customActions($action, $id);
-			$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::getClass());
+			$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
 			if ($sectionEditHelperClass) {
 				$element = $className::getById($id)->Fetch();
 				if ($element[$className::getSectionField()]) {
@@ -325,7 +325,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$this->arFilter = $arFilter;
 		}
 
-		if (static::getHelperClass(AdminSectionEditHelper::getClass())) {
+		if (static::getHelperClass(AdminSectionEditHelper::className())) {
 			$model = $this->getModel();
 			$this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
 		}
@@ -338,7 +338,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	public function getSectionsHeader()
 	{
 		$arSectionsHeaders = array();
-		$sectionHelper = static::getHelperClass(AdminSectionEditHelper::getClass());
+		$sectionHelper = static::getHelperClass(AdminSectionEditHelper::className());
 		$sectionsInterfaceSettings = static::getInterfaceSettings($sectionHelper::getViewName());
 		$this->sectionFields = $sectionsInterfaceSettings['FIELDS'];
 
@@ -393,7 +393,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getContextMenu()
 	{
 		$contextMenu = array();
-		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::getClass());
+		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::className());
 		if ($sectionEditHelper) {
 			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
 		}
@@ -428,14 +428,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 		 * Добавляем кнопку создать элемент и создать раздел
 		 */
 		if (!$this->isPopup() && $this->hasWriteRights()) {
-			$editHelperClass = static::getHelperClass(AdminEditHelper::getClass());
+			$editHelperClass = static::getHelperClass(AdminEditHelper::className());
 			if ($editHelperClass) {
 				$contextMenu[] = $this->getButton('LIST_CREATE_NEW', array(
 					'LINK' => $editHelperClass::getUrl($this->additionalUrlParams),
 					'ICON' => 'btn_new'
 				));
 			}
-			$sectionsHelperClass = static::getHelperClass(AdminSectionEditHelper::getClass());
+			$sectionsHelperClass = static::getHelperClass(AdminSectionEditHelper::className());
 			if ($sectionsHelperClass) {
 				$contextMenu[] = $this->getButton('LIST_CREATE_NEW_SECTION', array(
 					'LINK' => $sectionsHelperClass::getUrl($this->additionalUrlParams),
@@ -481,8 +481,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$className = $_REQUEST['model'];
 		}
 
-		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::getClass());
-		$listHelperClass = $this->getHelperClass(AdminListHelper::getClass());
+		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+		$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 
 		if ($sectionEditHelperClass && !isset($_REQUEST['model-section'])) {
 			$sectionClassName = $sectionEditHelperClass::getModel();
@@ -605,7 +605,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$headers = $this->arHeader;
 
-		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::getClass());
+		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::className());
 
 		if ($sectionEditHelper) { // если есть реализация класса AdminSectionEditHelper, значит используются разделы
 			$sectionHeaders = $this->getSectionsHeader();
@@ -691,7 +691,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$this->modifyRowData($data);
 				if ($data['IS_SECTION']) // для разделов своя обработка
 				{
-					list($link, $name) = $this->getRow($data, $this->getHelperClass(AdminSectionEditHelper::getClass()));
+					list($link, $name) = $this->getRow($data, $this->getHelperClass(AdminSectionEditHelper::className()));
 					$row = $this->list->AddRow('s' . $data[$this->pk()], $data, $link, $name);
 					foreach ($this->sectionFields as $code => $settings) {
 						if (in_array($code, $sectionsVisibleColumns)) {
@@ -824,7 +824,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw)
 	{
-		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::getClass());
+		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
 		$returnData = array();
 		$raw['SELECT'] = array_unique($raw['SELECT']);
 		$sectionModel = $sectionEditHelperClass::getModel();
@@ -866,7 +866,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		// для списка разделов элементы не нужны
-		if (static::getHelperClass(AdminSectionListHelper::getClass()) == static::getClass()) {
+		if (static::getHelperClass(AdminSectionListHelper::className()) == static::className()) {
 			return $returnData;
 		}
 
@@ -988,7 +988,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getRow($data, $class = false)
 	{
 		if (empty($class)) {
-			$class = static::getHelperClass(AdminEditHelper::getClass());
+			$class = static::getHelperClass(AdminEditHelper::className());
 		}
 		if ($this->isPopup()) {
 			return array();
@@ -1015,7 +1015,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function addRowSectionCell($row, $code, $data)
 	{
-		$sectionEditHelper = $this->getHelperClass(AdminSectionEditHelper::getClass());
+		$sectionEditHelper = $this->getHelperClass(AdminSectionEditHelper::className());
 		if (!isset($this->sectionFields[$code]['WIDGET'])) {
 			$error = str_replace('#CODE#', $code, 'Can\'t create widget for the code "#CODE#"');
 			throw new Exception($error, Exception::CODE_NO_WIDGET);
@@ -1067,8 +1067,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$query = array_merge($this->additionalUrlParams,
 				array($this->pk() => $data[$this->pk()]));
 			if ($this->hasWriteRights()) {
-				$sectionHelperClass = static::getHelperClass(AdminSectionEditHelper::getClass());
-				$editHelperClass = static::getHelperClass(AdminEditHelper::getClass());
+				$sectionHelperClass = static::getHelperClass(AdminSectionEditHelper::className());
+				$editHelperClass = static::getHelperClass(AdminEditHelper::className());
 
 				$actions['edit'] = array(
 					"ICON" => "edit",

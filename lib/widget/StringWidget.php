@@ -172,11 +172,11 @@ class StringWidget extends HelperWidget
 				{
 					$params = $this->helper->isPopup() ? $_GET : array();
 					$params['ID'] = $this->data[$pk];
-                    $listHelper = $this->helper->getHelperClass( $this->helper->isPopup() ? AdminSectionListHelper::getClass() :AdminListHelper::getClass());
+                    $listHelper = $this->helper->getHelperClass( $this->helper->isPopup() ? AdminSectionListHelper::className() :AdminListHelper::className());
                     $pageUrl = $listHelper::getUrl($params);
 					$value = '<span class="adm-submenu-item-link-icon adm-list-table-icon iblock-section-icon"></span>';
                 } else {
-                    $editHelper = $this->helper->getHelperClass(AdminEditHelper::getClass());
+                    $editHelper = $this->helper->getHelperClass(AdminEditHelper::className());
                     $pageUrl = $editHelper::getUrl(array(
 						'ID' => $this->data[$pk]
 					));

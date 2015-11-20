@@ -2,8 +2,6 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
-use Bitrix\Main\Entity\DataManager;
-
 /**
  * Базовый класс для описания админского интерфейса.
  * Включает в себя методы описывающие элементы управления, названия столбцов, типы полей и т.д.
@@ -35,8 +33,8 @@ abstract class AdminInterface
 	public static $registeredInterfaces = array();
 
 	/**
-	 * Список табов с описанием полей
-	 * Метод должен вернуть массив вида:
+     * Описание интерфейса админки: списка табов и полей. Метод должен вернуть массив вида:
+     * 
 	 * ```
 	 * array(
 	 *    'TAB_1' => array(
@@ -74,21 +72,21 @@ abstract class AdminInterface
 	 *  ...
 	 * )
 	 * ```
-	 * Где TAB_1..2 - символьные коды табов, FIELD_1..4 - название столбцов в таблице сущности.
+     * 
+	 * Где TAB_1..2 - символьные коды табов, FIELD_1..4 - название столбцов в таблице сущности. TITLE для поля задавать 
+     * не обязательно, в этому случае он будет запрашиваться из модели.
 	 *
-	 * TITLE для поля задавать не обязательно, в этому случае он будет получаться из DataManager::getMap()
-	 * через getField($code)->getTitle().
-	 *
-	 * Более подробная информация о формате описания полей в классе HelperWidget
+	 * Более подробную информацию о формате описания настроек виджетов см. в классе HelperWidget.
+     * 
 	 * @see DigitalWand\AdminHelper\Widget\HelperWidget
 	 *
 	 * @return array[]
 	 */
-	abstract protected function getFields();
+	abstract public function fields();
 
 	/**
-	 * Список классов хелперов с настройками
-	 * Метод должен вернуть массив вида:
+	 * Список классов хелперов с настройками. Метод должен вернуть массив вида:
+     * 
 	 * ```
 	 * array(
 	 *    '\Vendor\Module\Entity\AdminInterface\EntityListHelper' => array(
@@ -107,47 +105,56 @@ abstract class AdminInterface
 	 *    )
 	 * )
 	 * ```
-	 * или вида
+     * 
+	 * или
+     * 
 	 * ```
 	 * array(
 	 *    '\Vendor\Module\Entity\AdminInterface\EntityListHelper',
 	 *    '\Vendor\Module\Entity\AdminInterface\EntityEditHelper'
 	 * )
 	 * ```
-	 * Где
-	 * Vendor\Module\Entity\AdminInterface - namespace до реализованных классов AdminHelper,
-	 * BUTTONS - ключ для массива с описанием элементов управления (подробнее в методе getButton класса AdminBaseHelper),
-	 * LIST_CREATE_NEW, LIST_CREATE_NEW_SECTION, RETURN_TO_LIST, ADD_ELEMENT - символьные код элементов управления,
-	 * EntityListHelper и EntityEditHelper - реализованные классы хелперов
+     * 
+	 * Где:
+	 * <ul>
+     * <li> `Vendor\Module\Entity\AdminInterface` - namespace до реализованных классов AdminHelper.
+	 * <li> `BUTTONS` - ключ для массива с описанием элементов управления (подробнее в методе getButton() 
+     *          класса AdminBaseHelper).
+	 * <li> `LIST_CREATE_NEW`, `LIST_CREATE_NEW_SECTION`, `RETURN_TO_LIST`, `ADD_ELEMENT` - символьные код элементов 
+     *          управления.
+	 * <li> `EntityListHelper` и `EntityEditHelper` - реализованные классы хелперов.
 	 *
-	 * @see \DigitalWand\AdminHelper\Helper\AdminBaseHelper::getButton
-	 * оба формата могут сочетаться друг с другом
+     * Оба формата могут сочетаться друг с другом.
+     * 
+	 * @see \DigitalWand\AdminHelper\Helper\AdminBaseHelper::getButton()
 	 *
 	 * @return string[]
 	 */
-	abstract protected function getHelpers();
+	abstract public function helpers();
 
 	/**
-	 * Список зависимых админских интерфейсов которые будут зарегистрированы
-	 * при регистраци админского интерфейса, например админские интерфейсы разделов
+	 * Список зависимых админских интерфейсов, которые будут зарегистрированы при регистраци админского интерфейса, 
+     * например, админские интерфейсы разделов.
+     * 
 	 * @return string[]
 	 */
-	public function getDependencies()
+	public function dependencies()
 	{
 		return array();
 	}
 
 	/**
-	 * Регистрируем поля, табы и кнопки в AdminBaseHelper::setInterfaceSettings.
+	 * Регистрируем поля, табы и кнопки.
 	 */
 	public function registerData()
 	{
 		$fieldsAndTabs = array('FIELDS' => array(), 'TABS' => array());
-		$tabsWithFields = $this->getFields();
+		$tabsWithFields = $this->fields();
 
 		// приводим массив хелперов к формату класс => настройки
 		$helpers = array();
-		foreach ($this->getHelpers() as $key => $value) {
+        
+		foreach ($this->helpers() as $key => $value) {
 			if (is_array($value)) {
 				$helpers[$key] = $value;
 			}
@@ -156,54 +163,48 @@ abstract class AdminInterface
 			}
 		}
 
-		// список классов хелперов
 		$helperClasses = array_keys($helpers);
-
-		/*
-		 * Получаем модель для автоподстановки TITLE из getMap, так как модель одинаковая
-		 * для всех хелперов, то просто берем модель из первого хелпера
-		 */
+        /**
+         * @var \Bitrix\Main\Entity\DataManager
+         */
 		$model = $helperClasses[0]::getModel();
 
-		// разделяем описание полей на табы и поля
 		foreach ($tabsWithFields as $tabCode => $tab) {
 			$fieldsAndTabs['TABS'][$tabCode] = $tab['NAME'];
 
 			foreach ($tab['FIELDS'] as $fieldCode => $field) {
-				if (empty($field['TITLE'])) // если TITLE не задан то берем его из getMap модели
-				{
+				if (empty($field['TITLE'])) {
 					$field['TITLE'] = $model::getEntity()->getField($fieldCode)->getTitle();
 				}
+                
 				$field['TAB'] = $tabCode;
 				$fieldsAndTabs['FIELDS'][$fieldCode] = $field;
 			}
 		}
-
-		/*
-		 * Регистрируем настройки интерфейса в базовом классе, код модуля берем из хелпера,
-		 * так как все хелперы из одного модуля то просто получаем модуль первого хелпера
-		 */
+        
 		AdminBaseHelper::setInterfaceSettings($fieldsAndTabs, $helpers, $helperClasses[0]::getModule());
 
-		// привязываем хелперы к классу их админ интерфейса
 		foreach ($helperClasses as $helperClass) {
+            /**
+             * @var AdminBaseHelper $helperClass
+             */
 			$helperClass::setInterfaceClass(get_called_class());
 		}
 	}
 
 	/**
-	 * Регистрация интерфейса
+	 * Регистрация интерфейса и его зависимостей.
 	 */
 	public static function register()
 	{
-		// регистрируем интерфейс если он еще не зарегистрирован
 		if (!in_array(get_called_class(), static::$registeredInterfaces)) {
-			static::$registeredInterfaces[] = get_called_class(); // добавляем админ интерфейс в список зарегистрированных
+			static::$registeredInterfaces[] = get_called_class();
+            
 			$adminInterface = new static();
-			$adminInterface->registerData(); // собственно регистрация
+			$adminInterface->registerData();
 
-			foreach ($adminInterface->getDependencies() as $adminInterfaceClass) {
-				$adminInterfaceClass::register(); // регистрируем зависимые админ интерфейсы
+			foreach ($adminInterface->dependencies() as $adminInterfaceClass) {
+				$adminInterfaceClass::register();
 			}
 		}
 	}
