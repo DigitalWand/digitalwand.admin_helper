@@ -163,12 +163,12 @@ class CheckboxWidget extends HelperWidget
 
         switch ($modeType) {
             case static::TYPE_STRING: {
-                $value = $value == 'Y' ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
+                $value = $value == 'Y' ? Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES') : Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
                 break;
             }
             case static::TYPE_INT:
             case static::TYPE_BOOLEAN: {
-                $value = $value ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
+                $value = $value ? Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES') : Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
                 break;
             }
         }
