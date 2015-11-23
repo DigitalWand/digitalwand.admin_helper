@@ -89,7 +89,8 @@ class OrmElementWidget extends NumberWidget
                     . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
                     . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
                     . '&amp;n=' . $name . '&amp;k=' . $key . $additionalUrlParams . '\', ' . $windowWidth . ', '
-                    . $windowHeight . ');">' . '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $elementName
+                    . $windowHeight . ');">' . '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' .
+					static::prepareToOutput($elementName)
                     . '</span>';
     }
 
@@ -109,7 +110,9 @@ class OrmElementWidget extends NumberWidget
             {
                 $return .= InputType("radio", $this->getEditInputName(), $element['ID'], $this->getValue(), false, $element['TITLE']);
             }
-        }
+        } else {
+			$return = 'Элементы не найдены';
+		}
 
         return $return;
     }
