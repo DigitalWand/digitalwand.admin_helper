@@ -115,8 +115,16 @@ class CheckboxWidget extends HelperWidget
                                 name="' . $this->getEditableListInputName() . '" />';
             $row->AddEditField($this->getCode(), $editHtml);
         }
-
-        $value = intval($this->getValue() == $globalYes) ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
+        
+        if (intval($this->getValue() == $globalYes))
+        {
+            $value = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES');
+        }
+        else
+        {
+            $value = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
+        }
+        
         $row->AddViewField($this->getCode(), $value);
     }
 
@@ -134,17 +142,20 @@ class CheckboxWidget extends HelperWidget
         $filterHtml .= '<option value=""></option>';
 
         $modeType = $this->getCheckboxType();
+        
+        $langYes = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES');
+        $langNo = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
 
         switch ($modeType) {
             case self::TYPE_STRING: {
-                $filterHtml .= '<option value="' . self::TYPE_STRING_YES . '">' . Loc::getMessage('CHECKBOX_YES') . '</option>';
-                $filterHtml .= '<option value="' . self::TYPE_STRING_NO . '">' . Loc::getMessage('CHECKBOX_NO') . '</option>';
+                $filterHtml .= '<option value="' . self::TYPE_STRING_YES . '">' . $langYes . '</option>';
+                $filterHtml .= '<option value="' . self::TYPE_STRING_NO . '">' . $langNo . '</option>';
                 break;
             }
             case self::TYPE_INT:
             case self::TYPE_BOOLEAN: {
-                $filterHtml .= '<option value="' . self::TYPE_INT_YES . '">' . Loc::getMessage('CHECKBOX_YES') . '</option>';
-                $filterHtml .= '<option value="' . self::TYPE_INT_NO . '">' . Loc::getMessage('CHECKBOX_NO') . '</option>';
+                $filterHtml .= '<option value="' . self::TYPE_INT_YES . '">' . $langYes . '</option>';
+                $filterHtml .= '<option value="' . self::TYPE_INT_NO . '">' . $langNo . '</option>';
                 break;
             }
         }
