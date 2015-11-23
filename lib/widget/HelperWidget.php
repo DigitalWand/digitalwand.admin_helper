@@ -183,6 +183,12 @@ abstract class HelperWidget
 	protected $helper;
 
 	/**
+	 * @var bool Статус отображения JS хелпера
+	 * Используется для исключения дублирования JS кода
+	 */
+	protected $jsHelper = false;
+
+	/**
 	 * @var array $validationErrors
 	 * Ошибки валидации поля
 	 */
@@ -361,12 +367,25 @@ abstract class HelperWidget
 	/**
 	 * Подготовка строки для использования в аттрибутах тегов
 	 * Например <input name="test" value="<?= HelperWidget::prepareToTag($value) ?>"/>
-	 * @param $string
-	 * @return mixed
+	 * @param string $string
+	 * @return string
 	 */
 	public static function prepareToTag($string)
 	{
-		return htmlspecialcharsEx($string);
+		return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+	}
+
+	/**
+	 * Подготовка строки для использования в JS
+	 * @param string $string
+	 * @return string
+	 */
+	public static function prepareToJs($string)
+	{
+		$string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+		// Экранирование для корректного вывода \n
+		$string = addcslashes($string, '\\');
+		return $string;
 	}
 
 	/**
@@ -890,6 +909,13 @@ abstract class HelperWidget
 
 	protected function jsHelper()
 	{
+		// JS хелпер уже объявлен
+		if ($this->jsHelper == true)
+		{
+			return true;
+		}
+
+		$this->jsHelper = true;
 		\CJSCore::Init(array("jquery"));
 		// TODO Вынести в ресурс
 		?>
@@ -902,9 +928,9 @@ abstract class HelperWidget
 			 * - создайте экземпляр MultipleWidgetHelper
 			 * Например: var multiple = MultipleWidgetHelper(селектор контейнера, шаблон)
 			 * шаблон - это HTML код, который можно будет добавлять и удалять в интерфейсе
-			 * В шаблон можно добавлять переменные, их нужно обрамлять решетками. Например #entity_id#
-			 * Если в шаблоне несколько полей, переменная #field_id# обязательна
-			 * Например <input type="text" name="image[#field_id#][SRC]"><input type="text" name="image[#field_id#][DESCRIPTION]">
+			 * В шаблон можно добавлять переменные, их нужно обрамлять фигурными скобками. Например {{entity_id}}
+			 * Если в шаблоне несколько полей, переменная {{field_id}} обязательна
+			 * Например <input type="text" name="image[{{field_id}}][SRC]"><input type="text" name="image[{{field_id}}][DESCRIPTION]">
 			 * Если добавляемые поле не новое, то обязательно передавайте в addField переменную field_id с ID записи,
 			 * для новосозданных полей переменная заполнится автоматически
 			 */
@@ -942,7 +968,7 @@ abstract class HelperWidget
 				 * @param data object Данные для шаблона в виде ключ: значение
 				 */
 				addField: function (data) {
-					console.log('Добавление поля');
+					// console.log('Добавление поля');
 					this.addFieldHtml(this.fieldTemplate, data);
 				},
 				addFieldHtml: function (fieldTemplate, data) {
@@ -954,7 +980,7 @@ abstract class HelperWidget
 				 * @param field string|object Селектор или jQuery объект
 				 */
 				deleteField: function (field) {
-					console.log('Удаление поля');
+					// console.log('Удаление поля');
 					$(field).remove();
 					if (this.$fieldsContainer.find('> *').size() == 0) {
 						this.addField();
@@ -994,9 +1020,12 @@ abstract class HelperWidget
 					}
 
 					$.each(data, function (key, value) {
-						fieldTemplate = fieldTemplate.replace(new RegExp('\#' + key + '\#', ['g']), value);
+						// Подставление значений переменных
+						fieldTemplate = fieldTemplate.replace(new RegExp('\{\{' + key + '\}\}', ['g']), value);
 					});
-					fieldTemplate = fieldTemplate.replace(/\#[^\#]+\#/g, '');
+
+					// Удаление из шаблона необработанных переменных
+					fieldTemplate = fieldTemplate.replace(/\{\{.+?\}\}/g, '');
 
 					return fieldTemplate;
 				},

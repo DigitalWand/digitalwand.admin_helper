@@ -71,11 +71,11 @@ class FileWidget extends HelperWidget
 
 		<script>
 			var fileInputTemplate = '<span class="adm-input-file"><span>Выбрать файл</span>' +
-				'<input type="file" name="<?= $this->getCode() ?>[#field_id#]" style="<?= $style ?>" size="<?= $size ?>"' +
+				'<input type="file" name="<?= $this->getCode() ?>[{{field_id}}]" style="<?= $style ?>" size="<?= $size ?>"' +
 				' class="adm-designed-file" onchange="BXHotKeys.OnFileInputChange(this);"></span>';
 
 			<? if ($descriptionField) { ?>
-			fileInputTemplate = fileInputTemplate + '<input type="text" name="<?= $this->getCode() ?>[#field_id#][DESCRIPTION]"' +
+			fileInputTemplate = fileInputTemplate + '<input type="text" name="<?= $this->getCode() ?>[{{field_id}}][DESCRIPTION]"' +
 				' style="margin-left: 5px;" placeholder="Описание">';
 			<? } ?>
 
@@ -97,9 +97,9 @@ class FileWidget extends HelperWidget
 
 					if ($fileInfo)
 					{
-						$fileInfoHtml = static::prepareToOutput($fileInfo['ORIGINAL_NAME']);
+						$fileInfoHtml = $fileInfo['ORIGINAL_NAME'];
 						if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
-							$fileInfoHtml .= ' - ' . static::prepareToOutput(mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8')).'...';
+							$fileInfoHtml .= ' - ' . mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8').'...';
 						}
 					}
 					else
@@ -110,11 +110,11 @@ class FileWidget extends HelperWidget
 					?>
 
 			<?if($fileInfo['CONTENT_TYPE'] == 'image/jpeg' || $fileInfo['CONTENT_TYPE'] == 'image/png'|| $fileInfo['CONTENT_TYPE'] == 'image/gif'):?>
-			$htmlStr = '<span style="display: block"><img src="<?=$fileInfo['SRC']?>" alt="<?=$fileInfo['ORIGINAL_NAME']?>" width="100" height="100"></span>';
+			$htmlStr = '<span style="display: block"><img src="<?=$fileInfo['SRC']?>" alt="<?= static::prepareToJs($fileInfo['ORIGINAL_NAME']) ?>" width="100" height="100"></span>';
 			<?endif?>
 
-			$htmlStr = $htmlStr + '<span style="display: inline-block; min-width: 139px;"><?= $fileInfoHtml ?></span>' +
-				'<input type="hidden" name="<?= $this->getCode() ?>[#field_id#][ID]" value="#field_id#">';
+			$htmlStr = $htmlStr + '<span style="display: inline-block; min-width: 139px;"><?= static::prepareToJs($fileInfoHtml)?></span>' +
+				'<input type="hidden" name="<?= $this->getCode() ?>[{{field_id}}][ID]" value="{{field_id}}">';
 
 			multiple.addFieldHtml($htmlStr,
 				{field_id: <?= $referenceData['REFERENCE_' . $this->getMultipleField('ID')] ?>});

@@ -94,7 +94,7 @@ class StringWidget extends HelperWidget
 		<script>
 			var multiple = new MultipleWidgetHelper(
 				'#<?= $uniqueId ?>-field-container',
-				'#field_original_id#<input type="text" name="<?= $this->getCode()?>[#field_id#][<?=$this->getMultipleField('VALUE')?>]" style="<?=$style?>" size="<?=$size?>" value="#value#">'
+				'{{field_original_id}}<input type="text" name="<?= $this->getCode()?>[{{field_id}}][<?=$this->getMultipleField('VALUE')?>]" style="<?=$style?>" size="<?=$size?>" value="{{value}}">'
 			);
 			<?
 			if ($rsEntityData)
@@ -108,8 +108,8 @@ class StringWidget extends HelperWidget
 
 					?>
 			multiple.addField({
-				value: '<?= static::prepareToTag($referenceData['REFERENCE_' . $this->getMultipleField('VALUE')]) ?>',
-				field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[#field_id#][<?= $this->getMultipleField('ID') ?>]"' +
+				value: '<?= static::prepareToJs($referenceData['REFERENCE_' . $this->getMultipleField('VALUE')]) ?>',
+				field_original_id: '<input type="hidden" name="<?= $this->getCode()?>[{{field_id}}][<?= $this->getMultipleField('ID') ?>]"' +
 				' value="<?= $referenceData['REFERENCE_' . $this->getMultipleField('ID')] ?>">',
 				field_id: <?= $referenceData['REFERENCE_' . $this->getMultipleField('ID')] ?>
 			});

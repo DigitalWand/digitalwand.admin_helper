@@ -140,9 +140,9 @@ class OrmElementWidget extends NumberWidget
         <script>
             var multiple = new MultipleWidgetHelper(
                 '#<?= $uniqueId ?>-field-container',
-                '<input name="<?=$key?>[#field_id#][VALUE]"' +
-                'id="<?=$name?>[#field_id#]"' +
-                'value="#value#"' +
+                '<input name="<?=$key?>[{{field_id}}][VALUE]"' +
+                'id="<?=$name?>[{{field_id}}]"' +
+                'value="{{value}}"' +
                 'size="<?=$inputSize?>"' +
                 'type="text">' +
                 '<input type="button"' +
@@ -150,8 +150,8 @@ class OrmElementWidget extends NumberWidget
                 'onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=<?=LANGUAGE_ID?>' +
                 '&amp;module=<?=$module?>&amp;view=<?=$view?>&amp;popup=Y' +
                 '&amp;eltitle=<?=$this->getSettings('TITLE_FIELD_NAME')?>' +
-                '&amp;n=<?=$name?>&amp;k=#field_id#\', <?=$windowWidth?>, <?=$windowHeight?>);">' +
-                '&nbsp;<span id="sp_<?=md5($name)?>_#field_id#" >#element_title#</span>'
+                '&amp;n=<?=$name?>&amp;k={{field_id}}\', <?=$windowWidth?>, <?=$windowHeight?>);">' +
+                '&nbsp;<span id="sp_<?=md5($name)?>_{{field_id}}" >{{element_title}}</span>'
             );
             <?
             if (!empty($entityListData))
@@ -167,7 +167,7 @@ class OrmElementWidget extends NumberWidget
             multiple.addField({
                 value: '<?= $elementId ?>',
                 field_id: <?= $elementId ?>,
-                element_title: '<?= $elementName?>'
+                element_title: '<?= static::prepareToJs($elementName) ?>'
             });
                 <?
                 }
