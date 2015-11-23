@@ -115,10 +115,10 @@ class CheckboxWidget extends HelperWidget
 			$js = 'var input = document.getElementsByName(\'' . $this->getEditableListInputName() . '\')[0];
                    input.value = this.checked ? \'' . $globalYes . '\' : \'' . $globalNo . '\';';
 			$editHtml = '<input type="checkbox"
-                                value="' . static::prepareToTag($this->getValue()) . '" ' . $checked . '
+                                value="' . static::prepareToTagAttr($this->getValue()) . '" ' . $checked . '
                                 onchange="' . $js . '"/>
                          <input type="hidden"
-                                value="' . static::prepareToTag($this->getValue()) . '"
+                                value="' . static::prepareToTagAttr($this->getValue()) . '"
                                 name="' . $this->getEditableListInputName() . '" />';
 			$row->AddEditField($this->getCode(), $editHtml);
 		}

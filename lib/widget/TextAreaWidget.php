@@ -38,7 +38,7 @@ class TextAreaWidget extends StringWidget
 		$rows = $this->getSettings('ROWS');
 
 		return '<textarea cols="' . $cols . '" rows="' . $rows . '" name="' . $this->getEditInputName() . '">'
-		. static::prepareToTag($this->getValue()) . '</textarea>';
+		. static::prepareToOutput($this->getValue(), false) . '</textarea>';
 	}
 
 	/**

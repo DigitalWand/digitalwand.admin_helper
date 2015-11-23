@@ -191,7 +191,7 @@ class OrmElementWidget extends NumberWidget
                 $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
                 Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
 
-            return '[' . $entityData['ID'] . ']' . $entityName;
+            return '[' . $entityData['ID'] . ']' . static::prepareToOutput($entityName);
         }
 
         return '';
@@ -212,7 +212,7 @@ class OrmElementWidget extends NumberWidget
                     $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
                     Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
 
-                $multipleData[] = '[' . $entityData['ID'] . ']' . $entityName;
+                $multipleData[] = '[' . $entityData['ID'] . ']' . static::prepareToOutput($entityName);
             }
 
             return implode('<br />', $multipleData);

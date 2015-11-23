@@ -63,7 +63,7 @@ class StringWidget extends HelperWidget
 
 		return '<input type="text"
                        name="' . $this->getEditInputName() . '"
-                       value="' . static::prepareToTag($this->getValue()) . '"
+                       value="' . static::prepareToTagAttr($this->getValue()) . '"
                        size="' . $size . '"
                        style="' . $style . '"/>' . $link;
 	}
@@ -189,11 +189,11 @@ class StringWidget extends HelperWidget
 					));
 				}
 
-				$value .= '<a href="' . $pageUrl . '">' . $this->getValue() . '</a>';
+				$value .= '<a href="' . $pageUrl . '">' . static::prepareToOutput($this->getValue()) . '</a>';
 			}
 			else
 			{
-				$value = $this->getValue();
+				$value = static::prepareToOutput($this->getValue());
 			}
 
 			if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))

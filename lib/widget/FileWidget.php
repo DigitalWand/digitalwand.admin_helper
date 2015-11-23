@@ -153,7 +153,7 @@ class FileWidget extends HelperWidget
 			}
 			else
 			{
-				$html = '<a href="' . $file . '" >' . static::prepareToTag($fileInfo['FILE_NAME']
+				$html = '<a href="' . $file . '" >' . static::prepareToTagAttr($fileInfo['FILE_NAME']
 						. ' (' . $fileInfo['FILE_DESCRIPTION']) . ')' . '</a>';
 			}
 
@@ -305,7 +305,7 @@ class FileWidget extends HelperWidget
 					)
 					{
 						$result .= '<div><img src="' . $fileInfo['SRC'] . '"
-						alt="' . static::prepareToTag($fileInfo['ORIGINAL_NAME']) . '" width="100" height="100"></div>';
+						alt="' . static::prepareToTagAttr($fileInfo['ORIGINAL_NAME']) . '" width="100" height="100"></div>';
 					}
 
 					$fileDetails = $fileInfo['ORIGINAL_NAME'];

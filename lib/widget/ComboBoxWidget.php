@@ -99,9 +99,9 @@ class ComboBoxWidget extends HelperWidget
 				}
 
 				$result .= "<option value='" .
-					static::prepareToTag($id)
+					static::prepareToTagAttr($id)
 					. "' " . ($selected ? "selected" : "") . ">" .
-					static::prepareToTag($name)
+					static::prepareToTagAttr($name)
 					. "</option>";
 			}
 

@@ -51,7 +51,7 @@ class UrlWidget extends StringWidget
 
 		if ($value !== null)
 		{
-			$urlText = static::prepareToTag($value);
+			$urlText = static::prepareToOutput($value);
 			$urlText = preg_replace('/^javascript:/i', '', $urlText);
 
 			if (strlen($urlText) > $this->getSettings('MAX_URL_LEN'))

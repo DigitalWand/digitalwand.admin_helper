@@ -24,77 +24,86 @@ Loader::includeModule('iblock');
  */
 class IblockElementWidget extends NumberWidget
 {
-    static protected $defaults = array(
-        'FILTER' => '=',
-        'INPUT_SIZE' => 5,
-        'WINDOW_WIDTH' => 600,
-        'WINDOW_HEIGHT' => 500,
-    );
+	static protected $defaults = array(
+		'FILTER' => '=',
+		'INPUT_SIZE' => 5,
+		'WINDOW_WIDTH' => 600,
+		'WINDOW_HEIGHT' => 500,
+	);
 
-    public function genEditHtml()
-    {
-        $iblockId = (int) $this->getSettings('IBLOCK_ID');
-        $inputSize = (int) $this->getSettings('INPUT_SIZE');
-        $windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
-        $windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
+	public function genEditHtml()
+	{
+		$iblockId = (int)$this->getSettings('IBLOCK_ID');
+		$inputSize = (int)$this->getSettings('INPUT_SIZE');
+		$windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
+		$windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
 
-        $name = 'FIELDS';
-        $key = $this->getCode();
+		$name = 'FIELDS';
+		$key = $this->getCode();
 
-        $elementId = $this->getValue();
+		$elementId = $this->getValue();
 
-        if (!empty($elementId)) {
-            $rsElement = ElementTable::getById($elementId);
+		if (!empty($elementId))
+		{
+			$rsElement = ElementTable::getById($elementId);
 
-            if (!$element = $rsElement->fetchAll()) {
-                $element['NAME'] = Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
-            }
-        } else {
-            $elementId = '';
-        }
+			if (!$element = $rsElement->fetchAll())
+			{
+				$element['NAME'] = Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
+			}
+		}
+		else
+		{
+			$elementId = '';
+		}
 
-        return '<input name="' . $this->getEditInputName() . '"
+		return '<input name="' . $this->getEditInputName() . '"
                      id="' . $name . '[' . $key . ']"
                      value="' . $elementId . '"
                      size="' . $inputSize . '"
                      type="text">' .
-                '<input type="button"
+		'<input type="button"
                     value="..."
                     onClick="jsUtils.OpenWindow(\'/bitrix/admin/iblock_element_search.php?lang=' . LANGUAGE_ID
-                    . '&amp;IBLOCK_ID=' . $iblockId . '&amp;n=' . $name . '&amp;k=' . $key . '\', ' . $windowWidth . ', '
-                    . $windowHeight . ');">' . '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' . $element['NAME']
-                    . '</span>';
-    }
+		. '&amp;IBLOCK_ID=' . $iblockId . '&amp;n=' . $name . '&amp;k=' . $key . '\', ' . $windowWidth . ', '
+		. $windowHeight . ');">' . '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >'
+		. static::prepareToOutput($element['NAME'])
+		. '</span>';
+	}
 
-    public function getValueReadonly()
-    {
-        $elementId = $this->getValue();
+	public function getValueReadonly()
+	{
+		$elementId = $this->getValue();
 
-        if (!empty($elementId)) {
-            $rsElement = ElementTable::getById($elementId);
-            $element = $rsElement->fetch();
+		if (!empty($elementId))
+		{
+			$rsElement = ElementTable::getById($elementId);
+			$element = $rsElement->fetch();
 
-            return '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
-            . '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
-            . $elementId . '&lang=ru">[' . $elementId . '] ' . $element['NAME'] . '</a>';
-        }
-    }
+			return '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
+			. '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
+			. $elementId . '&lang=ru">[' . $elementId . '] ' . static::prepareToOutput($element['NAME']) . '</a>';
+		}
+	}
 
-    public function genListHTML(&$row, $data)
-    {
-        $elementId = $this->getValue();
+	public function genListHTML(&$row, $data)
+	{
+		$elementId = $this->getValue();
 
-        if (!empty($elementId)) {
-            $rsElement = ElementTable::getById($elementId);
-            $element = $rsElement->fetch();
+		if (!empty($elementId))
+		{
+			$rsElement = ElementTable::getById($elementId);
+			$element = $rsElement->fetch();
 
-            $html = '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
-                . '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
-                . $elementId . '&lang=ru">[' . $elementId . '] ' . $element['NAME'] . '</a>';
-        } else {
-            $html = '';
-        }
+			$html = '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
+				. '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
+				. $elementId . '&lang=ru">[' . $elementId . '] ' . static::prepareToOutput($element['NAME']) . '</a>';
+		}
+		else
+		{
+			$html = '';
+		}
 
-        $row->AddViewField($this->getCode(), $html);
-    }
+		$row->AddViewField($this->getCode(), $html);
+	}
 }

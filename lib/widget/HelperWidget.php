@@ -353,25 +353,37 @@ abstract class HelperWidget
 	}
 
 	/**
-	 * Обработка строки для безопасного отображения
+	 * Обработка строки для безопасного отображения.
 	 * Если нужно отобразить текст как аттрибут тега, используйте static::prepareToTag();
 	 * @param string $string
+	 * @param bool $hideTags Скрыть теги
+	 * true - вырезать теги оставив содержимое. Результат обработки: <b>text</b> = text
+	 * false - отобразаить теги в виде текста. Результат обработки: <b>text</b> = &lt;b&gt;text&lt;/b&gt;
 	 * @return string
 	 */
-	public static function prepareToOutput($string)
+	public static function prepareToOutput($string, $hideTags = true)
 	{
-		// Вырезаем теги
-		return preg_replace('/<.+>/mU', '', $string);
+		if ($hideTags)
+		{
+			// Вырезает теги
+			return preg_replace('/<.+>/mU', '', $string);
+		}
+		else
+		{
+			// Преобразует спец. символы для вывода
+			return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+		}
 	}
 
 	/**
 	 * Подготовка строки для использования в аттрибутах тегов
-	 * Например <input name="test" value="<?= HelperWidget::prepareToTag($value) ?>"/>
+	 * Например <input name="test" value="<?= HelperWidget::prepareToTagAttr($value) ?>"/>
 	 * @param string $string
 	 * @return string
 	 */
-	public static function prepareToTag($string)
+	public static function prepareToTagAttr($string)
 	{
+		// Не используйте addcslashes в этом методе, иначе в тегах будут дубли обратных слешей
 		return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
 	}
 
@@ -385,6 +397,7 @@ abstract class HelperWidget
 		$string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
 		// Экранирование для корректного вывода \n
 		$string = addcslashes($string, '\\');
+
 		return $string;
 	}
 

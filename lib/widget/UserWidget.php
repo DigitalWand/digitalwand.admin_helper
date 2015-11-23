@@ -40,7 +40,7 @@ class UserWidget extends NumberWidget
 
 		return '<input type="text"
                        name="' . $this->getEditInputName() . '"
-                       value="' . htmlentities($this->getValue(), ENT_QUOTES) . '"
+                       value="' . static::prepareToTagAttr($this->getValue()) . '"
                        size="' . $size . '"
                        style="' . $style . '"/>' . $htmlUser;
 	}
