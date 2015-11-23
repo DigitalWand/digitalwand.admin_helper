@@ -300,7 +300,7 @@ class EntityManager
 
         // Извлечение данных управляемых связей
         foreach ($references as $fieldName => $reference) {
-            if (isset($this->data[$fieldName])) {
+            if (array_key_exists($fieldName, $this->data)) {
                 // Извлечение данных для связи
                 $this->referencesData[$fieldName] = $this->data[$fieldName];
                 unset($this->data[$fieldName]);
@@ -309,7 +309,7 @@ class EntityManager
     }
 
     /**
-     * Обработка данных для связей
+     * Обработка данных для связей.
      *
      * @throws ArgumentException
      */
@@ -323,6 +323,10 @@ class EntityManager
         $fields = $entity->getFields();
 
         foreach ($this->referencesData as $fieldName => $referenceDataSet) {
+            if (!is_array($referenceDataSet)) {
+                continue;
+            }
+            
             /**
              * @var Entity\ReferenceField $reference
              */
