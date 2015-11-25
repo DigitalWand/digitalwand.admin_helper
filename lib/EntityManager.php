@@ -190,7 +190,12 @@ class EntityManager
      */
     public function save()
     {
-        $this->collectReferencesData();
+        if(!$this->collectReferencesData())
+		{
+			$result = new Entity\Result();
+			$result->addError(new Entity\EntityError('Связь должна быть множественным полем'));
+			return $result;
+		}
 
         /**
          * @var DataManager $modelClass
@@ -314,11 +319,16 @@ class EntityManager
         {
             if (array_key_exists($fieldName, $this->data))
             {
+				if(!is_array($this->data[$fieldName]))
+				{
+					return false;
+				}
                 // Извлечение данных для связи
                 $this->referencesData[$fieldName] = $this->data[$fieldName];
                 unset($this->data[$fieldName]);
             }
         }
+		return true;
     }
 
     /**
