@@ -40,12 +40,9 @@ class OrmElementWidget extends NumberWidget
      */
     public function genEditHtml()
     {
-        if($this->getSettings('TEMPLATE') == 'radio')
-        {
+        if ($this->getSettings('TEMPLATE') == 'radio') {
             $html = $this->genEditHtmlInputs();
-        }
-        else
-        {
+        } else {
             $html = $this->genEditHtmlSelect();
         }
 
@@ -58,9 +55,9 @@ class OrmElementWidget extends NumberWidget
      */
     public function genEditHtmlSelect()
     {
-        $inputSize = (int) $this->getSettings('INPUT_SIZE');
-        $windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
-        $windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
+        $inputSize = (int)$this->getSettings('INPUT_SIZE');
+        $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
+        $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
         $module = $this->getSettings('MODULE_NAME');
         $view = $this->getSettings('LIST_VIEW_NAME');
         $additionalUrlParams = htmlentities($this->getSettings('ADDITIONAL_URL_PARAMS'));
@@ -84,14 +81,14 @@ class OrmElementWidget extends NumberWidget
                      value="' . $elementId . '"
                      size="' . $inputSize . '"
                      type="text">' .
-                '<input type="button"
+        '<input type="button"
                     value="..." onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=' . LANGUAGE_ID
-                    . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
-                    . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
-                    . '&amp;n=' . $name . '&amp;k=' . $key . $additionalUrlParams . '\', ' . $windowWidth . ', '
-                    . $windowHeight . ');">' . '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' .
-					static::prepareToOutput($elementName)
-                    . '</span>';
+        . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
+        . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
+        . '&amp;n=' . $name . '&amp;k=' . $key . $additionalUrlParams . '\', ' . $windowWidth . ', '
+        . $windowHeight . ');">' . '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' .
+        static::prepareToOutput($elementName)
+        . '</span>';
     }
 
     /**
@@ -104,15 +101,13 @@ class OrmElementWidget extends NumberWidget
 
         $elementList = $this->getOrmElementList();
 
-        if(!is_null($elementList))
-        {
-            foreach($elementList as $key => $element)
-            {
+        if (!is_null($elementList)) {
+            foreach ($elementList as $key => $element) {
                 $return .= InputType("radio", $this->getEditInputName(), $element['ID'], $this->getValue(), false, $element['TITLE']);
             }
         } else {
-			$return = 'Элементы не найдены';
-		}
+            $return = 'Элементы не найдены';
+        }
 
         return $return;
     }
@@ -122,9 +117,9 @@ class OrmElementWidget extends NumberWidget
      */
     public function genMultipleEditHTML()
     {
-        $inputSize = (int) $this->getSettings('INPUT_SIZE');
-        $windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
-        $windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
+        $inputSize = (int)$this->getSettings('INPUT_SIZE');
+        $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
+        $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
         $module = $this->getSettings('MODULE_NAME');
         $view = $this->getSettings('LIST_VIEW_NAME');
 
@@ -172,10 +167,10 @@ class OrmElementWidget extends NumberWidget
                 field_id: <?= $elementId ?>,
                 element_title: '<?= static::prepareToJs($elementName) ?>'
             });
-                <?
-                }
+            <?
             }
-            ?>
+        }
+        ?>
             multiple.addField();
         </script>
         <?
@@ -206,11 +201,9 @@ class OrmElementWidget extends NumberWidget
     public function getMultipleValueReadonly()
     {
         $entityListData = $this->getOrmElementData();
-        if (!empty($entityListData))
-        {
+        if (!empty($entityListData)) {
             $multipleData = array();
-            foreach ($entityListData as $entityData)
-            {
+            foreach ($entityListData as $entityData) {
                 $entityName = $entityData[$this->getSettings('TITLE_FIELD_NAME')] ?
                     $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
                     Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
@@ -349,18 +342,17 @@ class OrmElementWidget extends NumberWidget
 
         $model = $this->getSettings('MODEL');
 
-        $rsEntity = $model::getList([
-            'filter' => [
+        $rsEntity = $model::getList(array(
+            'filter' => array(
                 'ACTIVE' => 1
-            ],
-            'select' => [
+            ),
+            'select' => array(
                 'ID',
                 'TITLE'
-            ]
-        ]);
+            )
+        ));
 
-        while ($entity = $rsEntity->fetch())
-        {
+        while ($entity = $rsEntity->fetch()) {
             $valueList[] = $entity;
         }
 

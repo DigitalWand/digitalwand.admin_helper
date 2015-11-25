@@ -301,7 +301,7 @@ abstract class HelperWidget
                 'select' => array('REFERENCE_' => $this->getCode() . '.*'),
                 'filter' => array('=ID' => $this->data['ID'])
             ));
-            
+
             if ($rsEntityData) {
                 while ($referenceData = $rsEntityData->fetch()) {
                     if (empty($referenceData['REFERENCE_' . $this->getMultipleField('ID')])) {

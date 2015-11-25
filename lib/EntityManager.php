@@ -177,8 +177,7 @@ class EntityManager
         $this->modelPk = $this->model->getPrimary();
         $this->helper = $helper;
 
-        if (!empty($itemId))
-        {
+        if (!empty($itemId)) {
             $this->setItemId($itemId);
         }
     }
@@ -197,22 +196,17 @@ class EntityManager
          */
         $modelClass = $this->modelClass;
 
-        if (empty($this->itemId))
-        {
+        if (empty($this->itemId)) {
             $result = $modelClass::add($this->data);
 
-            if ($result->isSuccess())
-            {
+            if ($result->isSuccess()) {
                 $this->setItemId($result->getId());
             }
-        }
-        else
-        {
+        } else {
             $result = $modelClass::update($this->itemId, $this->data);
         }
 
-        if ($result->isSuccess())
-        {
+        if ($result->isSuccess()) {
             $this->processReferencesData();
         }
 
@@ -253,12 +247,9 @@ class EntityManager
      */
     protected function addNote($note, $key = null)
     {
-        if ($key)
-        {
+        if ($key) {
             $this->notes[$key] = $note;
-        }
-        else
-        {
+        } else {
             $this->notes[] = $note;
         }
 
@@ -291,10 +282,8 @@ class EntityManager
         $fields = $entity->getFields();
         $references = array();
 
-        foreach ($fields as $fieldName => $field)
-        {
-            if ($field instanceof Entity\ReferenceField)
-            {
+        foreach ($fields as $fieldName => $field) {
+            if ($field instanceof Entity\ReferenceField) {
                 $references[$fieldName] = $field;
             }
         }
@@ -310,10 +299,8 @@ class EntityManager
         $references = $this->getReferences();
 
         // Извлечение данных управляемых связей
-        foreach ($references as $fieldName => $reference)
-        {
-            if (array_key_exists($fieldName, $this->data))
-            {
+        foreach ($references as $fieldName => $reference) {
+            if (array_key_exists($fieldName, $this->data)) {
                 // Извлечение данных для связи
                 $this->referencesData[$fieldName] = $this->data[$fieldName];
                 unset($this->data[$fieldName]);
@@ -335,10 +322,8 @@ class EntityManager
         $entity = $modelClass::getEntity();
         $fields = $entity->getFields();
 
-        foreach ($this->referencesData as $fieldName => $referenceDataSet)
-        {
-            if (!is_array($referenceDataSet))
-            {
+        foreach ($this->referencesData as $fieldName => $referenceDataSet) {
+            if (!is_array($referenceDataSet)) {
                 continue;
             }
 
@@ -352,38 +337,29 @@ class EntityManager
 
             // Создание и обновление привязанных данных
             $processedDataIds = array();
-            foreach ($referenceDataSet as $referenceData)
-            {
-                if (empty($referenceData[$fieldWidget->getMultipleField('ID')]))
-                {
+            foreach ($referenceDataSet as $referenceData) {
+                if (empty($referenceData[$fieldWidget->getMultipleField('ID')])) {
                     // Создание связанных данных
-                    if (!empty($referenceData[$fieldWidget->getMultipleField('VALUE')]))
-                    {
+                    if (!empty($referenceData[$fieldWidget->getMultipleField('VALUE')])) {
                         $result = $this->createReferenceData($reference, $referenceData);
 
-                        if ($result->isSuccess())
-                        {
+                        if ($result->isSuccess()) {
                             $processedDataIds[] = $result->getId();
                         }
                     }
-                }
-                else
-                {
+                } else {
                     // Обновление связанных данных
                     $updateResult = $this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet);
 
-                    if ($updateResult !== false)
-                    {
+                    if ($updateResult !== false) {
                         $processedDataIds[] = $referenceData[$fieldWidget->getMultipleField('ID')];
                     }
                 }
             }
 
             // Удаление записей, которые не были созданы или обновлены
-            foreach ($referenceStaleDataSet as $referenceData)
-            {
-                if (!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds))
-                {
+            foreach ($referenceStaleDataSet as $referenceData) {
+                if (!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds)) {
                     $this->deleteReferenceData($reference,
                         $referenceData[$fieldWidget->getMultipleField('ID')])->isSuccess();
                 }
@@ -405,19 +381,16 @@ class EntityManager
          * @var string $fieldName
          * @var Entity\ReferenceField $reference
          */
-        foreach ($references as $fieldName => $reference)
-        {
+        foreach ($references as $fieldName => $reference) {
             // Удаляются только данные связей, которые объявлены в интерфейсе
-            if (!isset($fields[$fieldName]))
-            {
+            if (!isset($fields[$fieldName])) {
                 continue;
             }
 
             $fieldWidget = $this->getFieldWidget($reference->getName());
             $referenceStaleDataSet = $this->getReferenceDataSet($reference);
 
-            foreach ($referenceStaleDataSet as $referenceData)
-            {
+            foreach ($referenceStaleDataSet as $referenceData) {
                 $this->deleteReferenceData($reference, $referenceData[$fieldWidget->getMultipleField('ID')]);
             }
         }
@@ -438,8 +411,7 @@ class EntityManager
         $fieldParams = $this->getFieldParams($referenceName);
         $fieldWidget = $this->getFieldWidget($referenceName);
 
-        if (!empty($referenceData[$fieldWidget->getMultipleField('ID')]))
-        {
+        if (!empty($referenceData[$fieldWidget->getMultipleField('ID')])) {
             throw new ArgumentException('Аргумент data не может содержать идентификатор элемента', 'data');
         }
 
@@ -447,8 +419,7 @@ class EntityManager
 
         $createResult = $refClass::add($referenceData);
 
-        if (!$createResult->isSuccess())
-        {
+        if (!$createResult->isSuccess()) {
             $this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR',
                 array('#FIELD#' => $fieldParams['TITLE'])), 'CREATE_' . $referenceName);
         }
@@ -470,34 +441,30 @@ class EntityManager
         Entity\ReferenceField $reference,
         array $referenceData,
         array $referenceStaleDataSet
-    ) {
+    )
+    {
         $referenceName = $reference->getName();
         $fieldParams = $this->getFieldParams($referenceName);
         $fieldWidget = $this->getFieldWidget($referenceName);
 
-        if (empty($referenceData[$fieldWidget->getMultipleField('ID')]))
-        {
+        if (empty($referenceData[$fieldWidget->getMultipleField('ID')])) {
             throw new ArgumentException('Аргумент data должен содержать идентификатор элемента', 'data');
         }
 
         // Сравнение старых данных и новых, обновляется только при различиях
         if ($this->isDifferentData($referenceStaleDataSet[$referenceData[$fieldWidget->getMultipleField('ID')]],
             $referenceData)
-        )
-        {
+        ) {
             $refClass = $reference->getRefEntity()->getDataClass();
             $updateResult = $refClass::update($referenceData[$fieldWidget->getMultipleField('ID')], $referenceData);
 
-            if (!$updateResult->isSuccess())
-            {
+            if (!$updateResult->isSuccess()) {
                 $this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR',
                     array('#FIELD#' => $fieldParams['TITLE'])), 'UPDATE_' . $referenceName);
             }
 
             return $updateResult;
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
@@ -517,8 +484,7 @@ class EntityManager
         $refClass = $reference->getRefEntity()->getDataClass();
         $deleteResult = $refClass::delete($referenceId);
 
-        if (!$deleteResult->isSuccess())
-        {
+        if (!$deleteResult->isSuccess()) {
             $this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_DELETE_ERROR',
                 array('#FIELD#' => $fieldParams['TITLE'])), 'DELETE_' . $reference->getName());
         }
@@ -547,16 +513,13 @@ class EntityManager
             'filter' => array('=' . $this->modelPk => $this->itemId)
         ));
 
-        while ($data = $rsData->fetch())
-        {
-            if (empty($data['REF_' . $fieldWidget->getMultipleField('ID')]))
-            {
+        while ($data = $rsData->fetch()) {
+            if (empty($data['REF_' . $fieldWidget->getMultipleField('ID')])) {
                 continue;
             }
 
             $row = array();
-            foreach ($data as $key => $value)
-            {
+            foreach ($data as $key => $value) {
                 $row[str_replace('REF_', '', $key)] = $value;
             }
 
@@ -579,19 +542,15 @@ class EntityManager
         // Парсим условия связи двух моделей
         $referenceConditions = $this->getReferenceConditions($reference);
 
-        foreach ($referenceConditions as $refField => $refValue)
-        {
+        foreach ($referenceConditions as $refField => $refValue) {
             // Так как в условиях связи между моделями в основном отношения типа this.field => ref.field или
             // ref.field => SqlExpression, мы можем использовать это для подстановки данных
             // this.field - это поле основной модели
             // ref.field - поле модели из связи
             // customValue - это строка полученная из new SqlExpression('%s', ...)
-            if (empty($refValue['thisField']))
-            {
+            if (empty($refValue['thisField'])) {
                 $referenceData[$refField] = $refValue['customValue'];
-            }
-            else
-            {
+            } else {
                 $referenceData[$refField] = $this->data[$refValue['thisField']];
             }
         }
@@ -609,8 +568,7 @@ class EntityManager
      */
     protected function linkDataSet(Entity\ReferenceField $reference, array $referenceDataSet)
     {
-        foreach ($referenceDataSet as $key => $referenceData)
-        {
+        foreach ($referenceDataSet as $key => $referenceData) {
             $referenceDataSet[$key] = $this->linkData($reference, $referenceData);
         }
 
@@ -639,8 +597,7 @@ class EntityManager
     {
         $conditionsFields = array();
 
-        foreach ($reference->getReference() as $leftCondition => $rightCondition)
-        {
+        foreach ($reference->getReference() as $leftCondition => $rightCondition) {
             $thisField = null;
             $refField = null;
             $customValue = null;
@@ -648,45 +605,35 @@ class EntityManager
             // Поиск this.... в левом условии
             $thisFieldMatch = array();
             $refFieldMatch = array();
-            if (preg_match('/=this\.([A-z]+)/', $leftCondition, $thisFieldMatch) == 1)
-            {
+            if (preg_match('/=this\.([A-z]+)/', $leftCondition, $thisFieldMatch) == 1) {
                 $thisField = $thisFieldMatch[1];
             } // Поиск ref.... в левом условии
-            else
-            {
-                if (preg_match('/ref\.([A-z]+)/', $leftCondition, $refFieldMatch) == 1)
-                {
+            else {
+                if (preg_match('/ref\.([A-z]+)/', $leftCondition, $refFieldMatch) == 1) {
                     $refField = $refFieldMatch[1];
                 }
             }
 
             // Поиск expression value... в правом условии
             $refFieldMatch = array();
-            if ($rightCondition instanceof \Bitrix\Main\DB\SqlExpression)
-            {
+            if ($rightCondition instanceof \Bitrix\Main\DB\SqlExpression) {
                 $customValueDirty = $rightCondition->compile();
                 $customValue = preg_replace('/^([\'"])(.+)\1$/', '$2', $customValueDirty);
-                if ($customValueDirty == $customValue)
-                {
+                if ($customValueDirty == $customValue) {
                     // Если значение выражения не обрамлено кавычками, значит оно не нужно нам
                     $customValue = null;
                 }
             } // Поиск ref.... в правом условии
-            else
-            {
-                if (preg_match('/ref\.([A-z]+)/', $rightCondition, $refFieldMatch) > 0)
-                {
+            else {
+                if (preg_match('/ref\.([A-z]+)/', $rightCondition, $refFieldMatch) > 0) {
                     $refField = $refFieldMatch[1];
                 }
             }
 
             // Если не указано поле, которое нужно заполнить или не найдено содержимое для него, то исключаем условие
-            if (empty($refField) || (empty($thisField) && empty($customValue)))
-            {
+            if (empty($refField) || (empty($thisField) && empty($customValue))) {
                 continue;
-            }
-            else
-            {
+            } else {
                 $conditionsFields[$refField] = array(
                     'thisField' => $thisField,
                     'customValue' => $customValue,
@@ -708,10 +655,8 @@ class EntityManager
      */
     protected function isDifferentData(array $data1 = null, array $data2 = null)
     {
-        foreach ($data1 as $key => $value)
-        {
-            if (isset($data2[$key]) && $data2[$key] != $value)
-            {
+        foreach ($data1 as $key => $value) {
+            if (isset($data2[$key]) && $data2[$key] != $value) {
                 return true;
             }
         }
@@ -728,12 +673,9 @@ class EntityManager
     {
         $fields = $this->helper->getFields();
 
-        if (isset($fields[$fieldName]) && isset($fields[$fieldName]['WIDGET']))
-        {
+        if (isset($fields[$fieldName]) && isset($fields[$fieldName]['WIDGET'])) {
             return $fields[$fieldName];
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
