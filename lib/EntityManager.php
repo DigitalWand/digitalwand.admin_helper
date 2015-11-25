@@ -195,6 +195,8 @@ class EntityManager
          * @var DataManager $modelClass
          */
         $modelClass = $this->modelClass;
+		$db = $this->model->getConnection();
+		$db->startTransaction(); // начало транзакции
 
         if (empty($this->itemId)) {
             $result = $modelClass::add($this->data);
@@ -207,8 +209,16 @@ class EntityManager
         }
 
         if ($result->isSuccess()) {
-            $this->processReferencesData();
-        }
+			$referencesDataResult = $this->processReferencesData();
+			if($referencesDataResult->isSuccess()){
+				$db->commitTransaction(); // ошибок нет - применяем изменения
+			}else{
+				$result = $referencesDataResult; // возвращаем ReferencesResult что бы вернуть ошибку
+				$db->rollbackTransaction(); // что-то пошло не так - возвращаем все как было
+			}
+		} else {
+			$db->rollbackTransaction();
+		}
 
         return $result;
     }
@@ -321,6 +331,7 @@ class EntityManager
         $modelClass = $this->modelClass;
         $entity = $modelClass::getEntity();
         $fields = $entity->getFields();
+		$result = new Entity\Result(); // пустой Result у которого isSuccess вернет true
 
         foreach ($this->referencesData as $fieldName => $referenceDataSet) {
             if (!is_array($referenceDataSet)) {
@@ -345,28 +356,37 @@ class EntityManager
 
                         if ($result->isSuccess()) {
                             $processedDataIds[] = $result->getId();
-                        }
+                        } else {
+							break; // ошибка, прерываем обработку данных
+						}
                     }
                 } else {
                     // Обновление связанных данных
-                    $updateResult = $this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet);
+					$result = $this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet);
 
-                    if ($updateResult !== false) {
+                    if ($result->isSuccess()) {
                         $processedDataIds[] = $referenceData[$fieldWidget->getMultipleField('ID')];
-                    }
+                    } else {
+						break; // ошибка, прерываем обработку данных
+					}
                 }
             }
 
-            // Удаление записей, которые не были созданы или обновлены
-            foreach ($referenceStaleDataSet as $referenceData) {
-                if (!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds)) {
-                    $this->deleteReferenceData($reference,
-                        $referenceData[$fieldWidget->getMultipleField('ID')])->isSuccess();
-                }
-            }
+			if($result->isSuccess()){ // Удаление записей, которые не были созданы или обновлены
+				foreach ($referenceStaleDataSet as $referenceData) {
+					if (!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds)) {
+						$result = $this->deleteReferenceData($reference,
+							$referenceData[$fieldWidget->getMultipleField('ID')]);
+						if(!$result->isSuccess()) {
+							break; // ошибка, прерываем удаление данных
+						}
+					}
+				}
+			}
         }
 
         $this->referencesData = array();
+		return $result;
     }
 
     /**
@@ -465,7 +485,7 @@ class EntityManager
 
             return $updateResult;
         } else {
-            return null;
+            return new Entity\Result(); // пустой Result у которого isSuccess() вернет true
         }
     }
 
