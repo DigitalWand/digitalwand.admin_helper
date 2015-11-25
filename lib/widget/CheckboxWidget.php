@@ -120,12 +120,20 @@ class CheckboxWidget extends HelperWidget
                          <input type="hidden"
                                 value="' . static::prepareToTagAttr($this->getValue()) . '"
                                 name="' . $this->getEditableListInputName() . '" />';
-			$row->AddEditField($this->getCode(), $editHtml);
-		}
-
-		$value = intval($this->getValue() == $globalYes) ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
-		$row->AddViewField($this->getCode(), $value);
-	}
+            $row->AddEditField($this->getCode(), $editHtml);
+        }
+        
+        if (intval($this->getValue() == $globalYes))
+        {
+            $value = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES');
+        }
+        else
+        {
+            $value = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
+        }
+        
+        $row->AddViewField($this->getCode(), $value);
+    }
 
 	/**
 	 * Генерирует HTML для поля фильтрации
@@ -140,24 +148,24 @@ class CheckboxWidget extends HelperWidget
 		$filterHtml .= '<td> <select  name="' . $this->getFilterInputName() . '">';
 		$filterHtml .= '<option value=""></option>';
 
-		$modeType = $this->getCheckboxType();
+        $modeType = $this->getCheckboxType();
+        
+        $langYes = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES');
+        $langNo = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
 
-		switch ($modeType)
-		{
-			case self::TYPE_STRING:
-			{
-				$filterHtml .= '<option value="' . self::TYPE_STRING_YES . '">' . Loc::getMessage('CHECKBOX_YES') . '</option>';
-				$filterHtml .= '<option value="' . self::TYPE_STRING_NO . '">' . Loc::getMessage('CHECKBOX_NO') . '</option>';
-				break;
-			}
-			case self::TYPE_INT:
-			case self::TYPE_BOOLEAN:
-			{
-				$filterHtml .= '<option value="' . self::TYPE_INT_YES . '">' . Loc::getMessage('CHECKBOX_YES') . '</option>';
-				$filterHtml .= '<option value="' . self::TYPE_INT_NO . '">' . Loc::getMessage('CHECKBOX_NO') . '</option>';
-				break;
-			}
-		}
+        switch ($modeType) {
+            case self::TYPE_STRING: {
+                $filterHtml .= '<option value="' . self::TYPE_STRING_YES . '">' . $langYes . '</option>';
+                $filterHtml .= '<option value="' . self::TYPE_STRING_NO . '">' . $langNo . '</option>';
+                break;
+            }
+            case self::TYPE_INT:
+            case self::TYPE_BOOLEAN: {
+                $filterHtml .= '<option value="' . self::TYPE_INT_YES . '">' . $langYes . '</option>';
+                $filterHtml .= '<option value="' . self::TYPE_INT_NO . '">' . $langNo . '</option>';
+                break;
+            }
+        }
 
 		$filterHtml .= '</select></td>';
 		$filterHtml .= '</tr>';
@@ -171,20 +179,17 @@ class CheckboxWidget extends HelperWidget
 		$value = isset($this->data[$code]) ? $this->data[$code] : null;
 		$modeType = $this->getCheckboxType();
 
-		switch ($modeType)
-		{
-			case static::TYPE_STRING:
-			{
-				$value = $value == 'Y' ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
-				break;
-			}
-			case static::TYPE_INT:
-			case static::TYPE_BOOLEAN:
-			{
-				$value = $value ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
-				break;
-			}
-		}
+        switch ($modeType) {
+            case static::TYPE_STRING: {
+                $value = $value == 'Y' ? Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES') : Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
+                break;
+            }
+            case static::TYPE_INT:
+            case static::TYPE_BOOLEAN: {
+                $value = $value ? Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES') : Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
+                break;
+            }
+        }
 
 		return static::prepareToOutput($value);
 	}
