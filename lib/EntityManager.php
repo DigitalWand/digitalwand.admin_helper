@@ -190,10 +190,9 @@ class EntityManager
      */
     public function save()
     {
-        if(!$this->collectReferencesData())
+		$result = $this->collectReferencesData();
+        if(!$result->isSuccess())
 		{
-			$result = new Entity\Result();
-			$result->addError(new Entity\EntityError('Связь должна быть множественным полем'));
 			return $result;
 		}
 
@@ -312,8 +311,8 @@ class EntityManager
      */
     protected function collectReferencesData()
     {
-        $references = $this->getReferences();
-
+		$result = new Entity\Result();
+		$references = $this->getReferences();
         // Извлечение данных управляемых связей
         foreach ($references as $fieldName => $reference)
         {
@@ -321,14 +320,15 @@ class EntityManager
             {
 				if(!is_array($this->data[$fieldName]))
 				{
-					return false;
+					$result->addError(new Entity\EntityError('Связь должна быть множественным полем'));
+					return $result;
 				}
                 // Извлечение данных для связи
                 $this->referencesData[$fieldName] = $this->data[$fieldName];
                 unset($this->data[$fieldName]);
             }
         }
-		return true;
+		return $result;
     }
 
     /**
