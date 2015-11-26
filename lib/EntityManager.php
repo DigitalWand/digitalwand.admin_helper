@@ -182,22 +182,21 @@ class EntityManager
 		}
 	}
 
-	/**
-	 * Сохранить запись и данные связей.
-	 *
-	 * @return Entity\AddResult|Entity\UpdateResult
-	 */
-	public function save()
-	{
-		$result = $this->collectReferencesData();
-		if (!$result->isSuccess()) {
-			return $result;
-		}
+    /**
+     * Сохранить запись и данные связей.
+     *
+     * @return Entity\AddResult|Entity\UpdateResult
+     */
+    public function save()
+    {
+        $this->collectReferencesData();
 
-		/**
-		 * @var DataManager $modelClass
-		 */
-		$modelClass = $this->modelClass;
+        /**
+         * @var DataManager $modelClass
+         */
+        $modelClass = $this->modelClass;
+		$db = $this->model->getConnection();
+		$db->startTransaction(); // начало транзакции
 
 		if (empty($this->itemId)) {
 			$result = $modelClass::add($this->data);
@@ -210,27 +209,50 @@ class EntityManager
 			$result = $modelClass::update($this->itemId, $this->data);
 		}
 
-		if ($result->isSuccess()) {
-			$this->processReferencesData();
+        if ($result->isSuccess()) {
+			$referencesDataResult = $this->processReferencesData();
+			if($referencesDataResult->isSuccess()){
+				$db->commitTransaction(); // ошибок нет - применяем изменения
+			}else{
+				$result = $referencesDataResult; // возвращаем ReferencesResult что бы вернуть ошибку
+				$db->rollbackTransaction(); // что-то пошло не так - возвращаем все как было
+			}
+		} else {
+			$db->rollbackTransaction();
 		}
 
 		return $result;
 	}
 
-	/**
-	 * Удаление запись и данные связей.
-	 *
-	 * @return Entity\DeleteResult
-	 */
-	public function delete()
-	{
-		// Удаление данных зависимостей
-		$this->deleteReferencesData();
+    /**
+     * Удаление запись и данные связей.
+     *
+     * @return Entity\DeleteResult
+     */
+    public function delete()
+    {
+        // Удаление данных зависимостей
+		$db = $this->model->getConnection();
+		$db->startTransaction(); // начало транзакции
+
+		$result = $this->deleteReferencesData(); // удаляем зависимые сущности
+
+		if(!$result->isSuccess()){ // если хотя бы одна из них не удалилась
+			$db->rollbackTransaction(); // то восстанавливаем все
+			return $result; // возвращаем ошибку
+		}
 
 		$model = $this->modelClass;
 
-		return $model::delete($this->itemId);
-	}
+        $result = $model::delete($this->itemId); // удаляем основную сущность
+		if(!$result->isSuccess()){  // если не удалилась
+			$db->rollbackTransaction(); // то восстанавливаем зависимые сущности
+			return $result; // возвращаем ошибку
+		}
+
+		$db->commitTransaction(); // все прошло без ошибок применяем изменения
+		return $result;
+    }
 
 	/**
 	 * Получить список предупреждений
@@ -320,19 +342,20 @@ class EntityManager
 		return $result;
 	}
 
-	/**
-	 * Обработка данных для связей.
-	 *
-	 * @throws ArgumentException
-	 */
-	protected function processReferencesData()
-	{
-		/**
-		 * @var DataManager $modelClass
-		 */
-		$modelClass = $this->modelClass;
-		$entity = $modelClass::getEntity();
-		$fields = $entity->getFields();
+    /**
+     * Обработка данных для связей.
+     *
+     * @throws ArgumentException
+     */
+    protected function processReferencesData()
+    {
+        /**
+         * @var DataManager $modelClass
+         */
+        $modelClass = $this->modelClass;
+        $entity = $modelClass::getEntity();
+        $fields = $entity->getFields();
+		$result = new Entity\Result(); // пустой Result у которого isSuccess вернет true
 
 		foreach ($this->referencesData as $fieldName => $referenceDataSet) {
 			if (!is_array($referenceDataSet)) {
@@ -355,59 +378,71 @@ class EntityManager
 					if (!empty($referenceData[$fieldWidget->getMultipleField('VALUE')])) {
 						$result = $this->createReferenceData($reference, $referenceData);
 
-						if ($result->isSuccess()) {
-							$processedDataIds[] = $result->getId();
+                        if ($result->isSuccess()) {
+                            $processedDataIds[] = $result->getId();
+                        } else {
+							break; // ошибка, прерываем обработку данных
+						}
+                    }
+                } else {
+                    // Обновление связанных данных
+					$result = $this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet);
+
+                    if ($result->isSuccess()) {
+                        $processedDataIds[] = $referenceData[$fieldWidget->getMultipleField('ID')];
+                    } else {
+						break; // ошибка, прерываем обработку данных
+					}
+                }
+            }
+
+			if($result->isSuccess()){ // Удаление записей, которые не были созданы или обновлены
+				foreach ($referenceStaleDataSet as $referenceData) {
+					if (!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds)) {
+						$result = $this->deleteReferenceData($reference,
+							$referenceData[$fieldWidget->getMultipleField('ID')]);
+						if(!$result->isSuccess()) {
+							break; // ошибка, прерываем удаление данных
 						}
 					}
 				}
-				else {
-					// Обновление связанных данных
-					$updateResult = $this->updateReferenceData($reference, $referenceData, $referenceStaleDataSet);
-
-					if ($updateResult !== false) {
-						$processedDataIds[] = $referenceData[$fieldWidget->getMultipleField('ID')];
-					}
-				}
 			}
+        }
 
-			// Удаление записей, которые не были созданы или обновлены
-			foreach ($referenceStaleDataSet as $referenceData) {
-				if (!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds)) {
-					$this->deleteReferenceData($reference,
-						$referenceData[$fieldWidget->getMultipleField('ID')])->isSuccess();
-				}
-			}
-		}
+        $this->referencesData = array();
+		return $result;
+    }
 
-		$this->referencesData = array();
-	}
-
-	/**
-	 * Удаление данных всех связей, которые указаны в полях интерфейса раздела.
-	 */
-	protected function deleteReferencesData()
-	{
-		$references = $this->getReferences();
-		$fields = $this->helper->getFields();
-
-		/**
-		 * @var string $fieldName
-		 * @var Entity\ReferenceField $reference
-		 */
-		foreach ($references as $fieldName => $reference) {
-			// Удаляются только данные связей, которые объявлены в интерфейсе
-			if (!isset($fields[$fieldName])) {
-				continue;
-			}
+    /**
+     * Удаление данных всех связей, которые указаны в полях интерфейса раздела.
+     */
+    protected function deleteReferencesData()
+    {
+        $references = $this->getReferences();
+        $fields = $this->helper->getFields();
+		$result = new Entity\Result();
+        /**
+         * @var string $fieldName
+         * @var Entity\ReferenceField $reference
+         */
+        foreach ($references as $fieldName => $reference) {
+            // Удаляются только данные связей, которые объявлены в интерфейсе
+            if (!isset($fields[$fieldName])) {
+                continue;
+            }
 
 			$fieldWidget = $this->getFieldWidget($reference->getName());
 			$referenceStaleDataSet = $this->getReferenceDataSet($reference);
 
-			foreach ($referenceStaleDataSet as $referenceData) {
-				$this->deleteReferenceData($reference, $referenceData[$fieldWidget->getMultipleField('ID')]);
-			}
-		}
-	}
+            foreach ($referenceStaleDataSet as $referenceData) {
+                $result = $this->deleteReferenceData($reference, $referenceData[$fieldWidget->getMultipleField('ID')]);
+				if(!$result->isSuccess()){
+					return $result;
+				}
+            }
+        }
+		return $result;
+    }
 
 	/**
 	 * Создание связанной записи.
@@ -476,12 +511,11 @@ class EntityManager
 					array('#FIELD#' => $fieldParams['TITLE'])), 'UPDATE_' . $referenceName);
 			}
 
-			return $updateResult;
-		}
-		else {
-			return null;
-		}
-	}
+            return $updateResult;
+        } else {
+            return new Entity\Result(); // пустой Result у которого isSuccess() вернет true
+        }
+    }
 
 	/**
 	 * Удаление данных связи.

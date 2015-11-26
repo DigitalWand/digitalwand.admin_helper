@@ -541,7 +541,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	protected function customActions($action, $id)
 	{
 		if ($action == 'delete' AND !is_null($id)) {
-			$this->deleteElement($id);
+			$result = $this->deleteElement($id);
+			if(!$result->isSuccess()){
+				$this->addErrors($result->getErrorMessages());
+			}
 			$listHelper = static::getHelperClass(AdminListHelper::className());
 			LocalRedirect($listHelper::getUrl(array_merge($this->additionalUrlParams,
 				array(
