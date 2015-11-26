@@ -564,11 +564,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$this->setContext(AdminListHelper::OP_EDIT_ACTION);
 		if(strpos($id, 's')===0){ // для раделов другой класс модели
-			$editHelperClass = $this->getHelperClass(AdminEditHelper::className());
+			$editHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+			$sectionsInterfaceSettings = static::getInterfaceSettings($editHelperClass::getViewName());
 			$className = $editHelperClass::getModel();
 			$id = str_replace('s','',$id);
 		}else{
 			$className = static::getModel();
+			$sectionsInterfaceSettings = false;
 		}
 		$el = $className::getById($id);
 		if ($el->getSelectedRowsCount() == 0) {
@@ -578,7 +580,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$allWidgets = array();
 		foreach ($fields as $key => $value) {
-			$widget = $this->createWidgetForField($key, $fields);
+			if($sectionsInterfaceSettings!==false){
+				$widget = $sectionsInterfaceSettings['FIELDS'][$key]['WIDGET'];
+			}else{
+				$widget = $this->createWidgetForField($key, $fields);
+			}
 
 			$widget->processEditAction();
 			$this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
