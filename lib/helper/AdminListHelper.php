@@ -182,7 +182,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 				if (!$this->list->IsUpdated($id)) {
 					continue;
 				}
-				$id = intval($id);
 				$this->editAction($id, $fields);
 			}
 		}
@@ -223,23 +222,26 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$filteredIDs[] = IntVal($id);
 			}
 			$this->groupActions($IDs, $_REQUEST['action']);
-		}elseif (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0) {
+		}
+		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
 			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 			$className = $listHelperClass::getModel();
 			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
 			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
-			$params = $_GET;
-			unset($params['action']);
-			unset($params['action_button']);
-			$this->customActions($action, $id);
-			$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
-			if ($sectionEditHelperClass) {
-				$element = $className::getById($id)->Fetch();
-				if ($element[$className::getSectionField()]) {
-					$params['ID'] = $element[$className::getSectionField()];
-				}
-			}
 			if($action!='edit'){
+				$params = $_GET;
+				unset($params['action']);
+				unset($params['action_button']);
+				$this->customActions($action, $id);
+				$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+
+				if ($sectionEditHelperClass) {
+					$element = $className::getById($id)->Fetch();
+					if ($element[$className::getSectionField()]) {
+						$params['ID'] = $element[$className::getSectionField()];
+					}
+				}
+
 				LocalRedirect($listHelperClass::getUrl($params));
 			}
 		}
@@ -393,18 +395,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$contextMenu = array();
 		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::className());
 		if ($sectionEditHelper) {
-			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
+			$this->additionalUrlParams['SECTION_ID'] = $_GET['ID'];
 		}
 
 		/**
 		 * Если задан для разделов добавляем кнопку создать раздел и
 		 * кнопку на уровень вверх если это не корневой раздел
 		 */
-		if ($sectionEditHelper && isset($_REQUEST['ID'])) {
-			if ($_REQUEST['ID']) {
+		if ($sectionEditHelper && isset($_GET['ID'])) {
+			if ($_GET['ID']) {
 				$params = $this->additionalUrlParams;
 				$sectionModel = $sectionEditHelper::getModel();
-				$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
+				$section = $sectionModel::getById($_GET['ID'])->Fetch();
 				if ($this->isPopup()) {
 					$params = array_merge($_GET);
 				}
@@ -561,8 +563,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function editAction($id, $fields)
 	{
 		$this->setContext(AdminListHelper::OP_EDIT_ACTION);
-
-		$className = static::getModel();
+		if(strpos($id, 's')===0){ // для раделов другой класс модели
+			$editHelperClass = $this->getHelperClass(AdminEditHelper::className());
+			$className = $editHelperClass::getModel();
+			$id = str_replace('s','',$id);
+		}else{
+			$className = static::getModel();
+		}
 		$el = $className::getById($id);
 		if ($el->getSelectedRowsCount() == 0) {
 			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR"), $id);
