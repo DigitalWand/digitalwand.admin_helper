@@ -226,9 +226,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
 			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 			$className = $listHelperClass::getModel();
-			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
+			$id = isset($_GET['ID']) ? $_GET['ID'] : null;
 			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
-			if($action!='edit'){
+			if($action!='edit' && $_REQUEST['cancel'] != 'Y'){
+				die('1111');
 				$params = $_GET;
 				unset($params['action']);
 				unset($params['action_button']);
@@ -327,7 +328,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if (static::getHelperClass(AdminSectionEditHelper::className())) {
 			$model = $this->getModel();
-			$this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
+			$this->arFilter[$model::getSectionField()] = $_GET['ID'];
 		}
 	}
 
@@ -899,7 +900,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$returnData = array();
 		$raw['SELECT'] = array_unique($raw['SELECT']);
 		$sectionModel = $sectionEditHelperClass::getModel();
-		$sectionFilter = array($sectionModel::getSectionField() => $_REQUEST['ID']);
+		$sectionFilter = array($sectionModel::getSectionField() => $_GET['ID']);
 
 		// при использовании в качестве popup окна исключаем раздел из выборке
 		// что бы не было возможности сделать раздел родителем самого себя
@@ -944,7 +945,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$elementLimit = $limitData[1] - count($returnData);
 		$elementModel = static::$model;
 		$elementFilter = $this->arFilter;
-		$elementFilter[$elementModel::getSectionField()] = $_REQUEST['ID'];
+		$elementFilter[$elementModel::getSectionField()] = $_GET['ID'];
 		// добавляем к общему количеству элементов количество элементов
 		$this->totalRowsCount += $elementModel::getCount($elementFilter);
 
@@ -1168,6 +1169,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param \CAdminListRow $row
 	 * @param $code - сивольный код поля
 	 * @param $data - данные текущей строки
+	 * @param bool $virtualCode
 	 * @throws Exception
 	 * @see HelperWidget::genListHTML()
 	 */
