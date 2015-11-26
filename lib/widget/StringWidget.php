@@ -125,10 +125,10 @@ class StringWidget extends HelperWidget
         $rsEntityData = null;
         if (!empty($this->data['ID'])) {
             $entityName = $this->entityName;
-            $rsEntityData = $entityName::getList([
-                'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-                'filter' => ['=ID' => $this->data['ID']]
-            ]);
+            $rsEntityData = $entityName::getList(array(
+                'select' => array('REFERENCE_' => $this->getCode() . '.*'),
+                'filter' => array('=ID' => $this->data['ID'])
+            ));
         }
 
         $result = '';

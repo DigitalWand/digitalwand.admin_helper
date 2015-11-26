@@ -29,7 +29,7 @@ class ComboBoxWidget extends HelperWidget
     );
 
     /**
-     * Генерирует HTML для редактирования поля
+     * @inheritdoc
      *
      * @see AdminEditHelper::showField();
      *
@@ -99,6 +99,9 @@ class ComboBoxWidget extends HelperWidget
         return $result;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function processEditAction()
     {
         if ($this->getSettings('MULTIPLE')) {
@@ -113,11 +116,17 @@ class ComboBoxWidget extends HelperWidget
         parent::processEditAction();
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function genMultipleEditHTML()
     {
         return $this->genEditHTML();
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function getValueReadonly()
     {
         $variants = $this->getVariants();
@@ -127,7 +136,7 @@ class ComboBoxWidget extends HelperWidget
     }
 
     /**
-     * Возвращает массив в формате
+     * Возвращает массив в следующем формате:
      * <code>
      * array(
      *      '123' => array('ID' => 123, 'TITLE' => 'ololo'),
@@ -135,7 +144,8 @@ class ComboBoxWidget extends HelperWidget
      *      '789' => array('ID' => 789, 'TITLE' => 'pish-pish'),
      * )
      * </code>
-     * Результат будет выводиться в комбобоксе
+     * 
+     * Результат будет выводиться в комбобоксе.
      * @return array
      */
     protected function getVariants()
@@ -177,14 +187,7 @@ class ComboBoxWidget extends HelperWidget
     }
 
     /**
-     * Генерирует HTML для поля в списке
-     *
-     * @see AdminListHelper::addRowCell();
-     *
-     * @param CAdminListRow $row
-     * @param array $data - данные текущей строки
-     *
-     * @return mixed
+     * @inheritdoc
      */
     public function genListHTML(&$row, $data)
     {
@@ -196,9 +199,7 @@ class ComboBoxWidget extends HelperWidget
     }
 
     /**
-     * Генерирует HTML для поля фильтрации
-     * @see AdminListHelper::createFilterForm();
-     * @return mixed
+     * @inheritdoc
      */
     public function genFilterHTML()
     {
@@ -209,24 +210,7 @@ class ComboBoxWidget extends HelperWidget
     }
 
     /**
-     * @todo Метод имеет устаревшую логику!
-     *
-     * @param $model Модель
-     * @param string $field Название поля
-     * @param array $variants Варианты значения (ключ => значение)
-     *
-     * @return null|array Формат ['key' => ключ, 'title' => название]
-     */
-    public static function getValueDetails(OrmModel $model, $field, array $variants)
-    {
-        $value = $model->{$field};
-        $title = (empty($variants[$value]) ? 'error: название не найдено' : $variants[$value]);
-
-        return array('key' => $value, 'title' => $title);
-    }
-
-    /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected function getMultipleValueReadonly()
     {
@@ -248,52 +232,4 @@ class ComboBoxWidget extends HelperWidget
 
         return $result;
     }
-
-    /*
-     * TRICKY: При слиянии этот метод оказался дублем. Если точно знаешь, что он устарел, можно удалить
-protected function getMultipleValueReadonly()
-{
-    $rsEntityData = null;
-    if (!empty($this->data['ID']))
-    {
-        $entityName = $this->entityName;
-        $rsEntityData = $entityName::getList([
-            'select' => ['REFERENCE_' => $this->getCode() . '.*'],
-            'filter' => ['=ID' => $this->data['ID']]
-        ]);
-    }
-
-    while ($referenceData = $rsEntityData->fetch())
-    {
-        if (empty($referenceData['REFERENCE_VALUE']))
-        {
-            continue;
-        }
-
-        $multipleSelected[] = $referenceData['REFERENCE_VALUE'];
-    }
-
-    $variants = $this->getVariants();
-    $result = '';
-    if (empty($variants))
-    {
-        $result = 'Не удалось получить данные';
-    }
-    else
-    {
-        foreach($multipleSelected as $selectId)
-        {
-            if(isset($variants[$selectId]))
-            {
-                $result .= '<div class="wrap_text" style="margin-bottom: 5px">' . $variants[$selectId]['TITLE'] .
-                    '</div>';
-            }
-
-        }
-    }
-
-    return $result;
-}
-*/
-
 }

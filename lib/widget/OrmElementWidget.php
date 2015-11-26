@@ -21,7 +21,6 @@ Loc::loadMessages(__FILE__);
  * <li> <b>TEMPLATE</b> - (string) шаблон отображения виджета, может принимать значения select|radio,  по умолчанию - select </li>
  *
  * @author Nik Samokhvalov <nik@samokhvalov.info>
- * @author Dmitry Savchenkov <bitrixdev@gmail.com>
  */
 class OrmElementWidget extends NumberWidget
 {

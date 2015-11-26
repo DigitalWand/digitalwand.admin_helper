@@ -41,9 +41,7 @@ class CheckboxWidget extends HelperWidget
     const TYPE_INT_NO = 0;
 
     /**
-     * Генерирует HTML для редактирования поля
-     *
-     * @return mixed
+     * @inheritdoc
      */
     protected function genEditHTML()
     {
@@ -73,14 +71,7 @@ class CheckboxWidget extends HelperWidget
     }
 
     /**
-     * Генерирует HTML для поля в списке
-     *
-     * @see AdminListHelper::addRowCell();
-     *
-     * @param \CAdminListRow $row
-     * @param array $data - данные текущей строки
-     *
-     * @return mixed
+     * @inheritdoc
      */
     public function genListHTML(&$row, $data)
     {
@@ -126,10 +117,7 @@ class CheckboxWidget extends HelperWidget
     }
 
     /**
-     * Генерирует HTML для поля фильтрации
-     *
-     * @see AdminListHelper::createFilterForm();
-     * @return mixed
+     * @inheritdoc
      */
     public function genFilterHTML()
     {
@@ -163,6 +151,9 @@ class CheckboxWidget extends HelperWidget
         print $filterHtml;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getValueReadonly()
     {
         $code = $this->getCode();
@@ -185,14 +176,14 @@ class CheckboxWidget extends HelperWidget
     }
 
     /**
-     * Перехватчик сохранения. Если поле является булевым - приводим к нужному типу.
+     * @inheritdoc
      */
     public function processEditAction()
     {
         parent::processEditAction();
 
         if ($this->getCheckboxType() === static::TYPE_BOOLEAN) {
-            $this->data[$this->getCode()] = (bool)$this->data[$this->getCode()];
+            $this->data[$this->getCode()] = (bool) $this->data[$this->getCode()];
         }
     }
 

@@ -7,6 +7,8 @@ use DigitalWand\AdminHelper\Helper\AdminEditHelper;
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_before.php');
 
+Loader::includeModule('digitalwand.admin_helper');
+
 function getRequestParams($param)
 {
 	if (!isset($_REQUEST[$param])) {
