@@ -231,11 +231,26 @@ class EntityManager
     public function delete()
     {
         // Удаление данных зависимостей
-        $this->deleteReferencesData();
+		$db = $this->model->getConnection();
+		$db->startTransaction(); // начало транзакции
+
+		$result = $this->deleteReferencesData(); // удаляем зависимые сущности
+
+		if(!$result->isSuccess()){ // если хотя бы одна из них не удалилась
+			$db->rollbackTransaction(); // то восстанавливаем все
+			return $result; // возвращаем ошибку
+		}
 
         $model = $this->modelClass;
 
-        return $model::delete($this->itemId);
+        $result = $model::delete($this->itemId); // удаляем основную сущность
+		if(!$result->isSuccess()){  // если не удалилась
+			$db->rollbackTransaction(); // то восстанавливаем зависимые сущности
+			return $result; // возвращаем ошибку
+		}
+
+		$db->commitTransaction(); // все прошло без ошибок применяем изменения
+		return $result;
     }
 
     /**
@@ -396,7 +411,7 @@ class EntityManager
     {
         $references = $this->getReferences();
         $fields = $this->helper->getFields();
-
+		$result = new Entity\Result();
         /**
          * @var string $fieldName
          * @var Entity\ReferenceField $reference
@@ -411,9 +426,13 @@ class EntityManager
             $referenceStaleDataSet = $this->getReferenceDataSet($reference);
 
             foreach ($referenceStaleDataSet as $referenceData) {
-                $this->deleteReferenceData($reference, $referenceData[$fieldWidget->getMultipleField('ID')]);
+                $result = $this->deleteReferenceData($reference, $referenceData[$fieldWidget->getMultipleField('ID')]);
+				if(!$result->isSuccess()){
+					return $result;
+				}
             }
         }
+		return $result;
     }
 
     /**

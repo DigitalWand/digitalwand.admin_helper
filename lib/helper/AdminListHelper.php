@@ -506,10 +506,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 				foreach ($IDs as $id) {
 					$entityManager = new EntityManager($className, array(), $id, $this);
-					$entityManager->delete();
+					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
+					if(!$result->isSuccess()){
+						$this->addErrors($result->getErrorMessages());
+						break;
+					}
 				}
-
 				LocalRedirect($listHelperClass::getUrl($params));
 			}
 			else {
