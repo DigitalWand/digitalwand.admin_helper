@@ -186,7 +186,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$this->editAction($id, $fields);
 			}
 		}
-
 		if ($IDs = $this->list->GroupAction() AND $this->hasWriteRights()) {
 			if ($_REQUEST['action_target'] == 'selected') {
 				$this->setContext(AdminListHelper::OP_GROUP_ACTION);
@@ -223,11 +222,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 				}
 				$filteredIDs[] = IntVal($id);
 			}
-
 			$this->groupActions($IDs, $_REQUEST['action']);
-		}
-
-		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0) {
+		}elseif (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0) {
 			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 			$className = $listHelperClass::getModel();
 			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
@@ -243,7 +239,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 					$params['ID'] = $element[$className::getSectionField()];
 				}
 			}
-			LocalRedirect($listHelperClass::getUrl($params));
+			if($action!='edit'){
+				LocalRedirect($listHelperClass::getUrl($params));
+			}
 		}
 
 		if ($this->isPopup()) {
@@ -534,6 +532,63 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 			else {
 				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
+			}
+		}
+	}
+
+	/**
+	 * Сохранение полей для отной записи, отредактированной в списке.
+	 * Этапы:
+	 * <ul>
+	 * <li> Выборка элемента по ID, чтобы удостовериться, что он существует. В противном случае  возвращается
+	 * ошибка</li>
+	 * <li> Создание виджета для каждой ячейки, валидация значений поля</li>
+	 * <li> TODO: вывод ошибок валидации</li>
+	 * <li> Сохранение записи</li>
+	 * <li> Вывод ошибок сохранения, если таковые появились</li>
+	 * <li> Модификация данных сроки виджетами.</li>
+	 * </ul>
+	 *
+	 * @param int $id ID записи в БД
+	 * @param array $fields Поля с изменениями
+	 *
+	 * @see HelperWidget::processEditAction();
+	 * @see HelperWidget::processAfterSaveAction();
+	 */
+	protected function editAction($id, $fields)
+	{
+		$this->setContext(AdminListHelper::OP_EDIT_ACTION);
+
+		$className = static::getModel();
+		$el = $className::getById($id);
+		if ($el->getSelectedRowsCount() == 0) {
+			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR"), $id);
+			return;
+		}
+
+		$allWidgets = array();
+		foreach ($fields as $key => $value) {
+			$widget = $this->createWidgetForField($key, $fields);
+
+			$widget->processEditAction();
+			$this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
+			$allWidgets[] = $widget;
+		}
+		//FIXME: может, надо добавить вывод ошибок ДО сохранения?..
+		$this->addErrors($this->validationErrors);
+
+		$result = $className::update($id, $fields);
+		$errors = $result->getErrorMessages();
+		if (empty($this->validationErrors) AND !empty($errors)) {
+			$fieldList = implode("\n", $errors);
+			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList, $id);
+		}
+
+		if (!empty($errors)) {
+			foreach ($allWidgets as $widget) {
+				/** @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget */
+				$widget->setData($fields);
+				$widget->processAfterSaveAction();
 			}
 		}
 	}
