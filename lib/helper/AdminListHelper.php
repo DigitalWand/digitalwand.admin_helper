@@ -508,6 +508,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
+
 						$this->addErrors($result->getErrorMessages());
 						break;
 					}
@@ -817,6 +818,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->list->BeginEpilogContent();
 		echo $this->epilogHtml;
 		$this->list->EndEpilogContent();
+
+		// добавляем ошибки в CAdminList для режимов list и frame
+		if(in_array($_GET['mode'], array('list','frame'))) {
+			foreach($this->getErrors() as $error) {
+				$this->list->addGroupError($error);
+			}
+		}
 
 		$this->list->CheckListMode();
 	}
