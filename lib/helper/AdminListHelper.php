@@ -229,7 +229,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$id = isset($_GET['ID']) ? $_GET['ID'] : null;
 			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
 			if($action!='edit' && $_REQUEST['cancel'] != 'Y'){
-				die('1111');
 				$params = $_GET;
 				unset($params['action']);
 				unset($params['action_button']);
