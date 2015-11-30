@@ -241,11 +241,8 @@ class FileWidget extends HelperWidget
         }
 
         $fileInfo['name'] = $name;
-        /**
-         * @var AdminBaseHelper $model
-         */
-        $helper = $this->helper;
-        $fileId = \CFile::SaveFile($fileInfo, $helper::$module);
+
+        $fileId = \CFile::SaveFile($fileInfo, $this->helper->getModule());
 
         if (!$this->getSettings('MULTIPLE')) {
             $code = $this->code;
