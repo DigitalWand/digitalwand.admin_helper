@@ -932,6 +932,18 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+	 * Получить URL на страницу с хелпером.
+	 *
+	 * @param array $params Дополнительные GET-параметры для URL.
+	 *
+	 * @return string
+	 */
+	public static function getUrl($params = array())
+	{
+		return static::getViewURL(static::getViewName(), null, $params);
+	}
+
+	/**
 	 * Получает виджет для текущего поля, выполняет базовую инициализацию.
 	 *
 	 * @param string $code ключ поля для данного виджета (должен быть в массиве $data)
