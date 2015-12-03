@@ -578,12 +578,25 @@ abstract class AdminListHelper extends AdminBaseHelper
 			return;
 		}
 
+		// замена кодов для столбцов элементов соединенных со столбцами разделов
+		if($sectionsInterfaceSettings==false){
+			$tableColumnsMap = array_flip($this->tableColumnsMap);
+			$replacedFields = array();
+			foreach($fields as $key => $value){
+				if(!empty($tableColumnsMap[$key])) {
+					$key = $tableColumnsMap[$key];
+				}
+				$replacedFields[$key] = $value;
+			}
+			$fields = $replacedFields;
+		}
+
 		$allWidgets = array();
 		foreach ($fields as $key => $value) {
-			if($sectionsInterfaceSettings!==false){
+			if($sectionsInterfaceSettings!==false){ // для разделов свои виджеты
 				$widget = $sectionsInterfaceSettings['FIELDS'][$key]['WIDGET'];
 			}else{
-				$widget = $this->createWidgetForField($key, $fields);
+				$widget = $this->createWidgetForField($key, $fields); // для элементов свои
 			}
 
 			$widget->processEditAction();
