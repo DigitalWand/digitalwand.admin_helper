@@ -40,6 +40,10 @@ class CheckboxWidget extends HelperWidget
      */
     const TYPE_INT_NO = 0;
 
+    static protected $defaults = array(
+        'EDIT_IN_LIST' => true
+    );
+
     /**
      * @inheritdoc
      */

@@ -7,15 +7,13 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 /**
- * Class NumberWidget
- * Виджет с числовыми значениями
- * Точная копия StringWidget, только работает с числами и не ищет по подстроке
+ * Виджет с числовыми значениями. Точная копия StringWidget, только работает с числами и не ищет по подстроке.
  */
 class NumberWidget extends StringWidget
 {
-
     static protected $defaults = array(
-        'FILTER' => '='
+        'FILTER' => '=',
+        'EDIT_IN_LIST' => true
     );
 
     public function checkFilter($operationType, $value)
