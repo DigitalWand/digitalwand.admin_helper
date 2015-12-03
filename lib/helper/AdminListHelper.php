@@ -820,7 +820,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->list->EndEpilogContent();
 
 		// добавляем ошибки в CAdminList для режимов list и frame
-		if(in_array($_GET['mode'], array('list','frame'))) {
+		if(in_array($_GET['mode'], array('list','frame')) && is_array($this->getErrors())) {
 			foreach($this->getErrors() as $error) {
 				$this->list->addGroupError($error);
 			}
