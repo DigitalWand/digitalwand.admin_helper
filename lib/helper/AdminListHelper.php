@@ -182,11 +182,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 				if (!$this->list->IsUpdated($id)) {
 					continue;
 				}
-				$id = intval($id);
 				$this->editAction($id, $fields);
 			}
 		}
-
 		if ($IDs = $this->list->GroupAction() AND $this->hasWriteRights()) {
 			if ($_REQUEST['action_target'] == 'selected') {
 				$this->setContext(AdminListHelper::OP_GROUP_ACTION);
@@ -223,27 +221,28 @@ abstract class AdminListHelper extends AdminBaseHelper
 				}
 				$filteredIDs[] = IntVal($id);
 			}
-
 			$this->groupActions($IDs, $_REQUEST['action']);
-		}
-
-		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0) {
+		}elseif (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
 			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 			$className = $listHelperClass::getModel();
-			$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
+			$id = isset($_GET['ID']) ? $_GET['ID'] : null;
 			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
-			$params = $_GET;
-			unset($params['action']);
-			unset($params['action_button']);
-			$this->customActions($action, $id);
-			$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
-			if ($sectionEditHelperClass) {
-				$element = $className::getById($id)->Fetch();
-				if ($element[$className::getSectionField()]) {
-					$params['ID'] = $element[$className::getSectionField()];
+			if($action!='edit' && $_REQUEST['cancel'] != 'Y'){
+				$params = $_GET;
+				unset($params['action']);
+				unset($params['action_button']);
+				$this->customActions($action, $id);
+				$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+
+				if ($sectionEditHelperClass) {
+					$element = $className::getById($id)->Fetch();
+					if ($element[$className::getSectionField()]) {
+						$params['ID'] = $element[$className::getSectionField()];
+					}
 				}
+
+				LocalRedirect($listHelperClass::getUrl($params));
 			}
-			LocalRedirect($listHelperClass::getUrl($params));
 		}
 
 		if ($this->isPopup()) {
@@ -327,7 +326,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if (static::getHelperClass(AdminSectionEditHelper::className())) {
 			$model = $this->getModel();
-			$this->arFilter[$model::getSectionField()] = $_REQUEST['ID'];
+			$this->arFilter[$model::getSectionField()] = $_GET['ID'];
 		}
 	}
 
@@ -395,18 +394,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$contextMenu = array();
 		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::className());
 		if ($sectionEditHelper) {
-			$this->additionalUrlParams['SECTION_ID'] = $_REQUEST['ID'];
+			$this->additionalUrlParams['SECTION_ID'] = $_GET['ID'];
 		}
 
 		/**
 		 * Если задан для разделов добавляем кнопку создать раздел и
 		 * кнопку на уровень вверх если это не корневой раздел
 		 */
-		if ($sectionEditHelper && isset($_REQUEST['ID'])) {
-			if ($_REQUEST['ID']) {
+		if ($sectionEditHelper && isset($_GET['ID'])) {
+			if ($_GET['ID']) {
 				$params = $this->additionalUrlParams;
 				$sectionModel = $sectionEditHelper::getModel();
-				$section = $sectionModel::getById($_REQUEST['ID'])->Fetch();
+				$section = $sectionModel::getById($_GET['ID'])->Fetch();
 				if ($this->isPopup()) {
 					$params = array_merge($_GET);
 				}
@@ -509,6 +508,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
+
 						$this->addErrors($result->getErrorMessages());
 						break;
 					}
@@ -537,6 +537,74 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 			else {
 				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
+			}
+		}
+	}
+
+	/**
+	 * Сохранение полей для отной записи, отредактированной в списке.
+	 * Этапы:
+	 * <ul>
+	 * <li> Выборка элемента по ID, чтобы удостовериться, что он существует. В противном случае  возвращается
+	 * ошибка</li>
+	 * <li> Создание виджета для каждой ячейки, валидация значений поля</li>
+	 * <li> TODO: вывод ошибок валидации</li>
+	 * <li> Сохранение записи</li>
+	 * <li> Вывод ошибок сохранения, если таковые появились</li>
+	 * <li> Модификация данных сроки виджетами.</li>
+	 * </ul>
+	 *
+	 * @param int $id ID записи в БД
+	 * @param array $fields Поля с изменениями
+	 *
+	 * @see HelperWidget::processEditAction();
+	 * @see HelperWidget::processAfterSaveAction();
+	 */
+	protected function editAction($id, $fields)
+	{
+		$this->setContext(AdminListHelper::OP_EDIT_ACTION);
+		if(strpos($id, 's')===0){ // для раделов другой класс модели
+			$editHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+			$sectionsInterfaceSettings = static::getInterfaceSettings($editHelperClass::getViewName());
+			$className = $editHelperClass::getModel();
+			$id = str_replace('s','',$id);
+		}else{
+			$className = static::getModel();
+			$sectionsInterfaceSettings = false;
+		}
+		$el = $className::getById($id);
+		if ($el->getSelectedRowsCount() == 0) {
+			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR"), $id);
+			return;
+		}
+
+		$allWidgets = array();
+		foreach ($fields as $key => $value) {
+			if($sectionsInterfaceSettings!==false){
+				$widget = $sectionsInterfaceSettings['FIELDS'][$key]['WIDGET'];
+			}else{
+				$widget = $this->createWidgetForField($key, $fields);
+			}
+
+			$widget->processEditAction();
+			$this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
+			$allWidgets[] = $widget;
+		}
+		//FIXME: может, надо добавить вывод ошибок ДО сохранения?..
+		$this->addErrors($this->validationErrors);
+
+		$result = $className::update($id, $fields);
+		$errors = $result->getErrorMessages();
+		if (empty($this->validationErrors) AND !empty($errors)) {
+			$fieldList = implode("\n", $errors);
+			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList, $id);
+		}
+
+		if (!empty($errors)) {
+			foreach ($allWidgets as $widget) {
+				/** @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget */
+				$widget->setData($fields);
+				$widget->processAfterSaveAction();
 			}
 		}
 	}
@@ -751,6 +819,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 		echo $this->epilogHtml;
 		$this->list->EndEpilogContent();
 
+		// добавляем ошибки в CAdminList для режимов list и frame
+		if(in_array($_GET['mode'], array('list','frame'))) {
+			foreach($this->getErrors() as $error) {
+				$this->list->addGroupError($error);
+			}
+		}
+
 		$this->list->CheckListMode();
 	}
 
@@ -831,7 +906,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$returnData = array();
 		$raw['SELECT'] = array_unique($raw['SELECT']);
 		$sectionModel = $sectionEditHelperClass::getModel();
-		$sectionFilter = array($sectionModel::getSectionField() => $_REQUEST['ID']);
+		$sectionFilter = array($sectionModel::getSectionField() => $_GET['ID']);
 
 		// при использовании в качестве popup окна исключаем раздел из выборке
 		// что бы не было возможности сделать раздел родителем самого себя
@@ -876,7 +951,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$elementLimit = $limitData[1] - count($returnData);
 		$elementModel = static::$model;
 		$elementFilter = $this->arFilter;
-		$elementFilter[$elementModel::getSectionField()] = $_REQUEST['ID'];
+		$elementFilter[$elementModel::getSectionField()] = $_GET['ID'];
 		// добавляем к общему количеству элементов количество элементов
 		$this->totalRowsCount += $elementModel::getCount($elementFilter);
 
@@ -1100,6 +1175,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param \CAdminListRow $row
 	 * @param $code - сивольный код поля
 	 * @param $data - данные текущей строки
+	 * @param bool $virtualCode
 	 * @throws Exception
 	 * @see HelperWidget::genListHTML()
 	 */
