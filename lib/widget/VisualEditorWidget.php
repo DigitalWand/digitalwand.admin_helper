@@ -2,6 +2,12 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
+/**
+ * Визуальный редактор
+ *
+ * В отличии от виджета TextAreaWidget, кроме поля указанного в интерфейсе раздела (AdminInterface::fields()),
+ * обязательно поле {НАЗВАНИЕ ПОЛЯ}_TEXT_TYPE, в котором будет хранится тип контента (text/html)
+ */
 class VisualEditorWidget extends TextAreaWidget
 {
     /** @const string Текст. Тип содержимого редактора */
