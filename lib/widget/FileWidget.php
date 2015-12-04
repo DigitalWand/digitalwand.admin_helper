@@ -12,7 +12,7 @@ Loc::loadMessages(__FILE__);
  * <ul>
  * <li><b>DESCRIPTION_FIELD</b> - bool нужно ли поле описания</li>
  * <li><b>MULTIPLE</b> - bool является ли поле множественным</li>
- * <li><b>IMAGE</b> - bool отображать ли изображение файла</li>
+ * <li><b>IMAGE</b> - bool отображать ли изображение файла, для старого вида отображения</li>
  * </ul>
  */
 class FileWidget extends HelperWidget
@@ -22,26 +22,32 @@ class FileWidget extends HelperWidget
 		'IMAGE' => false,
 		'DESCRIPTION_FIELD' => false,
 		'EDIT_IN_LIST' => false,
-		'FILTER' => false
+		'FILTER' => false,
+		'UPLOAD' => true,
+		'MEDIALIB' => true,
+		'FILE_DIALOG' => true,
+		'CLOUD' => true,
+		'DELETE' => true,
+		'EDIT' => true,
 	);
 
 	/**
-	 * Генерирует HTML для редактирования поля
-	 * @return mixed
+	 * {@inheritdoc}
 	 */
 	protected function genEditHTML()
 	{
-		if (class_exists('\Bitrix\Main\UI\FileInput', true))
+		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true)
 		{
 			$str = \Bitrix\Main\UI\FileInput::createInstance(array(
 				"name" => $this->getEditInputName('_FILE'),
 				"description" => $this->getSettings('DESCRIPTION_FIELD'),
-				"upload" => true,
+				"upload" => $this->getSettings('UPLOAD'),
 				"allowUpload" => "I",
-				"medialib" => true,
-				"fileDialog" => true,
-				"cloud" => true,
-				"delete" => true,
+				"medialib" => $this->getSettings('MEDIALIB'),
+				"fileDialog" => $this->getSettings('FILE_DIALOG'),
+				"cloud" => $this->getSettings('CLOUD'),
+				"delete" => $this->getSettings('DELETE'),
+				"edit" => $this->getSettings('EDIT'),
 				"maxCount" => 1
 			))->show($this->getValue());
 		}
@@ -54,11 +60,11 @@ class FileWidget extends HelperWidget
 					"FILE_SIZE" => "Y",
 					"ALLOW_UPLOAD" => "I",
 				), array(
-					'upload' => true,
-					'medialib' => false,
-					'file_dialog' => true,
-					'cloud' => false,
-					'del' => true,
+					'upload' => $this->getSettings('UPLOAD'),
+					'medialib' => $this->getSettings('MEDIALIB'),
+					'file_dialog' => $this->getSettings('FILE_DIALOG'),
+					'cloud' => $this->getSettings('CLOUD'),
+					'del' => $this->getSettings('DELETE'),
 					'description' => $this->getSettings('DESCRIPTION_FIELD'),
 				)
 			);
@@ -72,6 +78,9 @@ class FileWidget extends HelperWidget
 		return $str;
 	}
 
+	/**
+	 * {@inheritdoc}
+	 */
 	protected function genMultipleEditHTML()
 	{
 		$rsEntityData = null;
@@ -97,17 +106,18 @@ class FileWidget extends HelperWidget
 			}
 		}
 
-		if (class_exists('\Bitrix\Main\UI\FileInput', true))
+		if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true)
 		{
 			$str = \Bitrix\Main\UI\FileInput::createInstance(array(
 				"name" => $name . "[n#IND#]",
 				"description" => $this->getSettings('DESCRIPTION_FIELD'),
-				"upload" => true,
+				"upload" => $this->getSettings('UPLOAD'),
 				"allowUpload" => "I",
-				"medialib" => true,
-				"fileDialog" => true,
-				"cloud" => true,
-				"delete" => true,
+				"medialib" => $this->getSettings('MEDIALIB'),
+				"fileDialog" => $this->getSettings('FILE_DIALOG'),
+				"cloud" => $this->getSettings('CLOUD'),
+				"delete" => $this->getSettings('DELETE'),
+				"edit" => $this->getSettings('EDIT')
 			))->show($inputName);
 		}
 		else
@@ -120,11 +130,11 @@ class FileWidget extends HelperWidget
 					"DIMENSIONS" => "Y",
 					"IMAGE_POPUP" => "Y",
 				), false, array(
-					'upload' => true,
-					'medialib' => true,
-					'file_dialog' => true,
-					'cloud' => true,
-					'del' => true,
+					'upload' => $this->getSettings('UPLOAD'),
+					'medialib' => $this->getSettings('MEDIALIB'),
+					'file_dialog' => $this->getSettings('FILE_DIALOG'),
+					'cloud' => $this->getSettings('CLOUD'),
+					'del' => $this->getSettings('DELETE'),
 					'description' => $this->getSettings('DESCRIPTION_FIELD'),
 				)
 			);
@@ -143,11 +153,7 @@ class FileWidget extends HelperWidget
 	}
 
 	/**
-	 * Генерирует HTML для поля в списке
-	 * @see AdminListHelper::addRowCell();
-	 * @param \CAdminListRow $row
-	 * @param array $data - данные текущей строки
-	 * @return mixed
+	 * {@inheritdoc}
 	 */
 	public function genListHTML(&$row, $data)
 	{
@@ -173,25 +179,39 @@ class FileWidget extends HelperWidget
 	}
 
 	/**
-	 * Генерирует HTML для поля фильтрации
-	 * @see AdminListHelper::createFilterForm();
-	 * @return mixed
+	 * {@inheritdoc}
 	 */
 	public function genFilterHTML()
 	{
 		// TODO: Implement genFilterHTML() method.
 	}
 
+	/**
+	 * {@inheritdoc}
+	 */
 	public function processEditAction()
 	{
 		parent::processEditAction();
 		if ($this->getSettings('MULTIPLE'))
 		{
-			if(class_exists('\Bitrix\Main\UI\FileInput', true))
+			if($this->getSettings('READONLY') === true)
+			{
+				//удаляем все добавленные файлы в режиме только для чтения
+				foreach($this->data[$this->code] as $key => $value)
+				{
+					if(!is_array($value))
+					{
+						unset($this->data[$this->code][$key]);
+					}
+				}
+				return false;
+			}
+
+			if(class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true)
 			{
 				foreach($this->data[$this->code] as $key => $value)
 				{
-					if($value['name'] || $value['tmp_name'])
+					if(is_array($value) && ($value['name'] || $value['tmp_name']))
 					{
 						$_FILES[$this->code]['name'][$key] = $value['name'];
 						$_FILES[$this->code]['type'][$key] = $value['type'];
@@ -200,12 +220,17 @@ class FileWidget extends HelperWidget
 						$_FILES[$this->code]['size'][$key] = $value['size'];
 						unset($this->data[$this->code][$key]);
 					}
+					else
+					{
+						$_FILES[$this->code]['name'][$key] = '';
+					}
 				}
 				if(!count($this->data[$this->code]))
 				{
 					unset($this->data[$this->code]);
 				}
 			}
+
 
 			if (!empty($_FILES[$this->getCode()]))
 			{
@@ -217,7 +242,15 @@ class FileWidget extends HelperWidget
 					{
 						if (isset($_REQUEST[$this->getCode().'_del'][$key]))
 						{
-							\CFile::Delete(intval($this->data[$this->getCode()][$key]['VALUE']));
+							if(is_array($this->data[$this->getCode()][$key]) &&
+								!empty($this->data[$this->getCode()][$key]['VALUE']))
+							{
+								\CFile::Delete(intval($this->data[$this->getCode()][$key]['VALUE']));
+							}
+							else
+							{
+								\CFile::Delete(intval($this->data[$this->getCode()][$key]));
+							}
 							unset($this->data[$this->getCode()][$key]);
 						}
 						elseif($this->data[$this->getCode()][$key]['VALUE'])
@@ -226,6 +259,19 @@ class FileWidget extends HelperWidget
 								$_REQUEST[$this->getCode().'_descr'][$key]);
 						}
 						continue;
+					}
+					elseif(is_int($key))
+					{
+						//Удаляем старый файл при замене
+						if(is_array($this->data[$this->getCode()][$key]) &&
+							!empty($this->data[$this->getCode()][$key]['VALUE']))
+						{
+							\CFile::Delete(intval($this->data[$this->getCode()][$key]['VALUE']));
+						}
+						else
+						{
+							\CFile::Delete(intval($this->data[$this->getCode()][$key]));
+						}
 					}
 
 					$description = null;
@@ -244,7 +290,7 @@ class FileWidget extends HelperWidget
 
 					if ($fileId)
 					{
-						$this->data[$this->getCode()][] = array('VALUE' => $fileId);
+						$this->data[$this->getCode()][$key] = array('VALUE' => $fileId);
 					}
 					else
 					{
@@ -255,14 +301,23 @@ class FileWidget extends HelperWidget
 		}
 		else
 		{
-			if(class_exists('\Bitrix\Main\UI\FileInput', true))
+			if(class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true)
 			{
-				$_FILES['FIELDS']['name'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['name'];
-				$_FILES['FIELDS']['type'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['type'];
-				$_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['tmp_name'];
-				$_FILES['FIELDS']['error'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['error'];
-				$_FILES['FIELDS']['size'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['size'];
-				unset($this->data[$this->code . '_FILE']);
+				if(is_array($this->data[$this->code . '_FILE']) && ($this->data[$this->code . '_FILE']['name'] ||
+						$this->data[$this->code . '_FILE']['tmp_name']))
+				{
+					$_FILES['FIELDS']['name'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['name'];
+					$_FILES['FIELDS']['type'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['type'];
+					$_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['tmp_name'];
+					$_FILES['FIELDS']['error'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['error'];
+					$_FILES['FIELDS']['size'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['size'];
+				}
+			}
+
+			unset($this->data[$this->code . '_FILE']);
+			if($this->getSettings('READONLY') === true)
+			{
+				return false;
 			}
 
 			if (empty($_FILES['FIELDS']['name'][$this->code . '_FILE'])
@@ -316,7 +371,7 @@ class FileWidget extends HelperWidget
 			$fileInfo['description'] = $description;
 		}
 
-		if (stripos($fileInfo['type'], "image") === false)
+		if ($this->getSettings('IMAGE') === true && stripos($fileInfo['type'], "image") === false)
 		{
 			$this->addError('FILE_FIELD_TYPE_ERROR');
 
@@ -326,10 +381,10 @@ class FileWidget extends HelperWidget
 		$fileInfo["name"] = $name;
 
 		/** @var AdminBaseHelper $model */
-		$helper = $this->helper;
-		$fileInfo['MODULE_ID'] = $helper::$module;
+		$moduleId = $this->helper->getModule();
+		$fileInfo['MODULE_ID'] = $moduleId;
 
-		$fileId = \CFile::SaveFile($fileInfo, $helper::$module);
+		$fileId = \CFile::SaveFile($fileInfo, $moduleId);
 
 		if (!$this->getSettings('MULTIPLE'))
 		{
@@ -344,47 +399,34 @@ class FileWidget extends HelperWidget
 
 		return $fileId;
 	}
-	
-    /**
-     * {@inheritdoc}
-     */
-    protected function getMultipleValueReadonly()
-    {
-        $result = '';
-        $descriptionField = $this->getSettings('DESCRIPTION_FIELD');
-        $values = parent::getMultipleValue();
 
-        if (!empty($values)) {
-            foreach ($values as $value) {
-                $fileInfo = \CFile::GetFileArray($value);
-                if (!empty($fileInfo)) {
-                    if (
-                        $fileInfo['CONTENT_TYPE'] == 'image/jpeg'
-                        || $fileInfo['CONTENT_TYPE'] == 'image/png'
-                        || $fileInfo['CONTENT_TYPE'] == 'image/gif'
-                    ) {
-                        $result .= '<div><img src="' . $fileInfo['SRC'] . '"
-						alt="' . static::prepareToTagAttr($fileInfo['ORIGINAL_NAME']) . '" width="100" height="100"></div>';
-                    }
+	/**
+	 * {@inheritdoc}
+	 */
+	protected function getValueReadonly()
+	{
+		$this->setSetting('UPLOAD', false);
+		$this->setSetting('MEDIALIB', false);
+		$this->setSetting('FILE_DIALOG', false);
+		$this->setSetting('CLOUD', false);
+		$this->setSetting('DELETE', false);
+		$this->setSetting('EDIT', false);
 
-                    $fileDetails = $fileInfo['ORIGINAL_NAME'];
+		return $this->genEditHTML();
+	}
 
-                    if ($descriptionField && !empty($fileInfo['DESCRIPTION'])) {
-                        $description = mb_substr($fileInfo['DESCRIPTION'], 0, 30, 'UTF-8');
+	/**
+	 * {@inheritdoc}
+	 */
+	protected function getMultipleValueReadonly()
+	{
+		$this->setSetting('UPLOAD', false);
+		$this->setSetting('MEDIALIB', false);
+		$this->setSetting('FILE_DIALOG', false);
+		$this->setSetting('CLOUD', false);
+		$this->setSetting('DELETE', false);
+		$this->setSetting('EDIT', false);
 
-                        if (mb_strlen($fileInfo['DESCRIPTION'], 'UTF-8') > 30) {
-                            $description .= '...';
-                        }
-                        $fileDetails .= ' - ' . $description;
-                    }
-
-                    $result .= '<p>' . static::prepareToOutput($fileDetails) . '</p>';
-                } else {
-                    $result .= '<div>Файл не найден</div>';
-                }
-            }
-        }
-
-        return $result;
-    }
+		return $this->genMultipleEditHTML();
+	}
 }
