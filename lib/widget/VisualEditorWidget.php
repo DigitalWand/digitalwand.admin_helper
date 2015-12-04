@@ -4,6 +4,11 @@ namespace DigitalWand\AdminHelper\Widget;
 
 class VisualEditorWidget extends TextAreaWidget
 {
+    /** @const string Текст. Тип содержимого редактора */
+    const CONTENT_TYPE_TEXT = 'text';
+    /** @const string HTML-текст. Тип содержимого редактора */
+    const CONTENT_TYPE_HTML = 'html';
+
     static protected $defaults = array(
         'WIDTH' => '100%',
         'HEIGHT' => 450,
@@ -23,7 +28,7 @@ class VisualEditorWidget extends TextAreaWidget
     {
         if (\CModule::IncludeModule("fileman")) {
             ob_start();
-            $codeType = $this->code . '_TEXT_TYPE';
+            $codeType = $this->getContentTypeCode();
             /** @var string $className Имя класса без неймспейса */
             $className = $this->getEntityShortName();
             $entityClass = $this->entityName;
@@ -117,12 +122,19 @@ class VisualEditorWidget extends TextAreaWidget
                         'height' => $this->getSettings('HEIGHT'),
                     )
                 );
-                $defaultEditors = array("text" => "text", "html" => "html", "editor" => "editor");
+                // TRICKY Не ясно где хранится название редактора и где название типа контента, поэтому и ключ, и значение
+                // обернуты в константу CONTENT_TYPE_...
+                // Следовательно если значение констант будет изменено, могут быть проблемы с выбором редактора в админ интерфейсе
+                $defaultEditors = array(
+                    static::CONTENT_TYPE_TEXT => static::CONTENT_TYPE_TEXT,
+                    static::CONTENT_TYPE_HTML => static::CONTENT_TYPE_HTML,
+                    "editor" => "editor"
+                );
                 $editors = $this->getSettings('EDITORS');
                 $defaultEditor = strtolower($this->getSettings('DEFAULT_EDITOR'));
-                $contentType = $this->data[$codeType];
-                $defaultEditor = isset($contentType) && $contentType == "text" ? "text" : $defaultEditor;
-                $defaultEditor = isset($contentType) && $contentType == "html" ? "editor" : $defaultEditor;
+                $contentType = $this->getContentType();
+                $defaultEditor = isset($contentType) && $contentType == static::CONTENT_TYPE_TEXT ? static::CONTENT_TYPE_TEXT : $defaultEditor;
+                $defaultEditor = isset($contentType) && $contentType == static::CONTENT_TYPE_HTML ? "editor" : $defaultEditor;
 
                 if (count($editors) > 1) {
                     foreach ($editors as &$editor) {
@@ -217,7 +229,7 @@ class VisualEditorWidget extends TextAreaWidget
      */
     protected function getValueReadonly()
     {
-        return static::prepareToOutput($this->data[$this->code]);
+        return $this->getContentType() == static::CONTENT_TYPE_HTML ? $this->data[$this->code] : parent::getValueReadOnly();
     }
 
     /**
@@ -238,6 +250,24 @@ class VisualEditorWidget extends TextAreaWidget
 
         $text = static::prepareToOutput($text);
         $row->AddViewField($this->code, $text);
+    }
+
+    /**
+     * Тип текста (text/html)
+     * @return string
+     */
+    public function getContentType()
+    {
+        return $this->data[$this->getContentTypeCode()];
+    }
+
+    /**
+     * Поле, в котором хранится тип текста
+     * @return string
+     */
+    public function getContentTypeCode()
+    {
+        return $this->code . '_TEXT_TYPE';
     }
 
     /**
