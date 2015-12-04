@@ -1,4 +1,5 @@
 <?php
+
 namespace DigitalWand\AdminHelper\Widget;
 
 use Bitrix\Main\Localization\Loc;
@@ -6,91 +7,213 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 /**
- * Class CheckboxWidget
  * Виджет "галочка"
- *
  */
 class CheckboxWidget extends HelperWidget
 {
     /**
-     * Генерирует HTML для редактирования поля
-     *
-     * @return mixed
+     * Строковый тип чекбокса (Y/N)
+     */
+    const TYPE_STRING = 'string';
+    /**
+     * Целочисленный тип чекбокса (1/0)
+     */
+    const TYPE_INT = 'integer';
+    /**
+     * Булевый тип чекбокса
+     */
+    const TYPE_BOOLEAN = 'boolean';
+    /**
+     * Значение положительного варианта для строкового чекбокса
+     */
+    const TYPE_STRING_YES = 'Y';
+    /**
+     * Значение отрицательного варианта для строкового чекбокса
+     */
+    const TYPE_STRING_NO = 'N';
+    /**
+     * Значение положительного варианта для целочисленного чекбокса
+     */
+    const TYPE_INT_YES = 1;
+    /**
+     * Значение отрицательного варианта для целочисленного чекбокса
+     */
+    const TYPE_INT_NO = 0;
+
+    static protected $defaults = array(
+        'EDIT_IN_LIST' => true
+    );
+
+    /**
+     * @inheritdoc
      */
     protected function genEditHTML()
     {
-        $checked = $this->getValue() == 'Y' ? 'checked' : '';
+        $html = '';
 
-        return '<input type="checkbox" name="'.$this->getEditInputName().'" value="Y" '.$checked.' />';
+        $modeType = $this->getCheckboxType();
+
+        switch ($modeType) {
+            case static::TYPE_STRING: {
+                $checked = $this->getValue() == self::TYPE_STRING_YES ? 'checked' : '';
+
+                $html = '<input type="hidden" name="' . $this->getEditInputName() . '" value="' . self::TYPE_STRING_NO . '" />';
+                $html .= '<input type="checkbox" name="' . $this->getEditInputName() . '" value="' . self::TYPE_STRING_YES . '" ' . $checked . ' />';
+                break;
+            }
+            case static::TYPE_INT:
+            case static::TYPE_BOOLEAN: {
+                $checked = $this->getValue() == self::TYPE_INT_YES ? 'checked' : '';
+
+                $html = '<input type="hidden" name="' . $this->getEditInputName() . '" value="' . self::TYPE_INT_NO . '" />';
+                $html .= '<input type="checkbox" name="' . $this->getEditInputName() . '" value="' . self::TYPE_INT_YES . '" ' . $checked . ' />';
+                break;
+            }
+        }
+
+        return $html;
     }
 
     /**
-     * Генерирует HTML для поля в списке
-     *
-     * @see AdminListHelper::addRowCell();
-     *
-     * @param \CAdminListRow $row
-     * @param array          $data - данные текущей строки
-     *
-     * @return mixed
+     * @inheritdoc
      */
     public function genListHTML(&$row, $data)
     {
+        $modeType = $this->getCheckboxType();
+
+        $globalYes = '';
+        $globalNo = '';
+
+        switch ($modeType) {
+            case self::TYPE_STRING: {
+                $globalYes = self::TYPE_STRING_YES;
+                $globalNo = self::TYPE_STRING_NO;
+                break;
+            }
+            case self::TYPE_INT:
+            case self::TYPE_BOOLEAN: {
+                $globalYes = self::TYPE_INT_YES;
+                $globalNo = self::TYPE_INT_NO;
+                break;
+            }
+        }
+
         if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
-            $checked = intval($this->getValue() == 'Y') ? 'checked' : '';
-            $js = 'var input = document.getElementsByName(\''.$this->getEditableListInputName().'\')[0];
-                   input.value = this.checked ? \'Y\' : \'N\';';
-            $editHtml
-                = '<input type="checkbox"
-                                value="'.$this->getValue().'" '.$checked.'
-                                onchange="'.$js.'"/>
+            $checked = intval($this->getValue() == $globalYes) ? 'checked' : '';
+            $js = 'var input = document.getElementsByName(\'' . $this->getEditableListInputName() . '\')[0];
+                   input.value = this.checked ? \'' . $globalYes . '\' : \'' . $globalNo . '\';';
+            $editHtml = '<input type="checkbox"
+                                value="' . static::prepareToTagAttr($this->getValue()) . '" ' . $checked . '
+                                onchange="' . $js . '"/>
                          <input type="hidden"
-                                value="'.$this->getValue().'"
-                                name="'.$this->getEditableListInputName().'" />';
+                                value="' . static::prepareToTagAttr($this->getValue()) . '"
+                                name="' . $this->getEditableListInputName() . '" />';
             $row->AddEditField($this->getCode(), $editHtml);
         }
 
-        $value = intval($this->getValue() == 'Y') ? Loc::getMessage('CHECKBOX_YES') : Loc::getMessage('CHECKBOX_NO');
-        $row->AddViewField($this->getCode(), $value);
+        if (intval($this->getValue() == $globalYes)) {
+            $value = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES');
+        } else {
+            $value = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
+        }
 
+        $row->AddViewField($this->getCode(), $value);
     }
 
     /**
-     * Генерирует HTML для поля фильтрации
-     *
-     * @see AdminListHelper::createFilterForm();
-     * @return mixed
+     * @inheritdoc
      */
     public function genFilterHTML()
     {
-        print '<tr>';
-        print '<td>'.$this->getSettings('TITLE').'</td>';
-        print '<td> <select  name="'.$this->getFilterInputName().'">';
+        $filterHtml = '<tr>';
+        $filterHtml .= '<td>' . $this->getSettings('TITLE') . '</td>';
+        $filterHtml .= '<td> <select  name="' . $this->getFilterInputName() . '">';
+        $filterHtml .= '<option value=""></option>';
 
-        print '<option value="Y">'.Loc::getMessage('CHECKBOX_YES').'</option>';
-        print '<option value="N">'.Loc::getMessage('CHECKBOX_NO').'</option>';
+        $modeType = $this->getCheckboxType();
 
-        print '</select></td>';
-        print '</tr>';
-    }
+        $langYes = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES');
+        $langNo = Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
 
-    public function getValue()
-    {
-        $rawValue = parent::getValue();
-        if (!is_string($rawValue)) {
-            return $this->toString($rawValue);
+        switch ($modeType) {
+            case self::TYPE_STRING: {
+                $filterHtml .= '<option value="' . self::TYPE_STRING_YES . '">' . $langYes . '</option>';
+                $filterHtml .= '<option value="' . self::TYPE_STRING_NO . '">' . $langNo . '</option>';
+                break;
+            }
+            case self::TYPE_INT:
+            case self::TYPE_BOOLEAN: {
+                $filterHtml .= '<option value="' . self::TYPE_INT_YES . '">' . $langYes . '</option>';
+                $filterHtml .= '<option value="' . self::TYPE_INT_NO . '">' . $langNo . '</option>';
+                break;
+            }
         }
 
-        return $rawValue;
+        $filterHtml .= '</select></td>';
+        $filterHtml .= '</tr>';
+
+        print $filterHtml;
     }
 
-    public static function toInt($stringValue)
+    /**
+     * @inheritdoc
+     */
+    public function getValueReadonly()
     {
-        return $stringValue == 'Y' ? 1 : 0;
+        $code = $this->getCode();
+        $value = isset($this->data[$code]) ? $this->data[$code] : null;
+        $modeType = $this->getCheckboxType();
+
+        switch ($modeType) {
+            case static::TYPE_STRING: {
+                $value = $value == 'Y' ? Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES') : Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
+                break;
+            }
+            case static::TYPE_INT:
+            case static::TYPE_BOOLEAN: {
+                $value = $value ? Loc::getMessage('DIGITALWAND_AH_CHECKBOX_YES') : Loc::getMessage('DIGITALWAND_AH_CHECKBOX_NO');
+                break;
+            }
+        }
+
+        return static::prepareToOutput($value);
     }
 
-    public static function toString($boolValue)
+    /**
+     * @inheritdoc
+     */
+    public function processEditAction()
     {
-        return $boolValue ? 'Y' : 'N';
+        parent::processEditAction();
+
+        if ($this->getCheckboxType() === static::TYPE_BOOLEAN) {
+            $this->data[$this->getCode()] = (bool) $this->data[$this->getCode()];
+        }
+    }
+
+    /**
+     * Получить тип чекбокса по типу поля.
+     *
+     * @return mixed
+     */
+    public function getCheckboxType()
+    {
+        $fieldType = '';
+        $entity = $this->getEntityName();
+        $entityMap = $entity::getMap();
+        $columnName = $this->getCode();
+
+        if (!isset($entityMap[$columnName])) {
+            foreach ($entityMap as $field) {
+                if ($field->getColumnName() === $columnName) {
+                    $fieldType = $field->getDataType();
+                    break;
+                }
+            }
+        } else {
+            $fieldType = $entityMap[$columnName]['data_type'];
+        }
+
+        return $fieldType;
     }
 }

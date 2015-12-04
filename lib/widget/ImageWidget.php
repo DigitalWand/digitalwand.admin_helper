@@ -13,7 +13,8 @@ class ImageWidget extends FileWidget
         'LIST_WIDTH' => 100,
         'LIST_HEIGHT' => 100,
         'LIST_FILTERS' => false,
-        'LIST_QUALITY' => 80
+        'LIST_QUALITY' => 80,
+        'FILTER' => false
     );
     /**
      * Генерирует HTML для редактирования поля
@@ -47,23 +48,27 @@ class ImageWidget extends FileWidget
     /**
      * Генерирует HTML для поля в списке
      * @see AdminListHelper::addRowCell();
-     * @param CAdminListRow $row
+     * @param \CAdminListRow $row
      * @param array $data - данные текущей строки
      * @return mixed
      */
     public function genListHTML(&$row, $data)
     {
-        $image = $this->getImageByID($data[$this->code],'LIST');
+        if ($_REQUEST['mode'] == 'excel') {
+            $path = \CFile::GetPath($data[$this->code]);
+            $scheme = empty($_SERVER['REQUEST_SCHEME']) ? 'http' : $_SERVER['REQUEST_SCHEME'];
+            $html = $scheme . '://' . $_SERVER['SERVER_NAME'] . $path;
 
-        if (!$image)
-        {
-            $html = "";    
+        } else {
+            $image = $this->getImageByID($data[$this->code], 'LIST');
+            if (!$image) {
+                $html = "";
+            } else {
+                $html = '<img src="' . $image['src'] . '" width="' . $this->getSettings('LIST_WIDTH') . '" height="' . $this->getSettings('LIST_HEIGHT') . '">';
+            }
         }
-        else
-        {
-            $html = '<img src="'.$image['src'].'" width="'.$this->getSettings('LIST_WIDTH').'" height="'.$this->getSettings('LIST_HEIGHT').'">';
-        }
-        $row->AddViewField($this->code,$html);
+
+        $row->AddViewField($this->code, $html);
 
     }
 
@@ -78,5 +83,46 @@ class ImageWidget extends FileWidget
         return \CFile::ResizeImageGet($id, $size, BX_RESIZE_IMAGE_EXACT, true, $filters, false, $quality);
 
     }
+
+    protected function saveFile($name, $path, $type = false)
+    {
+        if (!$path)
+        {
+            return false;
+        }
+
+        $fileInfo = \CFile::MakeFileArray(
+            $path,
+            $type
+        );
+
+
+        if(!$fileInfo) return false;
+
+        if (stripos($fileInfo['type'], "image") === false)
+        {
+            $this->addError('FILE_FIELD_TYPE_ERROR');
+            return false;
+        }
+
+        $fileInfo["name"] = $name;
+
+        /** @var AdminBaseHelper $model */
+        $helper = $this->helper;
+        $fileId = \CFile::SaveFile($fileInfo, $helper::$module);
+
+        $code = $this->code;
+        if(isset($this->data[$code])) {
+            \CFile::Delete($this->data[$code]);
+        }
+
+        if($this->getSettings('MULTIPLE')){
+
+        }
+
+        $this->data[$code] = $fileId;
+        return true;
+    }
+
 
 }

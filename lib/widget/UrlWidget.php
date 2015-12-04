@@ -7,7 +7,7 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 /**
- * Виджет инпута для ввода ссылки
+ * Виджет текстового поля для ввода гиперссылки.
  *
  * Доступные опции:
  * <ul>
@@ -16,47 +16,70 @@ Loc::loadMessages(__FILE__);
  * <li> SIZE - значение атрибута size для input </li>
  * <li> MAX_URL_LEN - длина отображаемого URL</li>
  * </ul>
+ *
+ * @author Nik Samokhvalov <nik@samokhvalov.info>
  */
 class UrlWidget extends StringWidget
 {
-    static protected $defaults = [
+    static protected $defaults = array(
         'MAX_URL_LEN' => 256,
         'PROTOCOL_REQUIRED' => false,
-    ];
+    );
 
     /**
-     * Генерирует HTML для поля в списке
-     * @see AdminListHelper::addRowCell();
-     * @param CAdminListRow $row
-     * @param array $data - данные текущей строки
-     * @return mixed
+     * @inheritdoc
      */
     public function genListHTML(&$row, $data)
     {
-        $urlText = htmlspecialchars($data[$this->getCode()]);
-        if (strlen($urlText) > $this->getSettings('MAX_URL_LEN'))
-        {
-            $urlText = substr($urlText, 0, $this->getSettings('MAX_URL_LEN'));
+        $value = $this->getValue();
+
+        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
+            $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
         }
-        $href = '<a href="' . $data[$this->getCode()] . '" target="_blank">' . $urlText . '</a>';
-        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY'))
-        {
-            $row->AddInputField($this->getCode(), ['style' => 'width:90%']);
-        }
-        $row->AddViewField($this->getCode(), $href);
+
+        $row->AddViewField($this->getCode(), $value);
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function getValue()
+    {
+        $code = $this->getCode();
+        $value = isset($this->data[$code]) ? $this->data[$code] : null;
+
+        if ($value !== null) {
+            $urlText = static::prepareToOutput($value);
+            $urlText = preg_replace('/^javascript:/i', '', $urlText);
+
+            if (strlen($urlText) > $this->getSettings('MAX_URL_LEN')) {
+                $urlText = substr($urlText, 0, $this->getSettings('MAX_URL_LEN'));
+            }
+
+            if (($this->getSettings('READONLY') && $this->getCurrentViewType() == static::EDIT_HELPER) || $this->getCurrentViewType() == static::LIST_HELPER) {
+                $value = '<a href="' . $value . '" target="_blank">' . $urlText . '</a>';
+            } else {
+                $value = $urlText;
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function processEditAction()
     {
         $value = $this->getValue();
+
         if (
             $this->getSettings('PROTOCOL_REQUIRED')
             && !empty($value)
             && preg_match('/^https?:\/\//', $value) == 0
-        )
-        {
+        ) {
+
             $this->addError('PROTOCOL_REQUIRED');
         }
-
     }
 }

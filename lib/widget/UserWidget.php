@@ -2,18 +2,24 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
-use DigitalWand\AdminHelper\Widget\NumberWidget;
+use Bitrix\Main\UserTable;
 
 /**
- * Виджет для вывода пользователя
+ * Виджет для вывода пользователя.
+ *
  * Доступные опции:
  * <ul>
  * <li> STYLE - inline-стили
  * <li> SIZE - значение атрибута size для input
  * </ul>
+ *
+ * @author Nik Samokhvalov <nik@samokhvalov.info>
  */
 class UserWidget extends NumberWidget
 {
+    /**
+     * @inheritdoc
+     */
     public function genEditHtml()
     {
         $style = $this->getSettings('STYLE');
@@ -21,79 +27,73 @@ class UserWidget extends NumberWidget
 
         $userId = $this->getValue();
 
-        $strUser = '';
-        if(!empty($userId) && $userId != 0)
-        {
-            $rsUser = \CUser::GetByID($userId);
-            $arUser = $rsUser->Fetch();
+        $htmlUser = '';
 
-            $strUser = '[<a href="user_edit.php?lang=ru&ID='.$arUser['ID'].'">' . $arUser['ID'] . '</a>] (' . $arUser['EMAIL']  . ') ' . $arUser['NAME'] . '&nbsp;' .$arUser['LAST_NAME'];
+        if (!empty($userId) && $userId != 0) {
+            $rsUser = UserTable::getById($userId);
+            $user = $rsUser->fetch();
+
+            $htmlUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>] ('
+                . $user['EMAIL'] . ') ' . $user['NAME'] . '&nbsp;' . $user['LAST_NAME'];
         }
 
         return '<input type="text"
                        name="' . $this->getEditInputName() . '"
-                       value="' . htmlentities($this->getValue(), ENT_QUOTES) . '"
+                       value="' . static::prepareToTagAttr($this->getValue()) . '"
                        size="' . $size . '"
-                       style="' . $style . '"/>' . $strUser;
+                       style="' . $style . '"/>' . $htmlUser;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getValueReadonly()
     {
         $userId = $this->getValue();
-        $strUser = '';
+        $htmlUser = '';
 
-        if(!empty($userId) && $userId != 0)
-        {
-            $rsUser = \CUser::GetByID($userId);
-            $arUser = $rsUser->Fetch();
+        if (!empty($userId) && $userId != 0) {
+            $rsUser = UserTable::getById($userId);
+            $user = $rsUser->fetch();
 
-            $strUser = '[<a href="user_edit.php?lang=ru&ID='.$arUser['ID'].'">' . $arUser['ID'] . '</a>]';
+            $htmlUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>]';
 
-            if($arUser['EMAIL'])
-            {
-                $strUser .= ' (' . $arUser['EMAIL']  . ')';
+            if ($user['EMAIL']) {
+                $htmlUser .= ' (' . $user['EMAIL'] . ')';
             }
 
-            $strUser .=  ' '.$arUser['NAME'] . '&nbsp;' .$arUser['LAST_NAME'];
+            $htmlUser .= ' ' . static::prepareToOutput($user['NAME'])
+                . '&nbsp;' . static::prepareToOutput($user['LAST_NAME']);
         }
 
-        if($strUser)
-        {
-            return $strUser;
-        }
-        else
-        {
-            return '';
-        }
+        return $htmlUser;
     }
 
-
+    /**
+     * @inheritdoc
+     */
     public function genListHTML(&$row, $data)
     {
         $userId = $this->getValue();
         $strUser = '';
 
-        if(!empty($userId) && $userId != 0)
-        {
-            $rsUser = \CUser::GetByID($userId);
-            $arUser = $rsUser->Fetch();
+        if (!empty($userId) && $userId != 0) {
+            $rsUser = UserTable::getById($userId);
+            $user = $rsUser->fetch();
 
-            $strUser = '[<a href="user_edit.php?lang=ru&ID='.$arUser['ID'].'">' . $arUser['ID'] . '</a>]';
+            $strUser = '[<a href="user_edit.php?lang=ru&ID=' . $user['ID'] . '">' . $user['ID'] . '</a>]';
 
-            if($arUser['EMAIL'])
-            {
-                $strUser .= ' (' . $arUser['EMAIL']  . ')';
+            if ($user['EMAIL']) {
+                $strUser .= ' (' . $user['EMAIL'] . ')';
             }
 
-            $strUser .=  ' '.$arUser['NAME'] . '&nbsp;' .$arUser['LAST_NAME'];
+            $strUser .= ' ' . static::prepareToOutput($user['NAME'])
+                . '&nbsp;' . static::prepareToOutput($user['LAST_NAME']);
         }
 
-        if($strUser)
-        {
+        if ($strUser) {
             $row->AddViewField($this->getCode(), $strUser);
-        }
-        else
-        {
+        } else {
             $row->AddViewField($this->getCode(), '');
         }
     }
