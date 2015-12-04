@@ -210,7 +210,7 @@ class VisualEditorWidget extends TextAreaWidget
         switch ($currentView) {
             case HelperWidget::EDIT_HELPER:
                 $id = isset($this->data[$modelPk]) ? $this->data[$modelPk] : false;
-                $codeType = $this->getCode() . '_TEXT_TYPE';
+                $codeType = $this->getContentTypeCode();
                 $bxCode = $this->getCode() . '_' . $className;
                 $bxCodeType = $codeType . '_' . $className;
                 if ($this->forceMultiple AND $id) {
@@ -260,11 +260,14 @@ class VisualEditorWidget extends TextAreaWidget
 
     /**
      * Тип текста (text/html)
+     * По умолчанию html
      * @return string
      */
     public function getContentType()
     {
-        return $this->data[$this->getContentTypeCode()];
+        $contentType = $this->data[$this->getContentTypeCode()];
+
+        return empty($contentType) ? static::CONTENT_TYPE_HTML : $contentType;
     }
 
     /**
