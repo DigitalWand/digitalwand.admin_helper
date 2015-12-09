@@ -19,7 +19,7 @@ class VisualEditorWidget extends TextAreaWidget
     /**
      * @inheritdoc
      */
-    protected function genEditHTML()
+    protected function getEditHtml()
     {
         if (\CModule::IncludeModule("fileman")) {
             ob_start();
@@ -151,17 +151,17 @@ class VisualEditorWidget extends TextAreaWidget
 
             return $html;
         } else {
-            return parent::genEditHTML();
+            return parent::getEditHtml();
         }
     }
 
     /**
      * @inheritdoc
      */
-    public function genBasicEditField($isPKField)
+    public function showBasicEditField($isPKField)
     {
         if (!\CModule::IncludeModule("fileman")) {
-            parent::genBasicEditField($isPKField);
+            parent::showBasicEditField($isPKField);
         } else {
             $title = $this->getSettings('TITLE');
             if ($this->getSettings('REQUIRED') === true) {
@@ -171,7 +171,7 @@ class VisualEditorWidget extends TextAreaWidget
             print '<tr><td colspan="2">';
             $readOnly = $this->getSettings('READONLY');
             if (!$readOnly) {
-                print $this->genEditHTML();
+                print $this->getEditHtml();
             } else {
                 print $this->getValueReadonly();
             }

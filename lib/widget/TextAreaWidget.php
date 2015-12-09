@@ -32,7 +32,7 @@ class TextAreaWidget extends StringWidget
     /**
      * @inheritdoc
      */
-    protected function genEditHTML()
+    protected function getEditHtml()
     {
         $cols = $this->getSettings('COLS');
         $rows = $this->getSettings('ROWS');

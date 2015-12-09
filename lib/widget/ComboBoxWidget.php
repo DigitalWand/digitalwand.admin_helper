@@ -37,7 +37,7 @@ class ComboBoxWidget extends HelperWidget
      *
      * @return mixed
      */
-    protected function genEditHTML($forFilter = false)
+    protected function getEditHtml($forFilter = false)
     {
         $style = $this->getSettings('STYLE');
         $multiple = $this->getSettings('MULTIPLE');
@@ -119,9 +119,9 @@ class ComboBoxWidget extends HelperWidget
     /**
      * @inheritdoc
      */
-    protected function genMultipleEditHTML()
+    protected function getMultipleEditHtml()
     {
-        return $this->genEditHTML();
+        return $this->getEditHtml();
     }
 
     /**
@@ -201,11 +201,11 @@ class ComboBoxWidget extends HelperWidget
     /**
      * @inheritdoc
      */
-    public function genFilterHTML()
+    public function showFilterHtml()
     {
         print '<tr>';
         print '<td>' . $this->getSettings('TITLE') . '</td>';
-        print '<td>' . $this->genEditHTML(true) . '</td>';
+        print '<td>' . $this->getEditHtml(true) . '</td>';
         print '</tr>';
     }
 

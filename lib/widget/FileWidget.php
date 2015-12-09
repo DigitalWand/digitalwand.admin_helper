@@ -42,7 +42,7 @@ class FileWidget extends HelperWidget
     /**
      * {@inheritdoc}
      */
-    protected function genEditHTML()
+    protected function getEditHtml()
     {
         if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true) {
             $html = FileInput::createInstance(array(
@@ -85,7 +85,7 @@ class FileWidget extends HelperWidget
     /**
      * {@inheritdoc}
      */
-    protected function genMultipleEditHTML()
+    protected function getMultipleEditHtml()
     {
         $inputHidden = array();
         $inputName = array();
@@ -172,7 +172,7 @@ class FileWidget extends HelperWidget
     /**
      * {@inheritdoc}
      */
-    public function genFilterHTML()
+    public function showFilterHtml()
     {
         // TODO: Implement genFilterHTML() method.
     }
@@ -366,7 +366,7 @@ class FileWidget extends HelperWidget
         $this->setSetting('DELETE', false);
         $this->setSetting('EDIT', false);
 
-        return $this->genEditHTML();
+        return $this->getEditHtml();
     }
 
     /**
@@ -381,6 +381,6 @@ class FileWidget extends HelperWidget
         $this->setSetting('DELETE', false);
         $this->setSetting('EDIT', false);
 
-        return $this->genMultipleEditHTML();
+        return $this->getMultipleEditHtml();
     }
 }

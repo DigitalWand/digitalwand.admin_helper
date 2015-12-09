@@ -370,7 +370,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 			$this->tabControl->BeginCustomField($code, $widget->getSettings('TITLE'));
 			$pkField = ($code == $this->pk());
-			$widget->genBasicEditField($pkField);
+			$widget->showBasicEditField($pkField);
 			$this->tabControl->EndCustomField($code);
 		}
 	}

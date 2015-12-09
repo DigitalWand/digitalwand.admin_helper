@@ -47,7 +47,7 @@ class CheckboxWidget extends HelperWidget
     /**
      * @inheritdoc
      */
-    protected function genEditHTML()
+    protected function getEditHtml()
     {
         $html = '';
 
@@ -123,7 +123,7 @@ class CheckboxWidget extends HelperWidget
     /**
      * @inheritdoc
      */
-    public function genFilterHTML()
+    public function showFilterHtml()
     {
         $filterHtml = '<tr>';
         $filterHtml .= '<td>' . $this->getSettings('TITLE') . '</td>';

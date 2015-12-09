@@ -9,7 +9,7 @@ class DateTimeWidget extends HelperWidget
 	 * @see AdminEditHelper::showField();
 	 * @return mixed
 	 */
-	protected function genEditHTML()
+	protected function getEditHtml()
 	{
 		return \CAdminCalendar::CalendarDate($this->getEditInputName(), ConvertTimeStamp(strtotime($this->getValue()), "FULL"), 10, true);
 	}
@@ -49,7 +49,7 @@ class DateTimeWidget extends HelperWidget
 	 * @see AdminListHelper::createFilterForm();
 	 * @return mixed
 	 */
-	public function genFilterHTML()
+	public function showFilterHtml()
 	{
 		list($inputNameFrom, $inputNameTo) = $this->getFilterInputName();
 		print '<tr>';

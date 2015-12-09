@@ -31,7 +31,7 @@ class StringWidget extends HelperWidget
     /**
      * @inheritdoc
      */
-    protected function genEditHTML()
+    protected function getEditHtml()
     {
         $style = $this->getSettings('STYLE');
         $size = $this->getSettings('SIZE');
@@ -64,7 +64,7 @@ class StringWidget extends HelperWidget
                        style="' . $style . '"/>' . $link;
     }
 
-    protected function genMultipleEditHTML()
+    protected function getMultipleEditHtml()
     {
         $style = $this->getSettings('STYLE');
         $size = $this->getSettings('SIZE');
@@ -189,7 +189,7 @@ class StringWidget extends HelperWidget
     /**
      * @inheritdoc
      */
-    public function genFilterHTML()
+    public function showFilterHtml()
     {
         if ($this->getSettings('MULTIPLE')) {
         } else {

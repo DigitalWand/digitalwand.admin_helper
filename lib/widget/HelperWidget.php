@@ -134,9 +134,9 @@ use Bitrix\Main\Entity\DataManager;
  * класса \DigitalWand\AdminHelper\EntityManager.
  *
  * @see EntityManager
- * @see HelperWidget::genEditHTML()
+ * @see HelperWidget::getEditHtml()
  * @see HelperWidget::genListHTML()
- * @see HelperWidget::genFilterHTML()
+ * @see showFilterHtml::showFilterHTML()
  * @see HelperWidget::setSetting()
  * 
  * @author Nik Samokhvalov <nik@samokhvalov.info>
@@ -222,7 +222,7 @@ abstract class HelperWidget
      * @return string
      * @api
      */
-    abstract protected function genEditHTML();
+    abstract protected function getEditHtml();
 
     /**
      * Генерирует HTML для редактирования поля в мульти-режиме.
@@ -230,7 +230,7 @@ abstract class HelperWidget
      * @return string
      * @api
      */
-    protected function genMultipleEditHTML()
+    protected function getMultipleEditHtml()
     {
         return Loc::getMessage('DIGITALWAND_AH_MULTI_NOT_SUPPORT');
     }
@@ -241,9 +241,9 @@ abstract class HelperWidget
      *
      * @param $isPKField - является ли поле первичным ключом модели
      *
-     * @see HelperWidget::genEditHTML();
+     * @see HelperWidget::getEditHtml();
      */
-    public function genBasicEditField($isPKField)
+    public function showBasicEditField($isPKField)
     {
         if ($this->getSettings('HIDE_WHEN_CREATE') AND !isset($this->data['ID'])) {
             return;
@@ -253,7 +253,7 @@ abstract class HelperWidget
         $this->jsHelper();
 
         if ($this->getSettings('USE_BX_API')) {
-            $this->genEditHTML();
+            $this->getEditHtml();
         } else {
             print '<tr>';
             $title = $this->getSettings('TITLE');
@@ -272,9 +272,9 @@ abstract class HelperWidget
 
             if (!$readOnly AND !$isPKField) {
                 if ($this->getSettings('MULTIPLE')) {
-                    $field = $this->genMultipleEditHTML();
+                    $field = $this->getMultipleEditHtml();
                 } else {
-                    $field = $this->genEditHTML();
+                    $field = $this->getEditHtml();
                 }
             } else {
                 if ($readOnly) {
@@ -422,7 +422,7 @@ abstract class HelperWidget
      * @return void
      * @api
      */
-    abstract public function genFilterHTML();
+    abstract public function showFilterHtml();
 
     /**
      * Возвращает массив настроек данного виджета, либо значение отдельного параметра, если указано его имя

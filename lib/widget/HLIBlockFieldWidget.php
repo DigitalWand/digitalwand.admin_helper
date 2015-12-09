@@ -36,7 +36,7 @@ class HLIBlockFieldWidget extends HelperWidget
      * @see \CAdminForm::ShowUserFieldsWithReadyData
      * @return mixed
      */
-    protected function genEditHTML()
+    protected function getEditHtml()
     {
         $info = $this->getUserFieldInfo();
         if ($info) {
@@ -219,7 +219,7 @@ class HLIBlockFieldWidget extends HelperWidget
      * @see AdminListHelper::createFilterForm();
      * @return mixed
      */
-    public function genFilterHTML()
+    public function showFilterHtml()
     {
         $info = $this->getUserFieldInfo();
         if ($info) {

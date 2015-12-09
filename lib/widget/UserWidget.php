@@ -20,7 +20,7 @@ class UserWidget extends NumberWidget
     /**
      * @inheritdoc
      */
-    public function genEditHtml()
+    public function getEditHtml()
     {
         $style = $this->getSettings('STYLE');
         $size = $this->getSettings('SIZE');

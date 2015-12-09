@@ -37,7 +37,7 @@ class OrmElementWidget extends NumberWidget
     /**
      * @inheritdoc
      */
-    public function genEditHtml()
+    public function getEditHtml()
     {
         if ($this->getSettings('TEMPLATE') == 'radio') {
             $html = $this->genEditHtmlInputs();
@@ -114,7 +114,7 @@ class OrmElementWidget extends NumberWidget
     /**
      * @inheritdoc
      */
-    public function genMultipleEditHTML()
+    public function getMultipleEditHtml()
     {
         $inputSize = (int)$this->getSettings('INPUT_SIZE');
         $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
@@ -232,7 +232,7 @@ class OrmElementWidget extends NumberWidget
     /**
      * @inheritdoc
      */
-    public function genFilterHTML()
+    public function showFilterHtml()
     {
         if ($this->getSettings('MULTIPLE')) {
             print '';

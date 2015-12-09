@@ -1263,7 +1263,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		foreach ($this->arFilterOpts as $code => $name) {
 			$widget = $this->createWidgetForField($code);
-			$widget->genFilterHTML();
+			$widget->showFilterHtml();
 		}
 
 		$oFilter->Buttons(array(

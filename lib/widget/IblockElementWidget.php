@@ -39,7 +39,7 @@ class IblockElementWidget extends NumberWidget
     /**
      * {@inheritdoc}
      */
-    public function genEditHtml()
+    public function getEditHtml()
     {
         $iblockId = (int) $this->getSettings('IBLOCK_ID');
         $inputSize = (int) $this->getSettings('INPUT_SIZE');
