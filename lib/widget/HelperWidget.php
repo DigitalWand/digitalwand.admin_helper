@@ -1,4 +1,5 @@
 <?php
+
 namespace DigitalWand\AdminHelper\Widget;
 
 use Bitrix\Main\Localization\Loc;
@@ -10,9 +11,6 @@ use Bitrix\Main\Entity\DataManager;
 Loc::loadMessages(__FILE__);
 // TODO В мультивиджетах сделать поддержку READONLY
 /**
- * Class HelperWidget
- * @package AdminHelper\Widget
- *
  * Виджет - класс, отвечающий за внешний вид отдельно взятого поля сущности. Один виджет отвечает за:
  * <ul>
  * <li>Отображение поля на странице редактирования</li>
@@ -141,6 +139,9 @@ Loc::loadMessages(__FILE__);
  * @see HelperWidget::genListHTML()
  * @see HelperWidget::genFilterHTML()
  * @see HelperWidget::setSetting()
+ * 
+ * @author Nik Samokhvalov <nik@samokhvalov.info>
+ * @author Dmitriy Baibuhtin <dmitriy.baibuhtin@ya.ru>
  */
 abstract class HelperWidget
 {
@@ -559,13 +560,13 @@ abstract class HelperWidget
     /**
      * Добавляет строку ошибки в массив ошибок.
      *
-     * @param string $messageId сообщение об ошибке. Плейсхолдер #FIELD# будет заменён на значение параметра TITLE
+     * @param string $message сообщение об ошибке. Плейсхолдер #FIELD# будет заменён на значение параметра TITLE
      *
      * @see Loc::getMessage()
      */
-    protected function addError($messageId)
+    protected function addError($message)
     {
-        $this->validationErrors[$this->getCode()] = Loc::getMessage($messageId,
+        $this->validationErrors[$this->getCode()] = Loc::getMessage($message,
             array('#FIELD#' => $this->getSettings('TITLE')));
     }
 
