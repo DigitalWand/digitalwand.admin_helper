@@ -46,30 +46,25 @@ if (!$module OR !$view OR !Loader::IncludeModule($module)) {
 $moduleNameParts = explode('.', $module);
 $entityNameParts = explode('_', $entity);
 $interfaceNameParts = array_merge($moduleNameParts, $entityNameParts);
+$interfaceNameClass = null;
 $viewParts = explode('_', $view);
 
-if (count($viewParts) > 1)
+$count = $viewParts;
+for($i=0; $i < $count; $i++)
 {
+    $class = array_map('ucfirst', array_merge($interfaceNameParts, $viewParts));
+    $interfaceNameClass = implode('\\', $class). 'AdminInterface';
+    if (class_exists($interfaceNameClass)) {
+        break;
+    }
     array_pop($viewParts);
-    $entity = implode('', array_map('ucfirst', $viewParts));
-}
-else
-{
-    $entity = $entityNameParts[0];
-}
-
-$interfaceNameParts[] = ucfirst($entity) . 'AdminInterface';
-
-foreach ($interfaceNameParts as $i => $v) {
-    $interfaceNameParts[$i] = ucfirst($v);
 }
 
 /**
  * @var AdminInterface $interfaceNameClass
  */
-$interfaceNameClass = implode('\\', $interfaceNameParts);
 
-if (class_exists($interfaceNameClass)) {
+if ($interfaceNameClass && class_exists($interfaceNameClass)) {
     $interfaceNameClass::register();
 }
 

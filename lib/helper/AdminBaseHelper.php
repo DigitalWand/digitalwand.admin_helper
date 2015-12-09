@@ -131,12 +131,6 @@ abstract class AdminBaseHelper
 	 */
 	static protected $interfaceClass = array();
 
-	static protected $helperNames = array(
-		'list' => 'List',
-		'edit' => 'Edit',
-		'section' => 'Section'
-	);
-
 	/**
 	 * @var array
 	 * Хранит список отображаемых полей и настройки их отображения
@@ -408,10 +402,13 @@ abstract class AdminBaseHelper
 			$classNameParts = explode('\\', trim($className, '\\'));
 			// Определяем имя сущности и формируем из нее имя класса
 			if (count($classNameParts) > 2) {
-				$classCaption = str_replace('Helper', '', array_pop($classNameParts)); // название класса без namespace и приставки Helper
-				$entityName = str_replace(static::$helperNames, '', $classCaption);
-				$viewType = str_replace($entityName, '', $classCaption);
-				static::$viewName[$className] = lcfirst($entityName) . '_' . strtolower($viewType);
+				$classCaption = array_pop($classNameParts); // название класса без namespace
+                preg_match_all('/((?:^|[A-Z])[a-z]+)/',$classCaption,$matches);
+                $classCaptionParts = $matches[0];
+                if(end($classCaptionParts) == 'Helper'){
+                    array_pop($classCaptionParts);
+                }
+				static::$viewName[$className] = strtolower(implode('_', $classCaptionParts));
 			}
 		}
 
