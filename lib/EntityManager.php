@@ -9,8 +9,6 @@ use Bitrix\Main\Entity;
 use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 
-Loc::loadMessages(__FILE__);
-
 /**
  * Менеджер для управления моделью, способный анализировать её связи и сохранять данные в связанные сущности на
  * основании полученных данных от виджетов.
@@ -171,6 +169,8 @@ class EntityManager
 	 */
 	public function __construct($modelClass, array $data = array(), $itemId = null, AdminBaseHelper $helper)
 	{
+		Loc::loadMessages(__FILE__);
+		
 		$this->modelClass = $modelClass;
 		$this->model = $modelClass::getEntity();
 		$this->data = $data;
