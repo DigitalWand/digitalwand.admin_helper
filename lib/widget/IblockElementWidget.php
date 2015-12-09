@@ -6,9 +6,6 @@ use Bitrix\Iblock\ElementTable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 
-Loc::loadMessages(__FILE__);
-Loader::includeModule('iblock');
-
 /**
  * Виджет для выбора элемента инфоблока.
  *
@@ -30,13 +27,24 @@ class IblockElementWidget extends NumberWidget
         'WINDOW_WIDTH' => 600,
         'WINDOW_HEIGHT' => 500,
     );
+    
+    public function __construct(array $settings = array())
+    {
+        Loc::loadMessages(__FILE__);
+        Loader::includeModule('iblock');
+        
+        parent::__construct($settings);
+    }
 
+    /**
+     * {@inheritdoc}
+     */
     public function genEditHtml()
     {
-        $iblockId = (int)$this->getSettings('IBLOCK_ID');
-        $inputSize = (int)$this->getSettings('INPUT_SIZE');
-        $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
-        $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
+        $iblockId = (int) $this->getSettings('IBLOCK_ID');
+        $inputSize = (int) $this->getSettings('INPUT_SIZE');
+        $windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
+        $windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
 
         $name = 'FIELDS';
         $key = $this->getCode();
@@ -67,6 +75,9 @@ class IblockElementWidget extends NumberWidget
         . '</span>';
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getValueReadonly()
     {
         $elementId = $this->getValue();
@@ -81,6 +92,9 @@ class IblockElementWidget extends NumberWidget
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function genListHTML(&$row, $data)
     {
         $elementId = $this->getValue();

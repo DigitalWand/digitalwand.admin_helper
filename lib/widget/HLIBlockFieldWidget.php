@@ -280,26 +280,27 @@ class HLIBlockFieldWidget extends HelperWidget
     /**
      * Заменяем оригинальную функцию, т.к. текст ошибки приходит от битрикса, причем название поля там почему-то не
      * проставлено
-     * @param string $message
+     * 
+*@param string $messageId
      */
-    protected function addError($message)
+    protected function addError($messageId)
     {
-        if (is_array($message)) {
-            foreach ($message as $key => $error) {
+        if (is_array($messageId)) {
+            foreach ($messageId as $key => $error) {
                 if (isset($error['text'])) {
                     //FIXME: почему-то битрикс не подхватывает корректное название поля, поэтому запихиваем его сами.
                     if (isset($error['id']) AND strpos($error['text'], '""')) {
-                        $message[$key] = str_replace('""', '"' . $this->getSettings('TITLE') . '"', $error['text']);
+                        $messageId[$key] = str_replace('""', '"' . $this->getSettings('TITLE') . '"', $error['text']);
 
                     } else {
-                        $message[$key] = $error['text'];
+                        $messageId[$key] = $error['text'];
                     }
                 }
             }
         }
 
-        $message = implode("\n", $message);
-        $this->validationErrors[$this->getCode()] = $message;
+        $messageId = implode("\n", $messageId);
+        $this->validationErrors[$this->getCode()] = $messageId;
     }
 
 }

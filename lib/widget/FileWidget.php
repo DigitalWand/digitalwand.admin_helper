@@ -3,6 +3,7 @@
 namespace DigitalWand\AdminHelper\Widget;
 
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\UI\FileInput;
 
 /**
  * Для множественного поля в таблице должен быть столбец FILE_ID.
@@ -31,7 +32,7 @@ class FileWidget extends HelperWidget
     /**
      * {@inheritdoc}
      */
-    public function __construct(array $settings)
+    public function __construct(array $settings = array())
     {
         Loc::loadMessages(__FILE__);
         
@@ -44,7 +45,7 @@ class FileWidget extends HelperWidget
     protected function genEditHTML()
     {
         if (class_exists('\Bitrix\Main\UI\FileInput', true) && $this->getSettings('IMAGE') === true) {
-            $str = \Bitrix\Main\UI\FileInput::createInstance(array(
+            $html = FileInput::createInstance(array(
                 'name' => $this->getEditInputName('_FILE'),
                 'description' => $this->getSettings('DESCRIPTION_FIELD'),
                 'upload' => $this->getSettings('UPLOAD'),
@@ -57,7 +58,7 @@ class FileWidget extends HelperWidget
                 'maxCount' => 1
             ))->show($this->getValue());
         } else {
-            $str = \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
+            $html = \CFileInput::Show($this->getEditInputName('_FILE'), ($this->getValue() > 0 ? $this->getValue() : 0),
                 array(
                     'IMAGE' => $this->getSettings('IMAGE') === true ? 'Y' : 'N',
                     'PATH' => 'Y',
@@ -75,10 +76,10 @@ class FileWidget extends HelperWidget
         }
 
         if ($this->getValue()) {
-            $str .= '<input type="hidden" name="' . $this->getEditInputName() . '" value=' . $this->getValue() . '>';
+            $html .= '<input type="hidden" name="' . $this->getEditInputName() . '" value=' . $this->getValue() . '>';
         }
 
-        return $str;
+        return $html;
     }
 
     /**
@@ -88,7 +89,6 @@ class FileWidget extends HelperWidget
     {
         $inputHidden = array();
         $inputName = array();
-        $rsEntityData = null;
         
         if (!empty($this->data['ID'])) {
             $entityName = $this->entityName;
@@ -259,7 +259,9 @@ class FileWidget extends HelperWidget
                     if ($fileId) {
                         $this->data[$this->getCode()][$key] = array('VALUE' => $fileId);
                     } else {
-                        $this->addError('Не удалось добавить файл ' . $_FILES[$this->getCode()]['name'][$key]);
+                        $this->addError('DIGITALWAND_AH_FAIL_ADD_FILE', array(
+                            'FILE_NAME' => $_FILES[$this->getCode()]['name'][$key]
+                        ));
                     }
                 }
             }

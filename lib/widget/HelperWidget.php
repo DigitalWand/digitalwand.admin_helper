@@ -132,7 +132,8 @@ Loc::loadMessages(__FILE__);
  * </li>
  * </ul>
  *
- * О том как сохраняются данные множественных виджетов можно узнать из комментариев класса @see EntityManager
+ * О том как сохраняются данные множественных виджетов можно узнать из комментариев 
+ * класса \DigitalWand\AdminHelper\EntityManager.
  *
  * @see EntityManager
  * @see HelperWidget::genEditHTML()
@@ -209,18 +210,29 @@ abstract class HelperWidget
      * Эксемпляр виджета создаётся всего один раз, при описании настроек интерфейса. При создании есть возможность
      * сразу указать для него необходимые настройки
      */
-    public function __construct($settings = array())
+    public function __construct(array $settings = array())
     {
         $this->settings = $settings;
     }
 
     /**
-     * Генерирует HTML для редактирования поля
+     * Генерирует HTML для редактирования поля.
      *
      * @return string
      * @api
      */
     abstract protected function genEditHTML();
+
+    /**
+     * Генерирует HTML для редактирования поля в мульти-режиме.
+     *
+     * @return string
+     * @api
+     */
+    protected function genMultipleEditHTML()
+    {
+        return Loc::getMessage('DIGITALWAND_AH_MULTI_NOT_SUPPORT');
+    }
 
     /**
      * Оборачивает поле в HTML код, который в большинстве случаев менять не придется.
@@ -250,6 +262,7 @@ abstract class HelperWidget
             print '<td width="40%" style="vertical-align: top;">' . $title . ':</td>';
 
             $field = $this->getValue();
+            
             if (is_null($field)) {
                 $field = '';
             }
@@ -542,10 +555,10 @@ abstract class HelperWidget
     public function processEditAction()
     {
         if (!$this->checkRequired()) {
-            $this->addError('REQUIRED_FIELD_ERROR');
+            $this->addError('DIGITALWAND_AH_REQUIRED_FIELD_ERROR');
         }
         if ($this->getSettings('UNIQUE') && !$this->isUnique()) {
-            $this->addError('DUPLICATE_FIELD_ERROR');
+            $this->addError('DIGITALWAND_AH_DUPLICATE_FIELD_ERROR');
         }
     }
 
@@ -560,14 +573,18 @@ abstract class HelperWidget
     /**
      * Добавляет строку ошибки в массив ошибок.
      *
-     * @param string $message сообщение об ошибке. Плейсхолдер #FIELD# будет заменён на значение параметра TITLE
+     * @param string $messageId Код сообщения об ошибке из лэнг-файла. Плейсхолдер #FIELD# будет заменён на значение 
+     * параметра TITLE.
+     * @param array $replace Данные для замены.
      *
      * @see Loc::getMessage()
      */
-    protected function addError($message)
+    protected function addError($messageId, $replace = array())
     {
-        $this->validationErrors[$this->getCode()] = Loc::getMessage($message,
-            array('#FIELD#' => $this->getSettings('TITLE')));
+        $this->validationErrors[$this->getCode()] = Loc::getMessage(
+            $messageId,
+            array_merge(array('#FIELD#' => $this->getSettings('TITLE')), $replace)
+        );
     }
 
     /**
