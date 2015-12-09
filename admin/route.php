@@ -22,7 +22,7 @@ function getRequestParams($param)
 
 /**
  * Очищаем переменные сессии, чтобы сортировка восстанавливалась с учетом $table_id.
- * 
+ *
  * @global CMain $APPLICATION
  */
 global $APPLICATION;
@@ -49,15 +49,18 @@ $interfaceNameParts = array_merge($moduleNameParts, $entityNameParts);
 $interfaceNameClass = null;
 $viewParts = explode('_', $view);
 
-$count = $viewParts;
-for($i=0; $i < $count; $i++)
-{
-    $class = array_map('ucfirst', array_merge($interfaceNameParts, $viewParts));
-    $interfaceNameClass = implode('\\', $class). 'AdminInterface';
-    if (class_exists($interfaceNameClass)) {
-        break;
-    }
-    array_pop($viewParts);
+$count = count($viewParts);
+for ($i = 0; $i < $count; $i++) {
+	$interfaceName = implode('', array_map('ucfirst', $viewParts));
+	$parts = $interfaceNameParts;
+	$parts[] = $interfaceName . 'AdminInterface';
+	$class = array_map('ucfirst', $parts);
+	$interfaceNameClass = implode('\\', $class);
+
+	if (class_exists($interfaceNameClass)) {
+		break;
+	}
+	array_pop($viewParts);
 }
 
 /**
@@ -65,7 +68,7 @@ for($i=0; $i < $count; $i++)
  */
 
 if ($interfaceNameClass && class_exists($interfaceNameClass)) {
-    $interfaceNameClass::register();
+	$interfaceNameClass::register();
 }
 
 list($helper, $interface) = AdminBaseHelper::getGlobalInterfaceSettings($module, $view);
@@ -81,18 +84,21 @@ $helperType = false;
 
 if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper')) {
 	$helperType = 'edit';
-    /**
-     * @var AdminEditHelper $adminHelper
-     */
+	/**
+	 * @var AdminEditHelper $adminHelper
+	 */
 	$adminHelper = new $helper($fields, $tabs);
 }
 elseif (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper')) {
 	$helperType = 'list';
-    /**
-     * @var AdminListHelper $adminHelper
-     */
+	/**
+	 * @var AdminListHelper $adminHelper
+	 */
 	$adminHelper = new $helper($fields, $isPopup);
 	$adminHelper->buildList(array($by => $order));
+}
+elseif (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminBaseHelper')) {
+	$adminHelper = new $helper($fields, $tabs);
 }
 else {
 	include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';

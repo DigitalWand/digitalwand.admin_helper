@@ -403,11 +403,11 @@ abstract class AdminBaseHelper
 			// Определяем имя сущности и формируем из нее имя класса
 			if (count($classNameParts) > 2) {
 				$classCaption = array_pop($classNameParts); // название класса без namespace
-                preg_match_all('/((?:^|[A-Z])[a-z]+)/',$classCaption,$matches);
-                $classCaptionParts = $matches[0];
-                if(end($classCaptionParts) == 'Helper'){
-                    array_pop($classCaptionParts);
-                }
+				preg_match_all('/((?:^|[A-Z])[a-z]+)/', $classCaption, $matches);
+				$classCaptionParts = $matches[0];
+				if (end($classCaptionParts) == 'Helper') {
+					array_pop($classCaptionParts);
+				}
 				static::$viewName[$className] = strtolower(implode('_', $classCaptionParts));
 			}
 		}
@@ -426,7 +426,11 @@ abstract class AdminBaseHelper
 	 */
 	public static function getModel()
 	{
-		return static::getHLEntity(static::$model);
+		if (static::$model) {
+			return static::getHLEntity(static::$model);
+		}
+
+		return null;
 	}
 
 	/**
