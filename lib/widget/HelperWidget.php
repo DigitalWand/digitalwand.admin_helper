@@ -8,8 +8,6 @@ use DigitalWand\AdminHelper\Helper\AdminEditHelper;
 use DigitalWand\AdminHelper\Helper\AdminListHelper;
 use Bitrix\Main\Entity\DataManager;
 
-Loc::loadMessages(__FILE__);
-// TODO В мультивиджетах сделать поддержку READONLY
 /**
  * Виджет - класс, отвечающий за внешний вид отдельно взятого поля сущности. Один виджет отвечает за:
  * <ul>
@@ -206,12 +204,15 @@ abstract class HelperWidget
     protected $filterFieldPrefix = 'find_';
 
     /**
-     * @param array $settings
      * Эксемпляр виджета создаётся всего один раз, при описании настроек интерфейса. При создании есть возможность
-     * сразу указать для него необходимые настройки
+     * сразу указать для него необходимые настройки.
+     * 
+     * @param array $settings
      */
     public function __construct(array $settings = array())
     {
+        Loc::loadMessages(__FILE__);
+        
         $this->settings = $settings;
     }
 
