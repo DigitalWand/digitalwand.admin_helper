@@ -22,7 +22,7 @@ function getRequestParams($param)
 
 /**
  * Очищаем переменные сессии, чтобы сортировка восстанавливалась с учетом $table_id.
- * 
+ *
  * @global CMain $APPLICATION
  */
 global $APPLICATION;
@@ -46,31 +46,29 @@ if (!$module OR !$view OR !Loader::IncludeModule($module)) {
 $moduleNameParts = explode('.', $module);
 $entityNameParts = explode('_', $entity);
 $interfaceNameParts = array_merge($moduleNameParts, $entityNameParts);
+$interfaceNameClass = null;
 $viewParts = explode('_', $view);
 
-if (count($viewParts) > 1)
-{
-    array_pop($viewParts);
-    $entity = implode('', array_map('ucfirst', $viewParts));
-}
-else
-{
-    $entity = $entityNameParts[0];
-}
+$count = count($viewParts);
+for ($i = 0; $i < $count; $i++) {
+	$interfaceName = implode('', array_map('ucfirst', $viewParts));
+	$parts = $interfaceNameParts;
+	$parts[] = $interfaceName . 'AdminInterface';
+	$class = array_map('ucfirst', $parts);
+	$interfaceNameClass = implode('\\', $class);
 
-$interfaceNameParts[] = ucfirst($entity) . 'AdminInterface';
-
-foreach ($interfaceNameParts as $i => $v) {
-    $interfaceNameParts[$i] = ucfirst($v);
+	if (class_exists($interfaceNameClass)) {
+		break;
+	}
+	array_pop($viewParts);
 }
 
 /**
  * @var AdminInterface $interfaceNameClass
  */
-$interfaceNameClass = implode('\\', $interfaceNameParts);
 
-if (class_exists($interfaceNameClass)) {
-    $interfaceNameClass::register();
+if ($interfaceNameClass && class_exists($interfaceNameClass)) {
+	$interfaceNameClass::register();
 }
 
 list($helper, $interface) = AdminBaseHelper::getGlobalInterfaceSettings($module, $view);
@@ -86,18 +84,21 @@ $helperType = false;
 
 if (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminEditHelper')) {
 	$helperType = 'edit';
-    /**
-     * @var AdminEditHelper $adminHelper
-     */
+	/**
+	 * @var AdminEditHelper $adminHelper
+	 */
 	$adminHelper = new $helper($fields, $tabs);
 }
 elseif (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminListHelper')) {
 	$helperType = 'list';
-    /**
-     * @var AdminListHelper $adminHelper
-     */
+	/**
+	 * @var AdminListHelper $adminHelper
+	 */
 	$adminHelper = new $helper($fields, $isPopup);
 	$adminHelper->buildList(array($by => $order));
+}
+elseif (is_subclass_of($helper, 'DigitalWand\AdminHelper\Helper\AdminBaseHelper')) {
+	$adminHelper = new $helper($fields, $tabs);
 }
 else {
 	include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';

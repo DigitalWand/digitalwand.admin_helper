@@ -33,8 +33,8 @@ abstract class AdminInterface
 	public static $registeredInterfaces = array();
 
 	/**
-     * Описание интерфейса админки: списка табов и полей. Метод должен вернуть массив вида:
-     * 
+	 * Описание интерфейса админки: списка табов и полей. Метод должен вернуть массив вида:
+	 *
 	 * ```
 	 * array(
 	 *    'TAB_1' => array(
@@ -72,12 +72,12 @@ abstract class AdminInterface
 	 *  ...
 	 * )
 	 * ```
-     * 
-	 * Где TAB_1..2 - символьные коды табов, FIELD_1..4 - название столбцов в таблице сущности. TITLE для поля задавать 
-     * не обязательно, в этому случае он будет запрашиваться из модели.
+	 *
+	 * Где TAB_1..2 - символьные коды табов, FIELD_1..4 - название столбцов в таблице сущности. TITLE для поля задавать
+	 * не обязательно, в этому случае он будет запрашиваться из модели.
 	 *
 	 * Более подробную информацию о формате описания настроек виджетов см. в классе HelperWidget.
-     * 
+	 *
 	 * @see DigitalWand\AdminHelper\Widget\HelperWidget
 	 *
 	 * @return array[]
@@ -86,7 +86,7 @@ abstract class AdminInterface
 
 	/**
 	 * Список классов хелперов с настройками. Метод должен вернуть массив вида:
-     * 
+	 *
 	 * ```
 	 * array(
 	 *    '\Vendor\Module\Entity\AdminInterface\EntityListHelper' => array(
@@ -105,27 +105,27 @@ abstract class AdminInterface
 	 *    )
 	 * )
 	 * ```
-     * 
+	 *
 	 * или
-     * 
+	 *
 	 * ```
 	 * array(
 	 *    '\Vendor\Module\Entity\AdminInterface\EntityListHelper',
 	 *    '\Vendor\Module\Entity\AdminInterface\EntityEditHelper'
 	 * )
 	 * ```
-     * 
+	 *
 	 * Где:
 	 * <ul>
-     * <li> `Vendor\Module\Entity\AdminInterface` - namespace до реализованных классов AdminHelper.
-	 * <li> `BUTTONS` - ключ для массива с описанием элементов управления (подробнее в методе getButton() 
-     *          класса AdminBaseHelper).
-	 * <li> `LIST_CREATE_NEW`, `LIST_CREATE_NEW_SECTION`, `RETURN_TO_LIST`, `ADD_ELEMENT` - символьные код элементов 
-     *          управления.
+	 * <li> `Vendor\Module\Entity\AdminInterface` - namespace до реализованных классов AdminHelper.
+	 * <li> `BUTTONS` - ключ для массива с описанием элементов управления (подробнее в методе getButton()
+	 *          класса AdminBaseHelper).
+	 * <li> `LIST_CREATE_NEW`, `LIST_CREATE_NEW_SECTION`, `RETURN_TO_LIST`, `ADD_ELEMENT` - символьные код элементов
+	 *          управления.
 	 * <li> `EntityListHelper` и `EntityEditHelper` - реализованные классы хелперов.
 	 *
-     * Оба формата могут сочетаться друг с другом.
-     * 
+	 * Оба формата могут сочетаться друг с другом.
+	 *
 	 * @see \DigitalWand\AdminHelper\Helper\AdminBaseHelper::getButton()
 	 *
 	 * @return string[]
@@ -133,9 +133,9 @@ abstract class AdminInterface
 	abstract public function helpers();
 
 	/**
-	 * Список зависимых админских интерфейсов, которые будут зарегистрированы при регистраци админского интерфейса, 
-     * например, админские интерфейсы разделов.
-     * 
+	 * Список зависимых админских интерфейсов, которые будут зарегистрированы при регистраци админского интерфейса,
+	 * например, админские интерфейсы разделов.
+	 *
 	 * @return string[]
 	 */
 	public function dependencies()
@@ -153,7 +153,7 @@ abstract class AdminInterface
 
 		// приводим массив хелперов к формату класс => настройки
 		$helpers = array();
-        
+
 		foreach ($this->helpers() as $key => $value) {
 			if (is_array($value)) {
 				$helpers[$key] = $value;
@@ -164,30 +164,29 @@ abstract class AdminInterface
 		}
 
 		$helperClasses = array_keys($helpers);
-        /**
-         * @var \Bitrix\Main\Entity\DataManager
-         */
+		/**
+		 * @var \Bitrix\Main\Entity\DataManager
+		 */
 		$model = $helperClasses[0]::getModel();
-
 		foreach ($tabsWithFields as $tabCode => $tab) {
 			$fieldsAndTabs['TABS'][$tabCode] = $tab['NAME'];
 
 			foreach ($tab['FIELDS'] as $fieldCode => $field) {
-				if (empty($field['TITLE'])) {
+				if (empty($field['TITLE']) && $model) {
 					$field['TITLE'] = $model::getEntity()->getField($fieldCode)->getTitle();
 				}
-                
+
 				$field['TAB'] = $tabCode;
 				$fieldsAndTabs['FIELDS'][$fieldCode] = $field;
 			}
 		}
-        
+
 		AdminBaseHelper::setInterfaceSettings($fieldsAndTabs, $helpers, $helperClasses[0]::getModule());
 
 		foreach ($helperClasses as $helperClass) {
-            /**
-             * @var AdminBaseHelper $helperClass
-             */
+			/**
+			 * @var AdminBaseHelper $helperClass
+			 */
 			$helperClass::setInterfaceClass(get_called_class());
 		}
 	}
@@ -199,7 +198,7 @@ abstract class AdminInterface
 	{
 		if (!in_array(get_called_class(), static::$registeredInterfaces)) {
 			static::$registeredInterfaces[] = get_called_class();
-            
+
 			$adminInterface = new static();
 			$adminInterface->registerData();
 
