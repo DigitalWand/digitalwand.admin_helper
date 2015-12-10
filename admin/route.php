@@ -60,6 +60,16 @@ for ($i = 0; $i < $count; $i++) {
 	if (class_exists($interfaceNameClass)) {
 		break;
 	}
+	else {
+		$className = array_pop($parts);
+		$parts[] = 'AdminInterface';
+		$parts[] = $className;
+		$class = array_map('ucfirst', $parts);
+		$interfaceNameClass = implode('\\', $class);
+		if (class_exists($interfaceNameClass)) {
+			break;
+		}
+	}
 	array_pop($viewParts);
 }
 
