@@ -829,6 +829,10 @@ abstract class AdminBaseHelper
 		array_shift($namespaceParts); // убираем namespace вендора
 		array_shift($namespaceParts); // убираем namespace модуля
 
+		if (end($namespaceParts) == 'AdminInterface') {
+			array_pop($namespaceParts); // убираем AdminInterface
+		}
+
 		return str_replace( // формируем параметр
 			'\\',
 			'_',
