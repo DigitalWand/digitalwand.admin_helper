@@ -2,37 +2,58 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
+use Bitrix\Main\ArgumentTypeException;
 use Bitrix\Main\Localization\Loc;
+use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
 
 Loc::loadMessages(__FILE__);
 
 /**
  * Виджет выбора записей из ORM.
  *
- * Доступные опции:
- * <ul>
- * <li> <b>MODEL</b> - (string) название модели с неймспейсом, к элементам которой осуществляется привязка </li>
- * <li> <b>TITLE_FIELD_NAME</b> - (string) название поля, из которого выводить имя элемента </li>
- * <li> <b>MODULE_NAME</b> - (string) название модуля, которому принадлежит модель </li>
- * <li> <b>LIST_VIEW_NAME</b> - (string) название представления страницы списка элементов, к которым осуществлятеся привязка</li>
- * <li> <b>INPUT_SIZE</b> - (int) значение атрибута size для input </li>
- * <li> <b>WINDOW_WIDTH</b> - (int) значение width для всплывающего окна выбора элемента </li>
- * <li> <b>WINDOW_HEIGHT</b> - (int) значение height для всплывающего окна выбора элемента </li>
- * <li> <b>TEMPLATE</b> - (string) шаблон отображения виджета, может принимать значения select|radio,  по умолчанию - select </li>
+ * Настройки:
+ * - `HELPER` — (string) класс хелпера, из которого будет производиться поиск записией. Должен быть
+ * наследником `\DigitalWand\AdminHelper\Helper\AdminBaseHelper`.
+ * - `ADDITIONAL_URL_PARAMS` — (array) дополнительные параметры для URL с попапом выбора записи.
+ * - `TEMPLATE` — (string) шаблон отображения виджета, может принимать значения select и radio, по-умолчанию — select.
+ * - `INPUT_SIZE` — (int) значение атрибута size для input.
+ * - `WINDOW_WIDTH` — (int) значение width для всплывающего окна выбора элемента.
+ * - `WINDOW_HEIGHT` — (int) значение height для всплывающего окна выбора элемента.
+ * - `TITLE_FIELD_NAME` — (string) название поля, из которого выводить имя элемента.
  *
  * @author Nik Samokhvalov <nik@samokhvalov.info>
  */
 class OrmElementWidget extends NumberWidget
 {
-    static protected $defaults = array(
+    protected static $defaults = array(
         'FILTER' => '=',
         'INPUT_SIZE' => 5,
         'WINDOW_WIDTH' => 600,
         'WINDOW_HEIGHT' => 500,
         'TITLE_FIELD_NAME' => 'TITLE',
-        'LIST_VIEW_NAME' => 'list',
-        'TEMPLATE' => 'select'
+        'TEMPLATE' => 'select',
+        'ADDITIONAL_URL_PARAMS' => array()
     );
+
+    /**
+     * @inheritdoc
+     */
+    public function loadSettings($code = null)
+    {
+        $load = parent::loadSettings($code);
+
+        if (!is_subclass_of($this->getSettings('HELPER'), '\DigitalWand\AdminHelper\Helper\AdminBaseHelper'))
+        {
+            throw new ArgumentTypeException('HELPER', '\DigitalWand\AdminHelper\Helper\AdminBaseHelper');
+        }
+
+        if (!is_array($this->getSettings('ADDITIONAL_URL_PARAMS')))
+        {
+            throw new ArgumentTypeException('ADDITIONAL_URL_PARAMS', 'array');
+        }
+
+        return $load;
+    }
 
     /**
      * @inheritdoc
@@ -42,24 +63,26 @@ class OrmElementWidget extends NumberWidget
         if ($this->getSettings('TEMPLATE') == 'radio') {
             $html = $this->genEditHtmlInputs();
         } else {
-            $html = $this->genEditHtmlSelect();
+            $html = $this->getEditHtmlSelect();
         }
 
         return $html;
     }
 
     /**
-     * Генерирует HTML с выбором элемента во вcплывающем окне, шаблон select
+     * Генерирует HTML с выбором элемента во вcплывающем окне, шаблон select.
+     *
      * @return string
      */
-    public function genEditHtmlSelect()
+    protected function getEditHtmlSelect()
     {
-        $inputSize = (int)$this->getSettings('INPUT_SIZE');
-        $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
-        $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
-        $module = $this->getSettings('MODULE_NAME');
-        $view = $this->getSettings('LIST_VIEW_NAME');
-        $additionalUrlParams = htmlentities($this->getSettings('ADDITIONAL_URL_PARAMS'));
+        /**
+         * @var AdminBaseHelper $linkedHelper
+         */
+        $linkedHelper = $this->getSettings('HELPER');
+        $inputSize = (int) $this->getSettings('INPUT_SIZE');
+        $windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
+        $windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
 
         $name = 'FIELDS';
         $key = $this->getCode();
@@ -75,23 +98,31 @@ class OrmElementWidget extends NumberWidget
             $elementId = '';
         }
 
+        $popupUrl = $linkedHelper::getUrl(array_merge(
+            array(
+                'popup' => 'Y',
+                'eltitle' => $this->getSettings('TITLE_FIELD_NAME'),
+                'n' => $name,
+                'k' => $key
+            ),
+            $this->getSettings('ADDITIONAL_URL_PARAMS')
+        ));
+
         return '<input name="' . $this->getEditInputName() . '"
                      id="' . $name . '[' . $key . ']"
                      value="' . $elementId . '"
                      size="' . $inputSize . '"
                      type="text">' .
         '<input type="button"
-                    value="..." onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=' . LANGUAGE_ID
-        . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
-        . '&amp;eltitle=' . $this->getSettings('TITLE_FIELD_NAME')
-        . '&amp;n=' . $name . '&amp;k=' . $key . $additionalUrlParams . '\', ' . $windowWidth . ', '
+                    value="..." onClick="jsUtils.OpenWindow(\''. $popupUrl . '\', ' . $windowWidth . ', '
         . $windowHeight . ');">' . '&nbsp;<span id="sp_' . md5($name) . '_' . $key . '" >' .
         static::prepareToOutput($elementName)
         . '</span>';
     }
 
     /**
-     * Генерирует HTML с выбором элемента в виде радио инпутов
+     * Генерирует HTML с выбором элемента в виде радио инпутов.
+     *
      * @return string
      */
     public function genEditHtmlInputs()
@@ -116,11 +147,13 @@ class OrmElementWidget extends NumberWidget
      */
     public function getMultipleEditHtml()
     {
+        /**
+         * @var AdminBaseHelper $linkedHelper
+         */
+        $linkedHelper = $this->getSettings('HELPER');
         $inputSize = (int)$this->getSettings('INPUT_SIZE');
         $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
         $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
-        $module = $this->getSettings('MODULE_NAME');
-        $view = $this->getSettings('LIST_VIEW_NAME');
 
         $name = 'FIELDS';
         $key = $this->getCode();
@@ -128,6 +161,16 @@ class OrmElementWidget extends NumberWidget
         $uniqueId = $this->getEditInputHtmlId();
 
         $entityListData = $this->getOrmElementData();
+
+        $popupUrl = $linkedHelper::getUrl(array_merge(
+            array(
+                'popup' => 'Y',
+                'eltitle' => $this->getSettings('TITLE_FIELD_NAME'),
+                'n' => $name,
+                'k' => '{{field_id}}'
+            ),
+            $this->getSettings('ADDITIONAL_URL_PARAMS')
+        ));
 
         ob_start();
         ?>
@@ -144,10 +187,7 @@ class OrmElementWidget extends NumberWidget
                 'type="text">' +
                 '<input type="button"' +
                 'value="..."' +
-                'onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=<?=LANGUAGE_ID?>' +
-                '&amp;module=<?=$module?>&amp;view=<?=$view?>&amp;popup=Y' +
-                '&amp;eltitle=<?=$this->getSettings('TITLE_FIELD_NAME')?>' +
-                '&amp;n=<?=$name?>&amp;k={{field_id}}\', <?=$windowWidth?>, <?=$windowHeight?>);">' +
+                'onClick="jsUtils.OpenWindow(<?=$popupUrl?>, <?=$windowWidth?>, <?=$windowHeight?>);">' +
                 '&nbsp;<span id="sp_<?=md5($name)?>_{{field_id}}" >{{element_title}}</span>'
             );
             <?
@@ -200,8 +240,10 @@ class OrmElementWidget extends NumberWidget
     public function getMultipleValueReadonly()
     {
         $entityListData = $this->getOrmElementData();
+
         if (!empty($entityListData)) {
             $multipleData = array();
+
             foreach ($entityListData as $entityData) {
                 $entityName = $entityData[$this->getSettings('TITLE_FIELD_NAME')] ?
                     $entityData[$this->getSettings('TITLE_FIELD_NAME')] :
@@ -222,10 +264,11 @@ class OrmElementWidget extends NumberWidget
     public function generateRow(&$row, $data)
     {
         if ($this->getSettings('MULTIPLE')) {
-            $strElement = static::getMultipleValueReadonly();
+            $strElement = $this->getMultipleValueReadonly();
         } else {
-            $strElement = static::getValueReadonly();
+            $strElement = $this->getValueReadonly();
         }
+
         $row->AddViewField($this->getCode(), $strElement);
     }
 
@@ -234,20 +277,33 @@ class OrmElementWidget extends NumberWidget
      */
     public function showFilterHtml()
     {
+        /**
+         * @var AdminBaseHelper $linkedHelper
+         */
+        $linkedHelper = $this->getSettings('HELPER');
+
         if ($this->getSettings('MULTIPLE')) {
-            print '';
+
         } else {
-            $inputSize = (int)$this->getSettings('INPUT_SIZE');
-            $windowWidth = (int)$this->getSettings('WINDOW_WIDTH');
-            $windowHeight = (int)$this->getSettings('WINDOW_HEIGHT');
-            $module = $this->getSettings('MODULE_NAME');
-            $view = $this->getSettings('LIST_VIEW_NAME');
+            $inputSize = (int) $this->getSettings('INPUT_SIZE');
+            $windowWidth = (int) $this->getSettings('WINDOW_WIDTH');
+            $windowHeight = (int) $this->getSettings('WINDOW_HEIGHT');
 
             $name = 'FIND';
             $key = $this->getCode();
 
             print '<tr>';
             print '<td>' . $this->getSettings('TITLE') . '</td>';
+
+            $popupUrl = $linkedHelper::getUrl(array_merge(
+                array(
+                    'popup' => 'Y',
+                    'eltitle' => $this->getSettings('TITLE_FIELD_NAME'),
+                    'n' => $name,
+                    'k' => $key
+                ),
+                $this->getSettings('ADDITIONAL_URL_PARAMS')
+            ));
 
             $editStr = '<input name="' . $this->getFilterInputName() . '"
                      id="' . $name . '[' . $key . ']"
@@ -256,9 +312,7 @@ class OrmElementWidget extends NumberWidget
                      type="text">' .
                 '<input type="button"
                     value="..."
-                    onClick="jsUtils.OpenWindow(\'/bitrix/admin/admin_helper_route.php?lang=' . LANGUAGE_ID
-                . '&amp;module=' . $module . '&amp;view=' . $view . '&amp;popup=Y'
-                . '&amp;n=' . $name . '&amp;k=' . $key . '\', ' . $windowWidth . ', ' . $windowHeight . ');">';
+                    onClick="jsUtils.OpenWindow(\'' . $popupUrl . '\', ' . $windowWidth . ', ' . $windowHeight . ');">';
 
             print '<td>' . $editStr . '</td>';
 
@@ -276,6 +330,7 @@ class OrmElementWidget extends NumberWidget
     {
         $refInfo = array();
         $valueList = null;
+        $linkedModel = $this->getLinkedModel();
 
         if ($this->getSettings('MULTIPLE')) {
             $entityName = $this->entityName;
@@ -290,15 +345,14 @@ class OrmElementWidget extends NumberWidget
             }
         } else {
             $value = $this->getValue();
+
             if (!empty($value)) {
                 $valueList[$value] = $value;
             }
         }
 
         if ($valueList) {
-            $model = $this->getSettings('MODEL');
-
-            $rsEntity = $model::getList(array(
+            $rsEntity = $linkedModel::getList(array(
                 'filter' => array('ID' => $valueList)
             ));
 
@@ -329,7 +383,7 @@ class OrmElementWidget extends NumberWidget
     }
 
     /**
-     * Получает информацию о всех активных элементах для выбора в input
+     * Получает информацию о всех активных элементах для их выбора в виджете.
      *
      * @return array
      *
@@ -338,10 +392,9 @@ class OrmElementWidget extends NumberWidget
     protected function getOrmElementList()
     {
         $valueList = null;
+        $linkedModel = $this->getLinkedModel();
 
-        $model = $this->getSettings('MODEL');
-
-        $rsEntity = $model::getList(array(
+        $rsEntity = $linkedModel::getList(array(
             'filter' => array(
                 'ACTIVE' => 1
             ),
@@ -356,5 +409,20 @@ class OrmElementWidget extends NumberWidget
         }
 
         return $valueList;
+    }
+
+    /**
+     * Возвращает связанную модель.
+     *
+     * @return \Bitrix\Main\Entity\DataManager
+     */
+    protected function getLinkedModel()
+    {
+        /**
+         * @var \DigitalWand\AdminHelper\Helper\AdminBaseHelper $linkedHelper
+         */
+        $linkedHelper = $this->getSettings('HELPER');
+
+        return $linkedHelper::getModel();
     }
 }
