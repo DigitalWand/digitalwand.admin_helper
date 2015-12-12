@@ -95,7 +95,7 @@ class IblockElementWidget extends NumberWidget
     /**
      * {@inheritdoc}
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $elementId = $this->getValue();
 

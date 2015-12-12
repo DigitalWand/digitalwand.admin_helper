@@ -4,7 +4,7 @@ namespace DigitalWand\AdminHelper\Widget;
 
 class VisualEditorWidget extends TextAreaWidget
 {
-    static protected $defaults = array(
+    protected static $defaults = array(
         'WIDTH' => '100%',
         'HEIGHT' => 450,
         'EDITORS' => array(
@@ -223,7 +223,7 @@ class VisualEditorWidget extends TextAreaWidget
     /**
      * @inheritdoc
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $text = trim(strip_tags($data[$this->code]));
 

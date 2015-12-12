@@ -150,7 +150,7 @@ class FileWidget extends HelperWidget
     /**
      * {@inheritdoc}
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $html = '';
         

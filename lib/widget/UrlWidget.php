@@ -29,7 +29,7 @@ class UrlWidget extends StringWidget
     /**
      * @inheritdoc
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $value = $this->getValue();
 

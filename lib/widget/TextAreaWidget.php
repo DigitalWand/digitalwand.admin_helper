@@ -44,7 +44,7 @@ class TextAreaWidget extends StringWidget
     /**
      * @inheritdoc
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $text = $this->getValue();
 

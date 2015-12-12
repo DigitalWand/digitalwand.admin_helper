@@ -21,7 +21,7 @@ class DateTimeWidget extends HelperWidget
 	 * @param array $data - данные текущей строки
 	 * @return mixed
 	 */
-	public function genListHTML(&$row, $data)
+	public function generateRow(&$row, $data)
 	{
 		if (isset($this->settings['EDIT_IN_LIST']) AND $this->settings['EDIT_IN_LIST'])
 		{

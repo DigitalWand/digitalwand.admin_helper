@@ -16,13 +16,14 @@ Loc::loadMessages(__FILE__);
  * <li> static protected $model</li>
  * </ul>
  *
- * Этого будет дастаточно для получения минимальной функциональности
+ * Этого будет дастаточно для получения минимальной функциональности.
  *
+ * @package AdminHelper
+ * 
  * @see AdminBaseHelper::$model
  * @see AdminBaseHelper::$module
  * @see AdminBaseHelper::$listViewName
  * @see AdminBaseHelper::$viewName
- * @package AdminHelper
  *
  * @author Nik Samokhvalov <nik@samokhvalov.info>
  * @author Artem Yarygin <artx19@yandex.ru>
@@ -34,20 +35,16 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	const OP_EDIT_ACTION_AFTER = 'AdminEditHelper::editAction_after';
 
 	/**
-	 * @var array
-	 * Данные сущности, редактируемой в данный момент.
-	 * Ключи ассива - названия полей в БД.
+	 * @var array Данные сущности, редактируемой в данный момент. Ключи ассива — названия полей в БД.
 	 * @api
 	 */
 	protected $data;
 	/**
-	 * @var array
-	 * Вкладки страницы редактирования
+	 * @var array Вкладки страницы редактирования.
 	 */
 	protected $tabs = array();
 	/**
-	 * @var array
-	 * Элементы верхнего меню страницы
+	 * @var array Элементы верхнего меню страницы.
 	 * @see AdminEditHelper::fillMenu()
 	 */
 	protected $menu = array();
@@ -61,8 +58,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 *
 	 * @param array $fields
 	 * @param array $tabs
-	 *
-	 * @see AdminBaseHelper::setInterfaceSettings()
 	 */
 	public function __construct(array $fields, array $tabs = array())
 	{
@@ -73,7 +68,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				array(
 					'DIV' => 'DEFAULT_TAB',
 					'TAB' => Loc::getMessage('DEFAULT_TAB'),
-					"ICON" => "main_user_edit",
+					'ICON' => 'main_user_edit',
 					'TITLE' => Loc::getMessage('DEFAULT_TAB'),
 					'VISIBLE' => true,
 				)
@@ -182,7 +177,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает верхнее меню страницы
+	 * Возвращает верхнее меню страницы.
 	 * По-умолчанию две кнопки:
 	 * <ul>
 	 * <li> Возврат в список</li>
@@ -192,21 +187,25 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * Добавляя новые кнопки, нужно указывать параметр URl "action", который будет обрабатываться в
 	 * AdminEditHelper::customActions()
 	 *
-	 * @param bool $showDeleteButton управляет видимостью кнопки удаления элемента
+	 * @param bool $showDeleteButton Управляет видимостью кнопки удаления элемента.
+     * 
+     * @return array
+     * 
 	 * @see AdminEditHelper::$menu
 	 * @see AdminEditHelper::customActions()
-	 * @api
-	 * @return array
+	 * 
+     * @api
 	 */
 	protected function getMenu($showDeleteButton = true)
 	{
 		$listHelper = static::getHelperClass(AdminListHelper::className());
+        
 		$menu = array(
 			$this->getButton('RETURN_TO_LIST', array(
-				"LINK" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
+				'LINK' => $listHelper::getUrl(array_merge($this->additionalUrlParams,
 					array('restore_query' => 'Y')
 				)),
-				"ICON" => "btn_list",
+				'ICON' => 'btn_list',
 			))
 		);
 
@@ -214,7 +213,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 		if (isset($this->data[$this->pk()]) && $this->hasWriteRights()) {
 			$arSubMenu[] = $this->getButton('ADD_ELEMENT', array(
-				"LINK" => static::getUrl(array_merge($this->additionalUrlParams,
+				'LINK' => static::getUrl(array_merge($this->additionalUrlParams,
 					array(
 						'action' => 'add',
 						'lang' => LANGUAGE_ID,
@@ -226,7 +225,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 		if ($showDeleteButton && isset($this->data[$this->pk()]) && $this->hasDeleteRights()) {
 			$arSubMenu[] = $this->getButton('DELETE_ELEMENT', array(
-				"ONCLICK" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM') . "')) location.href='" .
+				'ONCLICK' => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_EDIT_DELETE_CONFIRM') . "')) location.href='" .
 					static::getUrl(array_merge($this->additionalUrlParams,
 						array(
 							'ID' => $this->data[$this->pk()],
@@ -239,9 +238,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		}
 
 		if (count($arSubMenu)) {
-			$menu[] = array("SEPARATOR" => "Y");
+			$menu[] = array('SEPARATOR' => 'Y');
 			$menu[] = $this->getButton('ACTIONS', array(
-				"MENU" => $arSubMenu,
+				'MENU' => $arSubMenu,
 				'ICON' => 'btn_new'
 			));
 		}
@@ -249,10 +248,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		return $menu;
 	}
 
-	/**
-	 * Выводит детальную страницу
-	 * @internal
-	 */
+    /**
+     * {@inheritdoc}
+     */
 	public function show()
 	{
 		if (!$this->hasReadRights()) {
@@ -275,6 +273,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		$this->tabControl->EndEpilogContent();
 
 		$query = $this->additionalUrlParams;
+        
 		if (isset($_REQUEST[$this->pk()])) {
 			$query[$this->pk()] = $_REQUEST[$this->pk()];
 		}
@@ -299,14 +298,14 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Отображение кнопок для управления элементом на странице редактирования
+	 * Отображение кнопок для управления элементом на странице редактирования.
 	 */
 	protected function showEditPageButtons()
 	{
-
 		$listHelper = static::getHelperClass(AdminListHelper::className());
-		$this->tabControl->Buttons(array(
-			"back_url" => $listHelper::getUrl(array_merge($this->additionalUrlParams,
+	
+        $this->tabControl->Buttons(array(
+			'back_url' => $listHelper::getUrl(array_merge($this->additionalUrlParams,
 				array(
 					'lang' => LANGUAGE_ID,
 					'restore_query' => 'Y',
@@ -316,6 +315,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 	/**
 	 * Отрисовка верхней части страницы.
+     * 
 	 * @api
 	 */
 	protected function showProlog()
@@ -323,20 +323,18 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Отрисовка нижней части страницы.
-	 * По-умолчанию рисует все поля, которые не попали в вывод, как input hidden
+	 * Отрисовка нижней части страницы. По-умолчанию рисует все поля, которые не попали в вывод, как input hidden.
+     * 
 	 * @api
 	 */
 	protected function showEpilog()
 	{
 		echo bitrix_sessid_post();
-		$interfaceSettings = static::getInterfaceSettings();
+	
+        $interfaceSettings = static::getInterfaceSettings();
 
 		foreach ($interfaceSettings['FIELDS'] as $code => $settings) {
-			if (!isset($settings['TAB']) AND
-				isset($settings['FORCE_SELECT']) AND
-				$settings['FORCE_SELECT'] == true
-			) {
+			if (!isset($settings['TAB']) AND isset($settings['FORCE_SELECT']) AND $settings['FORCE_SELECT'] == true) {
 				print '<input type="hidden" name="FIELDS[' . $code . ']" value="' . $this->data[$code] . '" />';
 			}
 		}
@@ -346,6 +344,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * Отрисовывает вкладку со всеми привязанными к ней полями.
 	 *
 	 * @param $tabSettings
+     * 
 	 * @internal
 	 */
 	private function showTabElements($tabSettings)
@@ -389,9 +388,11 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * </ul>
 	 *
 	 * @return bool
-	 * @see HelperWidget::processEditAction();
+	 * 
+     * @see HelperWidget::processEditAction();
 	 * @see HelperWidget::processAfterSaveAction();
-	 * @internal
+	 * 
+     * @internal
 	 */
 	protected function editAction()
 	{
@@ -486,13 +487,20 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Сохранение элемента.
-	 * Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
+	 * Сохранение элемента. Можно переопределить, если требуется сложная логика и нет возможности определить её 
+     * в модели.
+     * 
+     * Операциями сохранения модели занимается EntityManager.
 	 *
 	 * @param bool $id
-	 * @return \Bitrix\Main\Entity\AddResult|\Bitrix\Main\Entity\UpdateResult
-	 * @throws \Exception
-	 * @api
+	 * 
+     * @return \Bitrix\Main\Entity\AddResult|\Bitrix\Main\Entity\UpdateResult
+	 * 
+     * @throws \Exception
+     * 
+     * @see EntityManager
+	 * 
+     * @api
 	 */
 	protected function saveElement($id = null)
 	{
@@ -509,9 +517,12 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * Удаление элемента. Можно переопределить, если требуется сложная логика и нет возможности определить её в модели.
 	 *
 	 * @param $id
-	 * @return bool|\Bitrix\Main\Entity\DeleteResult
-	 * @throws \Exception
-	 * @api
+	 * 
+     * @return bool|\Bitrix\Main\Entity\DeleteResult
+	 * 
+     * @throws \Exception
+	 * 
+     * @api
 	 */
 	protected function deleteElement($id)
 	{
@@ -531,25 +542,31 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Выполнение кастомных операций над объектом в процессе редактирования
+	 * Выполнение кастомных операций над объектом в процессе редактирования.
 	 *
-	 * @param string $action название операции
-	 * @param int|null $id ID элемента
+	 * @param string $action Название операции.
+	 * @param int|null $id ID элемента.
+     * 
 	 * @see AdminEditHelper::fillMenu()
-	 * @api
+	 * 
+     * @api
 	 */
 	protected function customActions($action, $id)
 	{
 		if ($action == 'delete' AND !is_null($id)) {
 			$result = $this->deleteElement($id);
+            
 			if(!$result->isSuccess()){
 				$this->addErrors($result->getErrorMessages());
 			}
-			$listHelper = static::getHelperClass(AdminListHelper::className());
-			LocalRedirect($listHelper::getUrl(array_merge($this->additionalUrlParams,
-				array(
-					'restore_query' => 'Y'
-				))));
+			
+            $listHelper = static::getHelperClass(AdminListHelper::className());
+            $redirectUrl = $listHelper::getUrl(array_merge(
+                $this->additionalUrlParams,
+                array('restore_query' => 'Y')
+            ));
+			
+            LocalRedirect($redirectUrl);
 		}
 	}
 
@@ -558,7 +575,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 *
 	 * @see $data
 	 * @see AdminBaseHelper::setTitle()
-	 * @api
+	 * 
+     * @api
 	 */
 	protected function setElementTitle()
 	{
@@ -580,7 +598,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		return $this->tabControl;
 	}
 
-	public static function getUrl($params = array())
+    /**
+     * @inheritdoc
+     */
+	public static function getUrl(array $params = array())
 	{
 		return static::getViewURL(static::getViewName(), static::$editPageUrl, $params);
 	}

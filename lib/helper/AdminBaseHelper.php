@@ -67,10 +67,8 @@ Loc::loadMessages(__FILE__);
  * Единственное <b>обязательное</b> условие - расположение  всех реализуемых классов админ хелперов и админ интерфейсов
  * в одном неймспейсе
  *
- * @see AdminBaseHelper::setInterfaceSettings()
  * @see AdminInterface::fields()
  * @package AdminHelper
- * @FIXME: Упростить обработку сообщений об ошибках: слишком запутанно.
  *
  * @author Nik Samokhvalov <nik@samokhvalov.info>
  * @author Artem Yarygin <artx19@yandex.ru>
@@ -248,9 +246,8 @@ abstract class AdminBaseHelper
 	public function __construct(array $fields, array $tabs = array(), $module = "")
 	{
 		global $APPLICATION;
-		$this->app = $APPLICATION;
 
-		$this->loadMessages();
+		$this->app = $APPLICATION;
 
 		$settings = array(
 			'FIELDS' => $fields,
@@ -266,21 +263,14 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Подгрузка ленг-файла с сообщениями для локализации
-	 */
-	protected function loadMessages()
-	{
-	}
-
-	/**
-	 * @param string $viewName - имя вьюхи, для которой мы хотим получить натсройки
+	 * @param string $viewName Имя вьюхи, для которой мы хотим получить натсройки
 	 *
 	 * @return array Возвращает настройки интерфейса для данного класса.
 	 *
 	 * @see AdminBaseHelper::setInterfaceSettings()
 	 * @api
 	 */
-	static public function getInterfaceSettings($viewName = '')
+	public static function getInterfaceSettings($viewName = '')
 	{
 		if (empty($viewName)) {
 			$viewName = static::getViewName();
@@ -300,7 +290,7 @@ abstract class AdminBaseHelper
 	 *
 	 * @api
 	 */
-	static public function setInterfaceSettings(array $settings, array $helpers = array(), $module = '')
+	public static function setInterfaceSettings(array $settings, array $helpers = array(), $module = '')
 	{
 		foreach ($helpers as $helperClass => $helperSettings) {
 			if (!is_array($helperSettings)) { // поддержка старого формата описания хелперов
@@ -317,18 +307,20 @@ abstract class AdminBaseHelper
 	/**
 	 * Привязывает класса хелпера из которого вызывается к интерфесу, используется при получении
 	 * данных об элементах управления из интерфейса.
-	 * @param $class
+	 * 
+     * @param $class
 	 */
-	static public function setInterfaceClass($class)
+	public static function setInterfaceClass($class)
 	{
 		static::$interfaceClass[get_called_class()] = $class;
 	}
 
 	/**
-	 * Возвращает класс интерфейса к которому привязан хелпер из которого вызван метод
+	 * Возвращает класс интерфейса к которому привязан хелпер из которого вызван метод.
+     * 
 	 * @return array
 	 */
-	static public function getInterfaceClass()
+	public static function getInterfaceClass()
 	{
 		return isset(static::$interfaceClass[get_called_class()]) ? static::$interfaceClass[get_called_class()] : false;
 	}
@@ -338,10 +330,11 @@ abstract class AdminBaseHelper
 	 *
 	 * @param string $module имя текущего модуля
 	 * @param $interfaceSettings
+     * 
 	 * @return bool
 	 * @internal
 	 */
-	static public function registerInterfaceSettings($module, $interfaceSettings)
+	public static function registerInterfaceSettings($module, $interfaceSettings)
 	{
 		if (isset(self::$interfaceSettings[$module][static::getViewName()]) || empty($module)
 			|| empty($interfaceSettings)
@@ -358,8 +351,7 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Получает настройки интерфейса для данного модуля и представления
-	 * Используется при роутинге.
+	 * Получает настройки интерфейса для данного модуля и представления. Используется при роутинге.
 	 * Возвращается массив со следующими ключами:
 	 *
 	 * <ul>
@@ -367,12 +359,13 @@ abstract class AdminBaseHelper
 	 * <li> interface - настройки интерфейса для хелпера</li>
 	 * </ul>
 	 *
-	 * @param string $module Модуль, для которого нужно получить настройки
-	 * @param string $view Название представления
+	 * @param string $module Модуль, для которого нужно получить настройки.
+	 * @param string $view Название представления.
+     * 
 	 * @return array
 	 * @internal
 	 */
-	static public function getGlobalInterfaceSettings($module, $view)
+	public static function getGlobalInterfaceSettings($module, $view)
 	{
 		if (!isset(self::$interfaceSettings[$module][$view])) {
 			return false;
@@ -385,29 +378,31 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+     * Возвращает имя текущего представления.
+     * 
 	 * @return string
-	 * Возвращает имя текущего представления
 	 * @api
 	 */
 	public static function getViewName()
 	{
-		// Возвращаем имя представление если оно определено в дочернем классе
 		if (!is_array(static::$viewName)) {
 			return static::$viewName;
 		}
+
 		$className = get_called_class();
-		// Пытаемся автоматически определить текущее представление при его отсутствии в дочернем классе
+
 		if (!isset(static::$viewName[$className])) {
-			// Разбираем имя класса
 			$classNameParts = explode('\\', trim($className, '\\'));
-			// Определяем имя сущности и формируем из нее имя класса
+
 			if (count($classNameParts) > 2) {
 				$classCaption = array_pop($classNameParts); // название класса без namespace
 				preg_match_all('/((?:^|[A-Z])[a-z]+)/', $classCaption, $matches);
 				$classCaptionParts = $matches[0];
+
 				if (end($classCaptionParts) == 'Helper') {
 					array_pop($classCaptionParts);
 				}
+
 				static::$viewName[$className] = strtolower(implode('_', $classCaptionParts));
 			}
 		}
@@ -416,8 +411,9 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * @return \Bitrix\Main\Entity\DataManager|string Возвращает имя класса используемой модели
-	 * Возвращает имя класса используемой модели
+     * Возвращает имя класса используемой модели.
+     * 
+	 * @return \Bitrix\Main\Entity\DataManager|string
 	 *
 	 * @throws \Bitrix\Main\ArgumentException
 	 * @throws \Bitrix\Main\SystemException
@@ -434,34 +430,37 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает имя модуля, если оно не задано то определяет
-	 * автоматически из namespace
+	 * Возвращает имя модуля. Если оно не задано, то определяет автоматически из namespace класса.
+     * 
 	 * @return string
+     * 
 	 * @throws LoaderException
 	 * @api
 	 */
-	static public function getModule()
+	public static function getModule()
 	{
 		if (!is_array(static::$module)) {
 			return static::$module;
 		}
+        
 		$className = get_called_class();
-		// Пытаемся автоматически определить название модуля при его отсутствии
+
 		if (!isset(static::$module[$className])) {
-			// Разбираем имя класса
 			$classNameParts = explode('\\', trim($className, '\\'));
 
-			// Составляем имя модуля из имени класса по частям слева направо и проверяем есть ли такой модуль
 			$moduleNameParts = array();
 			$moduleName = false;
+
 			while (count($classNameParts)) {
 				$moduleNameParts[] = strtolower(array_shift($classNameParts));
 				$moduleName = implode('.', $moduleNameParts);
+
 				if (ModuleManager::isModuleInstalled($moduleName)) {
 					static::$module[$className] = $moduleName;
 					break;
 				}
 			}
+
 			if (empty($moduleName)) {
 				throw new LoaderException('Module name not found');
 			}
@@ -471,12 +470,16 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает модифцированный массив с описанием элемента управления по его коду.
-	 * Берет название и настройки из админ интерфейса, если они не заданы используются
-	 * значения по умолчанию
+	 * Возвращает модифцированный массив с описанием элемента управления по его коду. Берет название и настройки 
+     * из админ-интерфейса, если они не заданы — используются значения по умолчанию.
+     * 
+     * Если элемент управления описан в админ-интерфейсе, то дефолтные настройки и описанные в классе интерфейса 
+     * будут совмещены (смержены).
+     * 
 	 * @param $code
 	 * @param $params
 	 * @param array $keys
+     * 
 	 * @return array|bool
 	 */
 	protected function getButton($code, $params, $keys = array('name', 'TEXT'))
@@ -486,10 +489,7 @@ abstract class AdminBaseHelper
 
 		if ($interfaceClass && !empty($interfaceSettings['BUTTONS'])) {
 			$buttons = $interfaceSettings['BUTTONS'];
-			/*
-			 * Если элемент управления описан в классе интерфейсе, то совмещаем настройки
-			 * описание при использовании кнопки и описанные в классе интерфейса
-			 */
+			
 			if (is_array($buttons) && isset($buttons[$code])) {
 				if ($buttons[$code]['VISIBLE'] == 'N') {
 					return false;
@@ -499,8 +499,9 @@ abstract class AdminBaseHelper
 				return $params;
 			}
 		}
-		// Значения по умолчанию из настроек модуля
+
 		$text = Loc::getMessage('DIGITALWAND_ADMIN_HELPER_' . $code);
+
 		foreach ($keys as $key) {
 			$params[$key] = $text;
 		}
@@ -509,9 +510,12 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает список полей элемента, переданных через AdminBaseHelper::setInterfaceSettings()
+	 * Возвращает список полей интерфейса.
+     * 
 	 * @see AdminBaseHelper::setInterfaceSettings()
+     * 
 	 * @return array
+     * 
 	 * @api
 	 */
 	public function getFields()
@@ -520,18 +524,20 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Окончательно выводит админисстративную страницу
-	 * @internal
+	 * Окончательно выводит административную страницу.
 	 */
 	abstract public function show();
 
 	/**
-	 * Получает название таблицы используемой модели
+	 * Получает название таблицы используемой модели.
+     * 
 	 * @return mixed
 	 */
 	public function table()
 	{
-		/**@var DataManager $className */
+		/**
+         * @var DataManager $className
+         */
 		$className = static::getModel();
 
 		return $className::getTableName();
@@ -549,10 +555,12 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает первичный ключ таблицы используемой модели разделов
-	 * Для HL-инфоблоков битрикс - всегда ID. Но может поменяться для какой-либо другой сущности.
+	 * Возвращает первичный ключ таблицы используемой модели разделов. Для HL-инфоблоков битрикс - всегда ID. 
+     * Но может поменяться для какой-либо другой сущности.
+     * 
 	 * @return string
-	 * @api
+	 * 
+     * @api
 	 */
 	public function sectionPk()
 	{
@@ -560,9 +568,11 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Устанавливает заголовок раздела в админке
-	 * @param $title
-	 * @api
+	 * Устанавливает заголовок раздела в админке.
+     * 
+	 * @param string $title
+	 * 
+     * @api
 	 */
 	public function setTitle($title)
 	{
@@ -570,11 +580,12 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Функция для обработки дополнительных операций над элементами в админке.
-	 * Как правило должно оканчиваться LocalRedirect после внесения изменений.
+	 * Функция для обработки дополнительных операций над элементами в админке. Как правило, должно оканчиваться 
+     * LocalRedirect после внесения изменений.
 	 *
-	 * @param string $action Название действия
-	 * @param null|int $id ID элемента
+	 * @param string $action Название действия.
+	 * @param null|int $id ID элемента.
+     * 
 	 * @api
 	 */
 	protected function customActions($action, $id = null)
@@ -583,9 +594,11 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Выполняется проверка прав на доступ к сущности
+	 * Выполняется проверка прав на доступ к сущности.
+     * 
 	 * @return bool
-	 * @api
+	 * 
+     * @api
 	 */
 	protected function hasRights()
 	{
@@ -593,9 +606,11 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Выполняется проверка прав на выполнение операций чтения элементов
+	 * Выполняется проверка прав на выполнение операций чтения элементов.
+     * 
 	 * @return bool
-	 * @api
+	 * 
+     * @api
 	 */
 	protected function hasReadRights()
 	{
@@ -603,8 +618,10 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Выполняется проверка прав на выполнение операций редактирования элементов
-	 * @return bool
+	 * Выполняется проверка прав на выполнение операций редактирования элементов.
+	 * 
+     * @return bool
+     * 
 	 * @api
 	 */
 	protected function hasWriteRights()
@@ -613,9 +630,13 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Проверка прав на изменение определенного элемента
-	 * @param array $element Массив данных элемента
+	 * Проверка прав на изменение определенного элемента.
+     * 
+	 * @param array $element Массив данных элемента.
+     * 
 	 * @return bool
+     * 
+     * @api
 	 */
 	protected function hasWriteRightsElement($element = array())
 	{
@@ -627,8 +648,10 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Выполняется проверка прав на выполнение опреаций удаления элементов
+	 * Выполняется проверка прав на выполнение опреаций удаления элементов.
+     * 
 	 * @return bool
+     * 
 	 * @api
 	 */
 	protected function hasDeleteRights()
@@ -637,7 +660,8 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Выводит сообщения об ошибках
+	 * Выводит сообщения об ошибках.
+     * 
 	 * @internal
 	 */
 	protected function showMessages()
@@ -666,6 +690,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * @return bool|\CApplicationException
+     * 
 	 * @internal
 	 */
 	protected function getLastException()
@@ -691,9 +716,11 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Добавляет ошибку или массив ошибок для показа пользователю
+	 * Добавляет ошибку или массив ошибок для показа пользователю.
+     * 
 	 * @param array|string $errors
-	 * @api
+	 * 
+     * @api
 	 */
 	public function addErrors($errors)
 	{
@@ -710,9 +737,11 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Добавляет уведомление или список уведомлений для показа пользователю
+	 * Добавляет уведомление или список уведомлений для показа пользователю.
+     * 
 	 * @param array|string $notes
-	 * @api
+	 * 
+     * @api
 	 */
 	public function addNotes($notes)
 	{
@@ -731,6 +760,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * @return bool|array
+     * 
 	 * @api
 	 */
 	protected function getErrors()
@@ -748,6 +778,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * @return bool
+     * 
 	 * @api
 	 */
 	protected function getNotes()
@@ -773,41 +804,33 @@ abstract class AdminBaseHelper
 	 * то это будет вглядеть так $listHelperClass = static::getHelperClass(AdminListHelper::getClass())
 	 *
 	 * @param $class
+     * 
 	 * @return string|bool
 	 */
 	public function getHelperClass($class)
 	{
-		// получаем настройки интерфейса для текущего модуля, там есть классы хелперов они нам и нужны
 		$interfaceSettings = self::$interfaceSettings[static::getModule()];
 
-		// перебираем все хелперы в модули
 		foreach ($interfaceSettings as $viewName => $settings) {
-			// ищем среди них ближайшего родителя из DigitalWand\AdminHelper
 			$parentClasses = class_parents($settings['helper']);
 			array_pop($parentClasses); // AdminBaseHelper
 
-			// первый класс в цепочке родителей хелпера, по умолчанию считаем что
 			$parentClass = array_pop($parentClasses);
-			$thirdClass = array_pop($parentClasses); // третий класс в цепочке родителей хелпера
+			$thirdClass = array_pop($parentClasses);
 
-			// проверяем а не унаследован ли хелпер от хелперов-заглушек используемых для разделов
 			if (in_array($thirdClass, array(AdminSectionListHelper::className(), AdminSectionEditHelper::className()))) {
-				$parentClass = $thirdClass; // хелпер потомок AdminSectionEditHelper или AdminSectionListHelper
+				$parentClass = $thirdClass;
 			}
 
-			// проверяем соответствует ли хелпер запрошуенному типу
 			if ($parentClass == $class && class_exists($settings['helper'])) {
-				// получаем неймспейсы для хелпера
 				$helperClassParts = explode('\\', $settings['helper']);
 				array_pop($helperClassParts);
 				$helperNamespace = implode('\\', $helperClassParts);
 
-				// получаем неймспейсы для хелпера из которого вызван этот метод
 				$сlassParts = explode('\\', get_called_class());
 				array_pop($сlassParts);
 				$classNamespace = implode('\\', $сlassParts);
 
-				// сверяем namespace-ы
 				if ($helperNamespace == $classNamespace) {
 					return $settings['helper'];
 				}
@@ -818,22 +841,22 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает относительный namespace до хелперов в виде URL параметра
+	 * Возвращает относительный namespace до хелперов в виде URL параметра.
+     * 
 	 * @return string
 	 */
-	static public function getNamespaceUrlParam()
+	public static function getEntityCode()
 	{
-
 		$namespaceParts = explode('\\', get_called_class());
-		array_pop($namespaceParts); // убираем имя класс
-		array_shift($namespaceParts); // убираем namespace вендора
-		array_shift($namespaceParts); // убираем namespace модуля
+		array_pop($namespaceParts);
+		array_shift($namespaceParts);
+		array_shift($namespaceParts);
 
 		if (end($namespaceParts) == 'AdminInterface') {
-			array_pop($namespaceParts); // убираем AdminInterface
+			array_pop($namespaceParts);
 		}
 
-		return str_replace( // формируем параметр
+		return str_replace(
 			'\\',
 			'_',
 			implode(
@@ -844,12 +867,15 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает URL страницы редактирования класса данного представления
+	 * Возвращает URL страницы редактирования класса данного представления.
+     * 
 	 * @param array $params
-	 * @return string
-	 * @api
+	 * 
+     * @return string
+	 * 
+     * @api
 	 */
-	static public function getEditPageURL($params = array())
+	public static function getEditPageURL($params = array())
 	{
 		$editHelperClass = str_replace('List', 'Edit', get_called_class());
 		if (empty(static::$editViewName) && class_exists($editHelperClass)) {
@@ -861,15 +887,19 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает URL страницы редактирования класса данного представления
+	 * Возвращает URL страницы редактирования класса данного представления.
+     * 
 	 * @param array $params
-	 * @return string
-	 * @api
+	 * 
+     * @return string
+	 * 
+     * @api
 	 */
-	static public function getSectionsEditPageURL($params = array())
+	public static function getSectionsEditPageURL($params = array())
 	{
 		$sectionEditHelperClass = str_replace('List', 'SectionsEdit', get_called_class());
-		if (empty(static::$sectionsEditViewName) && class_exists($sectionEditHelperClass)) {
+		
+        if (empty(static::$sectionsEditViewName) && class_exists($sectionEditHelperClass)) {
 			return $sectionEditHelperClass::getViewURL($sectionEditHelperClass::getViewName(), static::$sectionsEditPageUrl, $params);
 		}
 		else {
@@ -878,15 +908,19 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает URL страницы списка класса данного представления
+	 * Возвращает URL страницы списка класса данного представления.
+     * 
 	 * @param array $params
-	 * @return string
-	 * @api
+	 * 
+     * @return string
+	 * 
+     * @api
 	 */
-	static public function getListPageURL($params = array())
+	public static function getListPageURL($params = array())
 	{
 		$listHelperClass = str_replace('Edit', 'List', get_called_class());
-		if (empty(static::$listViewName) && class_exists($listHelperClass)) {
+		
+        if (empty(static::$listViewName) && class_exists($listHelperClass)) {
 			return $listHelperClass::getViewURL($listHelperClass::getViewName(), static::$listPageUrl, $params);
 		}
 		else {
@@ -897,15 +931,17 @@ abstract class AdminBaseHelper
 	/**
 	 * Получает URL для указанного представления
 	 *
-	 * @param string $viewName название представления
-	 * @param string $defaultURL позволяет указать URL напрямую. Если указано, то будет использовано это значение
-	 * @param array $params - дополнительные query-параметры в URL
+	 * @param string $viewName Название представления.
+	 * @param string $defaultURL Позволяет указать URL напрямую. Если указано, то будет использовано это значение.
+	 * @param array $params Дополнительные query-параметры в URL.
+     * 
 	 * @return string
-	 * @internal
+	 * 
+     * @internal
 	 */
-	static public function getViewURL($viewName, $defaultURL, $params = array())
+	public static function getViewURL($viewName, $defaultURL, $params = array())
 	{
-		$params['entity'] = static::getNamespaceUrlParam();
+		$params['entity'] = static::getEntityCode();
 
 		if (isset($defaultURL)) {
 			$url = $defaultURL . "?lang=" . LANGUAGE_ID;
@@ -928,22 +964,25 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает адрес обработчика запросов к админ. интерфейсу.
-	 * @return string
-	 * @api
+	 * 
+     * @return string
+	 * 
+     * @api
 	 */
-	static public function getRouterURL()
+	public static function getRouterURL()
 	{
 		return static::$routerUrl;
 	}
 
-	/**
-	 * Получить URL на страницу с хелпером.
-	 *
-	 * @param array $params Дополнительные GET-параметры для URL.
-	 *
-	 * @return string
-	 */
-	public static function getUrl($params = array())
+    /**
+     * Возвращает URL страницы с хелпером. Как правило, метод вызывается при генерации административного
+     * меню (`menu.php`).
+     *
+     * @param array $params Дополнительные GET-параметры для подстановки в URL.
+     *
+     * @return string
+     */
+	public static function getUrl(array $params = array())
 	{
 		return static::getViewURL(static::getViewName(), null, $params);
 	}
@@ -951,11 +990,14 @@ abstract class AdminBaseHelper
 	/**
 	 * Получает виджет для текущего поля, выполняет базовую инициализацию.
 	 *
-	 * @param string $code ключ поля для данного виджета (должен быть в массиве $data)
-	 * @param array $data - данные объекта в виде массива
-	 * @return bool|\DigitalWand\AdminHelper\Widget\HelperWidget
+	 * @param string $code Ключ поля для данного виджета (должен быть в массиве $data).
+	 * @param array $data Данные объекта в виде массива.
+	 * 
+     * @return bool|\DigitalWand\AdminHelper\Widget\HelperWidget
+     * 
 	 * @throws \DigitalWand\AdminHelper\Helper\Exception
-	 * @internal
+	 * 
+     * @internal
 	 */
 	public function createWidgetForField($code, &$data = array())
 	{
@@ -982,8 +1024,8 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Метод вызывается при создании виджета для текущего поля.
-	 * Может быть использован для изменения настроек виджета на основе передаваемых данных
+	 * Метод вызывается при создании виджета для текущего поля. Может быть использован для изменения настроек виджета 
+     * на основе передаваемых данных.
 	 *
 	 * @param \DigitalWand\AdminHelper\Widget\HelperWidget $widget
 	 * @param array $data
@@ -993,8 +1035,8 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Если класс не объявлен, то битрикс генерирует новый класс в рантайме.
-	 * Если класс уже есть, то возвращаем имя как есть.
+	 * Если класс не объявлен, то битрикс генерирует новый класс в рантайме. Если класс уже есть, то возвращаем имя 
+     * как есть.
 	 *
 	 * @param $className
 	 * @return \Bitrix\Highloadblock\DataManager
@@ -1002,12 +1044,12 @@ abstract class AdminBaseHelper
 	 * @throws \Bitrix\Main\ArgumentException
 	 * @throws \Bitrix\Main\SystemException
 	 * @throws Exception
-	 *
 	 */
 	public static function getHLEntity($className)
 	{
 		if (!class_exists($className)) {
 			$info = static::getHLEntityInfo($className);
+
 			if ($info) {
 				$entity = HL\HighloadBlockTable::compileEntity($info);
 
@@ -1027,18 +1069,22 @@ abstract class AdminBaseHelper
 	/**
 	 * Получает запись из БД с информацией об HL.
 	 *
-	 * @param $className - название класса, обязательно без Table в конце и без указания неймспейса
+	 * @param string $className Название класса, обязательно без Table в конце и без указания неймспейса.
+     * 
 	 * @return array|false
-	 * @throws \Bitrix\Main\ArgumentException
+	 * 
+     * @throws \Bitrix\Main\ArgumentException
 	 */
 	public static function getHLEntityInfo($className)
 	{
 		$className = str_replace('\\', '', $className);
 		$pos = strripos($className, 'Table', -5);
-		if ($pos !== false) {
+	
+        if ($pos !== false) {
 			$className = substr($className, 0, $pos);
 		}
-		$parameters = array(
+
+        $parameters = array(
 			'filter' => array(
 				'NAME' => $className,
 			),
@@ -1050,8 +1096,10 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Выставляет текущий контекст исполнения.
+     * 
 	 * @param $context
-	 * @see $context
+	 * 
+     * @see $context
 	 */
 	protected function setContext($context)
 	{

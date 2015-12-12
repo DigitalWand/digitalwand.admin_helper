@@ -156,7 +156,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param bool $isPopup
 	 * @throws \Bitrix\Main\ArgumentException
 	 */
-	public function __construct($fields, $isPopup = false)
+	public function __construct(array $fields, $isPopup = false)
 	{
 		$this->isPopup = $isPopup;
 
@@ -384,10 +384,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Подготавливает массив с настройками контекстного меню.
-	 * По-умолчанию добавлена кнопка "создать элемент".
-	 * @api
+	 * Подготавливает массив с настройками контекстного меню. По-умолчанию добавлена кнопка "создать элемент".
+     * 
 	 * @see $contextMenu
+     * 
+     * @api
 	 */
 	protected function getContextMenu()
 	{
@@ -447,14 +448,17 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает массив с настройками групповых действий над списком
+	 * Возвращает массив с настройками групповых действий над списком.
+     *
+     * @return array
+     * 
 	 * @api
-	 * @return array
 	 */
 	protected function getGroupActions()
 	{
 		$result = array();
-		if (!$this->isPopup()) {
+		
+        if (!$this->isPopup()) {
 			if ($this->hasDeleteRights()) {
 				$result = array('delete' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"));
 			}
@@ -464,12 +468,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Обработчик групповых операций.
-	 * По-умолчанию прописаны операции активации/деактивации и удаления.
+	 * Обработчик групповых операций. По-умолчанию прописаны операции активации / деактивации и удаления.
 	 *
-	 * @api
 	 * @param array $IDs
 	 * @param string $action
+     *
+     * @api
 	 */
 	protected function groupActions($IDs, $action)
 	{
@@ -625,7 +629,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	/**
 	 * Является ли список всплывающим окном для выбора элементов из списка.
 	 * В этой версии не должно быть операций удаления/перехода к редактированию.
-	 * @return boolean
+	 * 
+     * @return boolean
 	 */
 	public function isPopup()
 	{
@@ -635,7 +640,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	/**
 	 * Функция определяет js-функцию для двойонго клика по строке.
 	 * Вызывается в том случае, если окно открыто в режиме попапа.
-	 * @api
+	 * 
+     * @api
 	 */
 	protected function genPopupActionJS()
 	{
@@ -906,7 +912,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Получение смешанного списка из разделов и элементов
+	 * Получение смешанного списка из разделов и элементов.
+     * 
 	 * @param $sectionsVisibleColumns
 	 * @param $elementVisibleColumns
 	 * @param $sort
@@ -917,9 +924,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	{
 		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
 		$returnData = array();
-		$raw['SELECT'] = array_unique($raw['SELECT']);
+        /**
+         * @var DataManager $sectionModel
+         */        
 		$sectionModel = $sectionEditHelperClass::getModel();
 		$sectionFilter = array($sectionModel::getSectionField() => $_GET['ID']);
+
+        $raw['SELECT'] = array_unique($raw['SELECT']);
 
 		// при использовании в качестве popup окна исключаем раздел из выборке
 		// что бы не было возможности сделать раздел родителем самого себя
@@ -937,17 +948,19 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 		}
 		// добавляем к выборке разделы
-		$res = $sectionModel::getList(array(
+		$rsSections = $sectionModel::getList(array(
 			'filter' => $sectionFilter,
 			'select' => $sectionsVisibleColumns,
 			'order' => $sectionSort,
 			'limit' => $limitData[1],
 			'offset' => $limitData[0],
 		));
-		while ($arSection = $res->Fetch()) {
-			$arSection['IS_SECTION'] = true;
-			$returnData[] = $arSection;
+        
+		while ($section = $rsSections->fetch()) {
+			$section['IS_SECTION'] = true;
+			$returnData[] = $section;
 		}
+        
 		// расчитываем offset и limit для элементов
 		if (count($returnData) > 0) {
 			$elementOffset = 0;
@@ -989,10 +1002,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$elementParams['limit'] = $elementLimit;
 			$elementParams['offset'] = $elementOffset;
 			// добавляем к выборке элементы
-			$res = $elementModel::getList($elementParams);
-			while ($arElement = $res->Fetch()) {
-				$arElement['IS_SECTION'] = false;
-				$returnData[] = $arElement;
+			$rsSections = $elementModel::getList($elementParams);
+            
+			while ($element = $rsSections->fetch()) {
+				$element['IS_SECTION'] = false;
+				$returnData[] = $element;
 			}
 		}
 
@@ -1023,7 +1037,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * а из нашего параметра, полученного из SQL-запроса.
 	 * array_slice также не делается.
 	 *
-	 * @param CAdminResult $res
+	 * @param \CAdminResult $res
 	 */
 	protected function customNavStart(&$res)
 	{
@@ -1060,21 +1074,27 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Преобразует данные строки, перед тем как добавлять их в список
-	 * @api
+	 * Преобразует данные строки, перед тем как добавлять их в список.
+     * 
 	 * @param $data
-	 * @see AdminListHelper::getList();
+	 * 
+     * @see AdminListHelper::getList()
+     *
+     * @api
 	 */
 	protected function modifyRowData(&$data)
 	{
 	}
 
 	/**
-	 * Настройки строки таблицы
-	 * @param array $data данные текущей строки БД
-	 * @param bool|string $class класс хелпера через метод getUrl которого идет получение ссылки
-	 * @return array возвращает ссылку на детальную страницу и её название
-	 * @api
+	 * Настройки строки таблицы.
+     * 
+	 * @param array $data Данные текущей строки БД.
+	 * @param bool|string $class Класс хелпера через метод getUrl которого идет получение ссылки.
+	 * 
+     * @return array Возвращает ссылку на детальную страницу и её название.
+	 * 
+     * @api
 	 */
 	protected function getRow($data, $class = false)
 	{
@@ -1096,13 +1116,15 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Для каждой ячейки(раздела) таблицы создаёт виджет соответствующего типа.
-	 * Виджет подготавливает необходимый HTML для списка
+	 * Виджет подготавливает необходимый HTML для списка.
 	 *
 	 * @param \CAdminListRow $row
-	 * @param $code - сивольный код поля
-	 * @param $data - данные текущей строки
-	 * @throws Exception
-	 * @see HelperWidget::genListHTML()
+	 * @param $code Сивольный код поля.
+	 * @param $data Данные текущей строки.
+	 * 
+     * @throws Exception
+	 * 
+     * @see HelperWidget::generateRow()
 	 */
 	protected function addRowSectionCell($row, $code, $data)
 	{
@@ -1112,7 +1134,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 			throw new Exception($error, Exception::CODE_NO_WIDGET);
 		}
 
-		/** @var HelperWidget $widget */
+		/**
+         * @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget
+         */
 		$widget = $this->sectionFields[$code]['WIDGET'];
 
 		$widget->setHelper($this);
@@ -1121,7 +1145,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$widget->setEntityName($sectionEditHelper::getModel());
 
 		$this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
-		$widget->genListHTML($row, $data);
+		$widget->generateRow($row, $data);
 	}
 
 	/**
@@ -1133,12 +1157,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * <li> Если это всплывающее окно - запустить кастомную JS-функцию. </li>
 	 * </ul>
 	 *
-	 * @see CAdminListRow::AddActions
-	 *
-	 * @api
-	 * @param $data - данные текущей строки
-	 * @param $section - признак списка для раздела
+	 * @param $data Данные текущей строки.
+	 * @param $section Признак списка для раздела.
+     * 
 	 * @return array
+     *
+     * @see CAdminListRow::AddActions
+     *
+     * @api
 	 */
 	protected function getRowActions($data, $section = false)
 	{
@@ -1147,14 +1173,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 		if ($this->isPopup()) {
 			$jsData = \CUtil::PhpToJSObject($data);
 			$actions['select'] = array(
-				"ICON" => "select",
-				"DEFAULT" => true,
-				"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_SELECT"),
+				'ICON' => 'select',
+				'DEFAULT' => true,
+				'TEXT' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_SELECT'),
 				"ACTION" => 'javascript:' . $this->popupClickFunctionName . '(' . $jsData . ')'
 			);
 		}
 		else {
-			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName() . '&entity=' . static::getNamespaceUrlParam();
+			$viewQueryString = 'module=' . static::getModule() . '&view=' . static::getViewName() . '&entity=' . static::getEntityCode();
 			$query = array_merge($this->additionalUrlParams,
 				array($this->pk() => $data[$this->pk()]));
 			if ($this->hasWriteRights()) {
@@ -1162,17 +1188,17 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$editHelperClass = static::getHelperClass(AdminEditHelper::className());
 
 				$actions['edit'] = array(
-					"ICON" => "edit",
-					"DEFAULT" => true,
-					"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_EDIT"),
-					"ACTION" => $this->list->ActionRedirect($section ? $sectionHelperClass::getUrl($query) : $editHelperClass::getUrl($query))
+					'ICON' => 'edit',
+					'DEFAULT' => true,
+					'TEXT' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_EDIT'),
+					'ACTION' => $this->list->ActionRedirect($section ? $sectionHelperClass::getUrl($query) : $editHelperClass::getUrl($query))
 				);
 			}
 			if ($this->hasDeleteRights()) {
 				$actions['delete'] = array(
-					"ICON" => "delete",
-					"TEXT" => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),
-					"ACTION" => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
+					'ICON' => 'delete',
+					'TEXT' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"),
+					'ACTION' => "if(confirm('" . Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_CONFIRM') . "')) " . $this->list->ActionDoGroup($data[$this->pk()],
 							$section ? "delete-section" : "delete", $viewQueryString)
 				);
 			}
@@ -1182,25 +1208,30 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Для каждой ячейки таблицы создаёт виджет соответствующего типа.
-	 * Виджет подготавливает необходимый HTML для списка
+	 * Для каждой ячейки таблицы создаёт виджет соответствующего типа. Виджет подготавливает необходимый HTML-код 
+     * для списка.
 	 *
-	 * @param \CAdminListRow $row
-	 * @param $code - сивольный код поля
-	 * @param $data - данные текущей строки
+	 * @param \CAdminListRow $row Объект строки списка записей.
+	 * @param string $code Сивольный код поля.
+	 * @param array $data Данные текущей строки.
 	 * @param bool $virtualCode
-	 * @throws Exception
-	 * @see HelperWidget::genListHTML()
+	 * 
+     * @throws Exception
+	 * 
+     * @see HelperWidget::generateRow()
 	 */
 	protected function addRowCell($row, $code, $data, $virtualCode = false)
 	{
 		$widget = $this->createWidgetForField($code, $data);
 		$this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
-		// устанавливаем виртуальный код ячейки, используется при слиянии столбцов
+		
+        // устанавливаем виртуальный код ячейки, используется при слиянии столбцов
 		if ($virtualCode) {
 			$widget->setCode($virtualCode);
 		}
-		$widget->genListHTML($row, $data);
+		
+        $widget->generateRow($row, $data);
+        
 		if ($virtualCode) {
 			$widget->setCode($code);
 		}
@@ -1215,9 +1246,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param array $select
 	 * @param array $sort
 	 * @param array $raw
-	 * @api
 	 *
 	 * @return Result
+     * 
+     * @api
 	 */
 	protected function getData($className, $filter, $select, $sort, $raw)
 	{
@@ -1335,11 +1367,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает URL для списка элементов
-	 * @param array $params
-	 * @return string
+	 * @inheritdoc
 	 */
-	public static function getUrl($params = array())
+	public static function getUrl(array $params = array())
 	{
 		return static::getViewURL(static::getViewName(), static::$listPageUrl, $params);
 	}

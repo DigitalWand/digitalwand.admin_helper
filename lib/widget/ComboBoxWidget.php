@@ -189,7 +189,7 @@ class ComboBoxWidget extends HelperWidget
     /**
      * @inheritdoc
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY']) {
             $row->AddInputField($this->getCode(), array('style' => 'width:90%'));

@@ -219,7 +219,7 @@ class OrmElementWidget extends NumberWidget
     /**
      * @inheritdoc
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         if ($this->getSettings('MULTIPLE')) {
             $strElement = static::getMultipleValueReadonly();

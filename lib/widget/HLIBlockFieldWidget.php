@@ -193,7 +193,7 @@ class HLIBlockFieldWidget extends HelperWidget
      *
      * @return mixed
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $info = $this->getUserFieldInfo();
         if ($info) {

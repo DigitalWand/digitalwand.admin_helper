@@ -72,7 +72,7 @@ class UserWidget extends NumberWidget
     /**
      * @inheritdoc
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $userId = $this->getValue();
         $strUser = '';

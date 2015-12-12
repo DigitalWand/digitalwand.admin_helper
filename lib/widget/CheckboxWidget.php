@@ -40,7 +40,7 @@ class CheckboxWidget extends HelperWidget
      */
     const TYPE_INT_NO = 0;
 
-    static protected $defaults = array(
+    protected static $defaults = array(
         'EDIT_IN_LIST' => true
     );
 
@@ -77,7 +77,7 @@ class CheckboxWidget extends HelperWidget
     /**
      * @inheritdoc
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $modeType = $this->getCheckboxType();
 

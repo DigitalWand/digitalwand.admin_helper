@@ -135,7 +135,7 @@ use Bitrix\Main\Entity\DataManager;
  *
  * @see EntityManager
  * @see HelperWidget::getEditHtml()
- * @see HelperWidget::genListHTML()
+ * @see HelperWidget::generateRow()
  * @see showFilterHtml::showFilterHTML()
  * @see HelperWidget::setSetting()
  * 
@@ -148,58 +148,41 @@ abstract class HelperWidget
     const EDIT_HELPER = 2;
 
     /**
-     * @var string
-     * Название поля ("символьный код")
+     * @var string Код поля.
      */
     protected $code;
-
     /**
-     * @var array $settings
-     * Настройки виджета для данной модели
+     * @var array $settings Настройки виджета для данной модели.
      */
     protected $settings = array(
         // Поля множественного виджета по умолчанию (array('ОРИГИНАЛЬНОЕ НАЗВАНИЕ', 'ОРИГИНАЛЬНОЕ НАЗВАНИЕ' => 'АЛИАС'))
         'MULTIPLE_FIELDS' => array('ID', 'VALUE', 'ENTITY_ID')
     );
-
     /**
-     * @var array
-     * Настройки "по-умолчанию" для модели
+     * @var array Настройки "по-умолчанию" для модели.
      */
     static protected $defaults;
-
     /**
-     * @var DataManager
-     * Название класса модели
+     * @var DataManager Название класса модели.
      */
     protected $entityName;
-
     /**
-     * @var array
-     * Данные модели
+     * @var array Данные модели.
      */
     protected $data;
-
-    /** @var  AdminBaseHelper|AdminListHelper|AdminEditHelper $helper
-     * Экземпляр хэлпера, вызывающий данный виджет
+    /** @var  AdminBaseHelper|AdminListHelper|AdminEditHelper $helper Экземпляр хэлпера, вызывающий данный виджет.
      */
     protected $helper;
-
     /**
-     * @var bool Статус отображения JS хелпера
-     * Используется для исключения дублирования JS кода
+     * @var bool Статус отображения JS хелпера. Используется для исключения дублирования JS-кода.
      */
     protected $jsHelper = false;
-
     /**
-     * @var array $validationErrors
-     * Ошибки валидации поля
+     * @var array $validationErrors Ошибки валидации поля.
      */
     protected $validationErrors = array();
-
     /**
-     * @var string
-     * Строка, добавляемая к полю name полей фильтра
+     * @var string Строка, добавляемая к полю name полей фильтра.
      */
     protected $filterFieldPrefix = 'find_';
 
@@ -220,6 +203,7 @@ abstract class HelperWidget
      * Генерирует HTML для редактирования поля.
      *
      * @return string
+     * 
      * @api
      */
     abstract protected function getEditHtml();
@@ -228,6 +212,7 @@ abstract class HelperWidget
      * Генерирует HTML для редактирования поля в мульти-режиме.
      *
      * @return string
+     * 
      * @api
      */
     protected function getMultipleEditHtml()
@@ -236,10 +221,10 @@ abstract class HelperWidget
     }
 
     /**
-     * Оборачивает поле в HTML код, который в большинстве случаев менять не придется.
-     * Далее вызывается кастомизируемая часть.
+     * Оборачивает поле в HTML код, который в большинстве случаев менять не придется. Далее вызывается 
+     * кастомизируемая часть.
      *
-     * @param $isPKField - является ли поле первичным ключом модели
+     * @param bool $isPKField Является ли поле первичным ключом модели.
      *
      * @see HelperWidget::getEditHtml();
      */
@@ -298,12 +283,12 @@ abstract class HelperWidget
      */
     protected function getValueReadonly()
     {
-        // Вырезаем теги
         return static::prepareToOutput($this->getValue());
     }
 
     /**
-     * Возвращает значения множественного поля
+     * Возвращает значения множественного поля.
+     * 
      * @return array
      */
     protected function getMultipleValue()
@@ -351,31 +336,33 @@ abstract class HelperWidget
     }
 
     /**
-     * Обработка строки для безопасного отображения.
-     * Если нужно отобразить текст как аттрибут тега, используйте static::prepareToTag();
+     * Обработка строки для безопасного отображения. Если нужно отобразить текст как аттрибут тега, 
+     * используйте static::prepareToTag().
      *
      * @param string $string
-     * @param bool $hideTags Скрыть теги
-     * true - вырезать теги оставив содержимое. Результат обработки: <b>text</b> = text
-     * false - отобразаить теги в виде текста. Результат обработки: <b>text</b> = &lt;b&gt;text&lt;/b&gt;
+     * @param bool $hideTags Скрыть теги:
+     * 
+     * - true - вырезать теги оставив содержимое. Результат обработки: <b>text</b> = text
+     * 
+     * - false - отобразаить теги в виде текста. Результат обработки: <b>text</b> = &lt;b&gt;text&lt;/b&gt;
      *
      * @return string
      */
     public static function prepareToOutput($string, $hideTags = true)
     {
         if ($hideTags) {
-            // Вырезает теги
             return preg_replace('/<.+>/mU', '', $string);
         } else {
-            // Преобразует спец. символы для вывода
             return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
         }
     }
-
+    
     /**
-     * Подготовка строки для использования в аттрибутах тегов
-     * Например <input name="test" value="<?= HelperWidget::prepareToTagAttr($value) ?>"/>
-     *
+     * Подготовка строки для использования в аттрибутах тегов. Например:
+     * ```
+     * <input name="test" value="<?= HelperWidget::prepareToTagAttr($value) ?>"/>
+     * ```
+     * 
      * @param string $string
      *
      * @return string
@@ -387,7 +374,7 @@ abstract class HelperWidget
     }
 
     /**
-     * Подготовка строки для использования в JS
+     * Подготовка строки для использования в JS.
      *
      * @param string $string
      *
@@ -396,40 +383,43 @@ abstract class HelperWidget
     public static function prepareToJs($string)
     {
         $string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
-        // Экранирование для корректного вывода \n
         $string = addcslashes($string, '\\');
 
         return $string;
     }
 
     /**
-     * Генерирует HTML для поля в списке
-     *
-     * @see AdminListHelper::addRowCell();
+     * Генерирует HTML для поля в списке.
      *
      * @param \CAdminListRow $row
-     * @param array $data - данные текущей строки
+     * @param array $data Данные текущей строки.
      *
      * @return void
+     *
+     * @see AdminListHelper::addRowCell()
+     * 
      * @api
      */
-    abstract public function genListHTML(&$row, $data);
+    abstract public function generateRow(&$row, $data);
 
     /**
-     * Генерирует HTML для поля фильтрации
+     * Генерирует HTML для поля фильтрации.
      *
-     * @see AdminListHelper::createFilterForm();
      * @return void
+     *
+     * @see AdminListHelper::createFilterForm()
+     * 
      * @api
      */
     abstract public function showFilterHtml();
 
     /**
-     * Возвращает массив настроек данного виджета, либо значение отдельного параметра, если указано его имя
+     * Возвращает массив настроек данного виджета, либо значение отдельного параметра, если указано его имя.
      *
-     * @param string $name название конкретного параметра
+     * @param string $name Название конкретного параметра.
      *
      * @return array|mixed
+     * 
      * @api
      */
     public function getSettings($name = '')
@@ -460,7 +450,7 @@ abstract class HelperWidget
     }
 
     /**
-     * Возвращает текукщее значение поля фильтрации (спец. символы экранированы)
+     * Возвращает текукщее значение поля фильтрации (спец. символы экранированы).
      *
      * @return bool|string
      */
@@ -538,7 +528,8 @@ abstract class HelperWidget
     }
 
     /**
-     * Проверяет оператор фильтрации
+     * Проверяет оператор фильтрации.
+     * 
      * @return bool
      */
     protected function isFilterBetween()
@@ -606,8 +597,9 @@ abstract class HelperWidget
     }
 
     /**
-     * @param string $code
      * Выставляет код для данного виджета при инициализации. Перегружает настройки.
+     * 
+     * @param string $code
      */
     public function setCode($code)
     {
@@ -624,14 +616,14 @@ abstract class HelperWidget
     }
 
     /**
-     * Устанавливает настройки интерфейса для текущего поля
-     *
-     * @see AdminBaseHelper::getInterfaceSettings();
-     * @see AdminBaseHelper::setFields();
+     * Устанавливает настройки интерфейса для текущего поля.
      *
      * @param string $code
      *
      * @return bool
+     * 
+     * @see AdminBaseHelper::getInterfaceSettings()
+     * @see AdminBaseHelper::setFields()
      */
     public function loadSettings($code = null)
     {
@@ -650,7 +642,8 @@ abstract class HelperWidget
     }
 
     /**
-     * Возвращает название сущности данной модели
+     * Возвращает название сущности данной модели.
+     * 
      * @return string|DataManager
      */
     public function getEntityName()
@@ -890,16 +883,18 @@ abstract class HelperWidget
         return false;
     }
 
+    /**
+     * @todo Вынести в ресурс (\CJSCore::Init()).
+     * @todo Описать.
+     */
     protected function jsHelper()
     {
-        // JS хелпер уже объявлен
         if ($this->jsHelper == true) {
             return true;
         }
 
         $this->jsHelper = true;
         \CJSCore::Init(array("jquery"));
-        // TODO Вынести в ресурс
         ?>
         <script>
             /**

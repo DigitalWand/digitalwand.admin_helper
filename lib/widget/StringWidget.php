@@ -152,7 +152,7 @@ class StringWidget extends HelperWidget
      * @param \CAdminListRow $row
      * @param array $data - данные текущей строки
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         if ($this->getSettings('MULTIPLE')) {
         } else {
