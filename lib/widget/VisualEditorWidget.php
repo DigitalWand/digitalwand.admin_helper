@@ -2,8 +2,23 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
+/**
+ * Визуальный редактор.
+ *
+ * В отличии от виджета TextAreaWidget, кроме поля указанного в интерфейсе раздела (AdminInterface::fields()),
+ * обязательно поле {НАЗВАНИЕ ПОЛЯ}_TEXT_TYPE, в котором будет хранится тип контента (text/html).
+ */
 class VisualEditorWidget extends TextAreaWidget
 {
+    /**
+     * @const string Текст. Тип содержимого редактора
+     */
+    const CONTENT_TYPE_TEXT = 'text';
+    /**
+     * @const string HTML-текст. Тип содержимого редактора
+     */
+    const CONTENT_TYPE_HTML = 'html';
+
     protected static $defaults = array(
         'WIDTH' => '100%',
         'HEIGHT' => 450,
@@ -21,9 +36,9 @@ class VisualEditorWidget extends TextAreaWidget
      */
     protected function getEditHtml()
     {
-        if (\CModule::IncludeModule("fileman")) {
+        if (\CModule::IncludeModule('fileman')) {
             ob_start();
-            $codeType = $this->code . '_TEXT_TYPE';
+            $codeType = $this->getContentTypeCode();
             /** @var string $className Имя класса без неймспейса */
             $className = $this->getEntityShortName();
             $entityClass = $this->entityName;
@@ -68,11 +83,11 @@ class VisualEditorWidget extends TextAreaWidget
             );
 
             if ($this->getSettings('LIGHT_EDITOR_MODE') == 'Y') {
-                /**
-                 * Облегченная версия редактора
-                 */
+                // Облегченная версия редактора
                 global $APPLICATION;
+                
                 $editorToolbarConfig = $this->getSettings('EDITOR_TOOLBAR_CONFIG');
+                
                 if (!is_array($editorToolbarConfig)) {
                     $editorToolbarSet = $this->getSettings('EDITOR_TOOLBAR_CONFIG_SET');
                     if (isset($editorToolbarSets[$editorToolbarSet])) {
@@ -81,32 +96,31 @@ class VisualEditorWidget extends TextAreaWidget
                         $editorToolbarConfig = $editorToolbarSets['FULL'];
                     }
                 }
-                $APPLICATION->IncludeComponent("bitrix:fileman.light_editor", "", array(
-                        "CONTENT" => $this->data[$this->code],
-                        "INPUT_NAME" => $bxCode,
-                        "INPUT_ID" => $bxCode,
-                        "WIDTH" => $this->getSettings('WIDTH'),
-                        "HEIGHT" => $this->getSettings('HEIGHT'),
-                        "RESIZABLE" => "N",
-                        "AUTO_RESIZE" => "N",
-                        "VIDEO_ALLOW_VIDEO" => "Y",
-                        "VIDEO_MAX_WIDTH" => $this->getSettings('WIDTH'),
-                        "VIDEO_MAX_HEIGHT" => $this->getSettings('HEIGHT'),
-                        "VIDEO_BUFFER" => "20",
-                        "VIDEO_LOGO" => "",
-                        "VIDEO_WMODE" => "transparent",
-                        "VIDEO_WINDOWLESS" => "Y",
-                        "VIDEO_SKIN" => "/bitrix/components/bitrix/player/mediaplayer/skins/bitrix.swf",
-                        "USE_FILE_DIALOGS" => "Y",
-                        "ID" => 'LIGHT_EDITOR_' . $bxCode,
-                        "JS_OBJ_NAME" => $bxCode,
+                
+                $APPLICATION->IncludeComponent('bitrix:fileman.light_editor', '', array(
+                        'CONTENT' => $this->data[$this->code],
+                        'INPUT_NAME' => $bxCode,
+                        'INPUT_ID' => $bxCode,
+                        'WIDTH' => $this->getSettings('WIDTH'),
+                        'HEIGHT' => $this->getSettings('HEIGHT'),
+                        'RESIZABLE' => 'N',
+                        'AUTO_RESIZE' => 'N',
+                        'VIDEO_ALLOW_VIDEO' => 'Y',
+                        'VIDEO_MAX_WIDTH' => $this->getSettings('WIDTH'),
+                        'VIDEO_MAX_HEIGHT' => $this->getSettings('HEIGHT'),
+                        'VIDEO_BUFFER' => '20',
+                        'VIDEO_LOGO' => '',
+                        'VIDEO_WMODE' => 'transparent',
+                        'VIDEO_WINDOWLESS' => 'Y',
+                        'VIDEO_SKIN' => '/bitrix/components/bitrix/player/mediaplayer/skins/bitrix.swf',
+                        'USE_FILE_DIALOGS' => 'Y',
+                        'ID' => 'LIGHT_EDITOR_' . $bxCode,
+                        'JS_OBJ_NAME' => $bxCode,
                         'TOOLBAR_CONFIG' => $editorToolbarConfig
                     )
                 );
             } else {
-                /**
-                 * Полная версия редактора
-                 */
+                // Полная версия редактора
                 \CFileMan::AddHTMLEditorFrame(
                     $bxCode,
                     $this->data[$this->code],
@@ -117,12 +131,17 @@ class VisualEditorWidget extends TextAreaWidget
                         'height' => $this->getSettings('HEIGHT'),
                     )
                 );
-                $defaultEditors = array("text" => "text", "html" => "html", "editor" => "editor");
+                
+                $defaultEditors = array(
+                    static::CONTENT_TYPE_TEXT => static::CONTENT_TYPE_TEXT,
+                    static::CONTENT_TYPE_HTML => static::CONTENT_TYPE_HTML,
+                    'editor' => 'editor'
+                );
                 $editors = $this->getSettings('EDITORS');
                 $defaultEditor = strtolower($this->getSettings('DEFAULT_EDITOR'));
-                $contentType = $this->data[$codeType];
-                $defaultEditor = isset($contentType) && $contentType == "text" ? "text" : $defaultEditor;
-                $defaultEditor = isset($contentType) && $contentType == "html" ? "editor" : $defaultEditor;
+                $contentType = $this->getContentType();
+                $defaultEditor = isset($contentType) && $contentType == static::CONTENT_TYPE_TEXT ? static::CONTENT_TYPE_TEXT : $defaultEditor;
+                $defaultEditor = isset($contentType) && $contentType == static::CONTENT_TYPE_HTML ? "editor" : $defaultEditor;
 
                 if (count($editors) > 1) {
                     foreach ($editors as &$editor) {
@@ -160,7 +179,7 @@ class VisualEditorWidget extends TextAreaWidget
      */
     public function showBasicEditField($isPKField)
     {
-        if (!\CModule::IncludeModule("fileman")) {
+        if (!\CModule::IncludeModule('fileman')) {
             parent::showBasicEditField($isPKField);
         } else {
             $title = $this->getSettings('TITLE');
@@ -192,16 +211,19 @@ class VisualEditorWidget extends TextAreaWidget
         switch ($currentView) {
             case HelperWidget::EDIT_HELPER:
                 $id = isset($this->data[$modelPk]) ? $this->data[$modelPk] : false;
-                $codeType = $this->getCode() . '_TEXT_TYPE';
+                $codeType = $this->getContentTypeCode();
                 $bxCode = $this->getCode() . '_' . $className;
                 $bxCodeType = $codeType . '_' . $className;
+                
                 if ($this->forceMultiple AND $id) {
                     $bxCode .= '_' . $id;
                     $bxCodeType .= '_' . $id;
                 }
+                
                 if (!$_REQUEST[$bxCode] && $this->getSettings('REQUIRED') == true) {
                     $this->addError('REQUIRED_FIELD_ERROR');
                 }
+                
                 $this->data[$this->code] = $_REQUEST[$bxCode];
                 $this->data[$codeType] = $_REQUEST[$bxCodeType];
                 break;
@@ -217,7 +239,7 @@ class VisualEditorWidget extends TextAreaWidget
      */
     protected function getValueReadonly()
     {
-        return static::prepareToOutput($this->data[$this->code]);
+        return $this->getContentType() == static::CONTENT_TYPE_HTML ? $this->data[$this->code] : parent::getValueReadOnly();
     }
 
     /**
@@ -238,6 +260,28 @@ class VisualEditorWidget extends TextAreaWidget
 
         $text = static::prepareToOutput($text);
         $row->AddViewField($this->code, $text);
+    }
+
+    /**
+     * Тип текста (text/html). По умолчанию html.
+     * 
+     * @return string
+     */
+    public function getContentType()
+    {
+        $contentType = $this->data[$this->getContentTypeCode()];
+
+        return empty($contentType) ? static::CONTENT_TYPE_HTML : $contentType;
+    }
+
+    /**
+     * Поле, в котором хранится тип текста.
+     * 
+     * @return string
+     */
+    public function getContentTypeCode()
+    {
+        return $this->code . '_TEXT_TYPE';
     }
 
     /**
