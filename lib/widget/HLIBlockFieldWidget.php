@@ -36,7 +36,7 @@ class HLIBlockFieldWidget extends HelperWidget
      * @see \CAdminForm::ShowUserFieldsWithReadyData
      * @return mixed
      */
-    protected function genEditHTML()
+    protected function getEditHtml()
     {
         $info = $this->getUserFieldInfo();
         if ($info) {
@@ -193,7 +193,7 @@ class HLIBlockFieldWidget extends HelperWidget
      *
      * @return mixed
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $info = $this->getUserFieldInfo();
         if ($info) {
@@ -219,7 +219,7 @@ class HLIBlockFieldWidget extends HelperWidget
      * @see AdminListHelper::createFilterForm();
      * @return mixed
      */
-    public function genFilterHTML()
+    public function showFilterHtml()
     {
         $info = $this->getUserFieldInfo();
         if ($info) {
@@ -280,7 +280,8 @@ class HLIBlockFieldWidget extends HelperWidget
     /**
      * Заменяем оригинальную функцию, т.к. текст ошибки приходит от битрикса, причем название поля там почему-то не
      * проставлено
-     * @param string $messageId
+     * 
+*@param string $messageId
      */
     protected function addError($messageId)
     {

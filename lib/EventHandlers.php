@@ -5,7 +5,6 @@ namespace DigitalWand\AdminHelper;
 use Bitrix\Main\Context;
 use Bitrix\Main\Loader;
 
-include_once("Loader.php");
 /**
  * Перехватчики событий.
  *

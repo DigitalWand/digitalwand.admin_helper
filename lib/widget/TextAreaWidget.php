@@ -1,4 +1,5 @@
 <?php
+
 namespace DigitalWand\AdminHelper\Widget;
 
 use Bitrix\Main\Localization\Loc;
@@ -6,7 +7,6 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 /**
- * Class TextAreaWidget
  * Выводит textarea для редактирования длинных строк.
  * Урезает длинные строки при отображении в списке
  *
@@ -30,30 +30,26 @@ class TextAreaWidget extends StringWidget
     );
 
     /**
-     * Генерирует HTML для редактирования поля
-     * @return mixed
+     * @inheritdoc
      */
-    protected function genEditHTML()
+    protected function getEditHtml()
     {
         $cols = $this->getSettings('COLS');
         $rows = $this->getSettings('ROWS');
-        return '<textarea cols="' . $cols . '" rows="' . $rows . '" name="' . $this->getEditInputName() . '">' . $this->getValue() . '</textarea>';
+
+        return '<textarea cols="' . $cols . '" rows="' . $rows . '" name="' . $this->getEditInputName() . '">'
+        . static::prepareToOutput($this->getValue(), false) . '</textarea>';
     }
 
     /**
-     * Генерирует HTML для поля в списке
-     * @see AdminListHelper::addRowCell();
-     * @param \CAdminListRow $row
-     * @param array $data - данные текущей строки
-     * @return mixed
+     * @inheritdoc
      */
-    public function genListHTML(&$row, $data)
+    public function generateRow(&$row, $data)
     {
         $text = $this->getValue();
 
         if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
             $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
-
         } else {
             if (strlen($text) > self::LIST_TEXT_SIZE && !$this->isExcelView()) {
                 $pos = false;
@@ -64,9 +60,9 @@ class TextAreaWidget extends StringWidget
                 $text = substr($text, 0, $pos) . " ...";
             }
 
+            $text = static::prepareToOutput($text);
+
             $row->AddViewField($this->code, $text);
         }
-
     }
-
 }

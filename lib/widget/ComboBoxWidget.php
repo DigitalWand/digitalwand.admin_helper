@@ -2,12 +2,23 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
+use Bitrix\Main\Localization\Loc;
+
+Loc::loadMessages(__FILE__);
+
 /**
- * Class ComboBoxWidget Выпадающий список
+ * Выпадающий список.
+ *
  * Доступные опции:
  * <ul>
  * <li> STYLE - inline-стили</li>
- * <li> VARIANTS - массив с вариантами занчений или функция для их получения</li>
+ * <li> VARIANTS - массив с вариантами значений или функция для их получения в формате ключ=>заголовок
+ *        Например:
+ *            [
+ *                1=>'Первый пункт',
+ *                2=>'Второй пункт'
+ *            ]
+ * </li>
  * <li> DEFAULT_VARIANT - ID варианта по-умолчанию</li>
  * </ul>
  */
@@ -18,41 +29,114 @@ class ComboBoxWidget extends HelperWidget
     );
 
     /**
-     * Генерирует HTML для редактирования поля
+     * @inheritdoc
+     *
      * @see AdminEditHelper::showField();
+     *
      * @param bool $forFilter
+     *
      * @return mixed
      */
-    protected function genEditHTML($forFilter = false)
+    protected function getEditHtml($forFilter = false)
     {
         $style = $this->getSettings('STYLE');
+        $multiple = $this->getSettings('MULTIPLE');
+        $multipleSelected = array();
 
-        $name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
-        $result = "<select name='" . $name . "' style='" . $style . "'>";
+        if ($multiple) {
+            $multipleSelected = $this->getMultipleValue();
+        }
+
         $variants = $this->getVariants();
-        $default = $this->getValue();
-        if (is_null($default)) {
-            $default = $this->getSettings('DEFAULT_VARIANT');
-        }
 
-        foreach ($variants as $id => $name) {
-            $result .= "<option value='" . $id . "' " . ($id == $default ? "selected" : "") . ">" . $name . "</option>";
-        }
+        if (empty($variants)) {
+            $result = 'Не удалось получить данные для выбора';
+        } else {
+            $name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
+            $result = "<select name='" . $name . ($multiple ? '[]' : null) . "' "
+                . ($multiple ? 'multiple="multiple"' : null) . " style='" . $style . "'>";
 
-        $result .= "</select>";
+            if (!$multiple) {
+                $variantEmpty = array(
+                    '' => array(
+                        'ID' => '',
+                        'TITLE' => Loc::getMessage('COMBO_BOX_LIST_EMPTY')
+                    )
+                );
+                $variants = $variantEmpty + $variants;
+            }
+
+            $default = $this->getValue();
+
+            if (is_null($default)) {
+                $default = $this->getSettings('DEFAULT_VARIANT');
+            }
+
+            foreach ($variants as $id => $data) {
+                $name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
+                $selected = false;
+
+                if ($multiple) {
+                    if (in_array($id, $multipleSelected)) {
+                        $selected = true;
+                    }
+                } else {
+                    if ($id == $default) {
+                        $selected = true;
+                    }
+                }
+
+                $result .= "<option value='" .
+                    static::prepareToTagAttr($id)
+                    . "' " . ($selected ? "selected" : "") . ">" .
+                    static::prepareToTagAttr($name)
+                    . "</option>";
+            }
+
+            $result .= "</select>";
+        }
 
         return $result;
     }
 
-    protected function getValueReadonly()
+    /**
+     * @inheritdoc
+     */
+    public function processEditAction()
     {
-        $variants = $this->getVariants();
-        $value = $variants[$this->getValue()];
-        return $value;
+        if ($this->getSettings('MULTIPLE')) {
+            $sphere = $this->data[$this->getCode()];
+            unset($this->data[$this->getCode()]);
+
+            foreach ($sphere as $sphereKey) {
+                $this->data[$this->getCode()][] = array('VALUE' => $sphereKey);
+            }
+        }
+
+        parent::processEditAction();
     }
 
     /**
-     * Возвращает массив в формате
+     * @inheritdoc
+     */
+    protected function getMultipleEditHtml()
+    {
+        return $this->getEditHtml();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getValueReadonly()
+    {
+        $variants = $this->getVariants();
+        $value = $variants[$this->getValue()]['TITLE'];
+
+        return static::prepareToOutput($value);
+    }
+
+    /**
+     * Возвращает массив в следующем формате:
      * <code>
      * array(
      *      '123' => array('ID' => 123, 'TITLE' => 'ololo'),
@@ -60,52 +144,92 @@ class ComboBoxWidget extends HelperWidget
      *      '789' => array('ID' => 789, 'TITLE' => 'pish-pish'),
      * )
      * </code>
-     * Результат будет выводиться в комбобоксе
+     * 
+     * Результат будет выводиться в комбобоксе.
      * @return array
      */
     protected function getVariants()
     {
         $variants = $this->getSettings('VARIANTS');
-        if (is_callable($variants)) {
-            $var = call_user_func($variants);
+        if (is_array($variants) AND !empty($variants)) {
+            return $this->formatVariants($variants);
+        } else if (is_callable($variants)) {
+            $var = $variants();
             if (is_array($var)) {
-                return $var;
+                return $this->formatVariants($var);
             }
-        } else if (is_array($variants) AND !empty($variants)) {
-            return $variants;
         }
 
         return array();
     }
 
     /**
-     * Генерирует HTML для поля в списке
-     * @see AdminListHelper::addRowCell();
-     * @param \CAdminListRow $row
-     * @param array $data - данные текущей строки
-     * @return mixed
+     * Приводит варианты к нужному формату, если они заданы в виде одномерного массива.
+     *
+     * @param $variants
+     *
+     * @return array
      */
-    public function genListHTML(&$row, $data)
+    protected function formatVariants($variants)
     {
-        if ($this->getSettings('EDIT_IN_LIST') AND !$this->getSettings('READONLY')) {
-            $variants = $this->getVariants();
-            $row->AddSelectField($this->getCode(), $variants, array('style' => 'width:90%'));
+        $formatted = array();
 
+        foreach ($variants as $id => $data) {
+            if (!is_array($data)) {
+                $formatted[$id] = array(
+                    'ID' => $id,
+                    'TITLE' => $data
+                );
+            }
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function generateRow(&$row, $data)
+    {
+        if ($this->settings['EDIT_IN_LIST'] AND !$this->settings['READONLY']) {
+            $row->AddInputField($this->getCode(), array('style' => 'width:90%'));
         } else {
             $row->AddViewField($this->getCode(), $this->getValueReadonly());
         }
     }
 
     /**
-     * Генерирует HTML для поля фильтрации
-     * @see AdminListHelper::createFilterForm();
-     * @return mixed
+     * @inheritdoc
      */
-    public function genFilterHTML()
+    public function showFilterHtml()
     {
         print '<tr>';
         print '<td>' . $this->getSettings('TITLE') . '</td>';
-        print '<td>' . $this->genEditHTML(true) . '</td>';
+        print '<td>' . $this->getEditHtml(true) . '</td>';
         print '</tr>';
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getMultipleValueReadonly()
+    {
+        $variants = $this->getVariants();
+        $values = $this->getMultipleValue();
+        $result = '';
+
+        if (empty($variants)) {
+            $result = 'Не удалось получить данные для выбора';
+        } else {
+            foreach ($variants as $id => $data) {
+                $name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
+
+                if (in_array($id, $values)) {
+                    $result .= static::prepareToOutput($name) . '<br/>';
+                }
+            }
+        }
+
+        return $result;
     }
 }
