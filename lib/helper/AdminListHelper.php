@@ -718,10 +718,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
 		if ($sectionEditHelper) {
+			$modelClass = $this->getModel();
+			$elementFields = array_keys($modelClass::getEntity()->getFields());
 			$sectionsVisibleColumns = array();
 			foreach ($visibleColumns as $k => $v) {
 				if (isset($this->sectionFields[$v])) {
-					unset($visibleColumns[$k]);
+					if(!in_array($k, $elementFields)){
+						unset($visibleColumns[$k]);
+					}
 					$sectionsVisibleColumns[] = $v;
 				}
 			}
