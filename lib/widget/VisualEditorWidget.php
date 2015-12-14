@@ -3,10 +3,10 @@
 namespace DigitalWand\AdminHelper\Widget;
 
 /**
- * Визуальный редактор
+ * Визуальный редактор.
  *
  * В отличии от виджета TextAreaWidget, кроме поля указанного в интерфейсе раздела (AdminInterface::fields()),
- * обязательно поле {НАЗВАНИЕ ПОЛЯ}_TEXT_TYPE, в котором будет хранится тип контента (text/html)
+ * обязательно поле {НАЗВАНИЕ ПОЛЯ}_TEXT_TYPE, в котором будет хранится тип контента (text/html).
  */
 class VisualEditorWidget extends TextAreaWidget
 {
@@ -36,7 +36,7 @@ class VisualEditorWidget extends TextAreaWidget
      */
     protected function getEditHtml()
     {
-        if (\CModule::IncludeModule("fileman")) {
+        if (\CModule::IncludeModule('fileman')) {
             ob_start();
             $codeType = $this->getContentTypeCode();
             /** @var string $className Имя класса без неймспейса */
@@ -83,11 +83,11 @@ class VisualEditorWidget extends TextAreaWidget
             );
 
             if ($this->getSettings('LIGHT_EDITOR_MODE') == 'Y') {
-                /**
-                 * Облегченная версия редактора
-                 */
+                // Облегченная версия редактора
                 global $APPLICATION;
+                
                 $editorToolbarConfig = $this->getSettings('EDITOR_TOOLBAR_CONFIG');
+                
                 if (!is_array($editorToolbarConfig)) {
                     $editorToolbarSet = $this->getSettings('EDITOR_TOOLBAR_CONFIG_SET');
                     if (isset($editorToolbarSets[$editorToolbarSet])) {
@@ -96,32 +96,31 @@ class VisualEditorWidget extends TextAreaWidget
                         $editorToolbarConfig = $editorToolbarSets['FULL'];
                     }
                 }
-                $APPLICATION->IncludeComponent("bitrix:fileman.light_editor", "", array(
-                        "CONTENT" => $this->data[$this->code],
-                        "INPUT_NAME" => $bxCode,
-                        "INPUT_ID" => $bxCode,
-                        "WIDTH" => $this->getSettings('WIDTH'),
-                        "HEIGHT" => $this->getSettings('HEIGHT'),
-                        "RESIZABLE" => "N",
-                        "AUTO_RESIZE" => "N",
-                        "VIDEO_ALLOW_VIDEO" => "Y",
-                        "VIDEO_MAX_WIDTH" => $this->getSettings('WIDTH'),
-                        "VIDEO_MAX_HEIGHT" => $this->getSettings('HEIGHT'),
-                        "VIDEO_BUFFER" => "20",
-                        "VIDEO_LOGO" => "",
-                        "VIDEO_WMODE" => "transparent",
-                        "VIDEO_WINDOWLESS" => "Y",
-                        "VIDEO_SKIN" => "/bitrix/components/bitrix/player/mediaplayer/skins/bitrix.swf",
-                        "USE_FILE_DIALOGS" => "Y",
-                        "ID" => 'LIGHT_EDITOR_' . $bxCode,
-                        "JS_OBJ_NAME" => $bxCode,
+                
+                $APPLICATION->IncludeComponent('bitrix:fileman.light_editor', '', array(
+                        'CONTENT' => $this->data[$this->code],
+                        'INPUT_NAME' => $bxCode,
+                        'INPUT_ID' => $bxCode,
+                        'WIDTH' => $this->getSettings('WIDTH'),
+                        'HEIGHT' => $this->getSettings('HEIGHT'),
+                        'RESIZABLE' => 'N',
+                        'AUTO_RESIZE' => 'N',
+                        'VIDEO_ALLOW_VIDEO' => 'Y',
+                        'VIDEO_MAX_WIDTH' => $this->getSettings('WIDTH'),
+                        'VIDEO_MAX_HEIGHT' => $this->getSettings('HEIGHT'),
+                        'VIDEO_BUFFER' => '20',
+                        'VIDEO_LOGO' => '',
+                        'VIDEO_WMODE' => 'transparent',
+                        'VIDEO_WINDOWLESS' => 'Y',
+                        'VIDEO_SKIN' => '/bitrix/components/bitrix/player/mediaplayer/skins/bitrix.swf',
+                        'USE_FILE_DIALOGS' => 'Y',
+                        'ID' => 'LIGHT_EDITOR_' . $bxCode,
+                        'JS_OBJ_NAME' => $bxCode,
                         'TOOLBAR_CONFIG' => $editorToolbarConfig
                     )
                 );
             } else {
-                /**
-                 * Полная версия редактора
-                 */
+                // Полная версия редактора
                 \CFileMan::AddHTMLEditorFrame(
                     $bxCode,
                     $this->data[$this->code],
@@ -132,13 +131,11 @@ class VisualEditorWidget extends TextAreaWidget
                         'height' => $this->getSettings('HEIGHT'),
                     )
                 );
-                // TRICKY Не ясно где хранится название редактора и где название типа контента, поэтому и ключ, и значение
-                // обернуты в константу CONTENT_TYPE_...
-                // Следовательно если значение констант будет изменено, могут быть проблемы с выбором редактора в админ интерфейсе
+                
                 $defaultEditors = array(
                     static::CONTENT_TYPE_TEXT => static::CONTENT_TYPE_TEXT,
                     static::CONTENT_TYPE_HTML => static::CONTENT_TYPE_HTML,
-                    "editor" => "editor"
+                    'editor' => 'editor'
                 );
                 $editors = $this->getSettings('EDITORS');
                 $defaultEditor = strtolower($this->getSettings('DEFAULT_EDITOR'));
@@ -182,7 +179,7 @@ class VisualEditorWidget extends TextAreaWidget
      */
     public function showBasicEditField($isPKField)
     {
-        if (!\CModule::IncludeModule("fileman")) {
+        if (!\CModule::IncludeModule('fileman')) {
             parent::showBasicEditField($isPKField);
         } else {
             $title = $this->getSettings('TITLE');
@@ -217,13 +214,16 @@ class VisualEditorWidget extends TextAreaWidget
                 $codeType = $this->getContentTypeCode();
                 $bxCode = $this->getCode() . '_' . $className;
                 $bxCodeType = $codeType . '_' . $className;
+                
                 if ($this->forceMultiple AND $id) {
                     $bxCode .= '_' . $id;
                     $bxCodeType .= '_' . $id;
                 }
+                
                 if (!$_REQUEST[$bxCode] && $this->getSettings('REQUIRED') == true) {
                     $this->addError('REQUIRED_FIELD_ERROR');
                 }
+                
                 $this->data[$this->code] = $_REQUEST[$bxCode];
                 $this->data[$codeType] = $_REQUEST[$bxCodeType];
                 break;
@@ -263,8 +263,8 @@ class VisualEditorWidget extends TextAreaWidget
     }
 
     /**
-     * Тип текста (text/html)
-     * По умолчанию html
+     * Тип текста (text/html). По умолчанию html.
+     * 
      * @return string
      */
     public function getContentType()
@@ -275,7 +275,8 @@ class VisualEditorWidget extends TextAreaWidget
     }
 
     /**
-     * Поле, в котором хранится тип текста
+     * Поле, в котором хранится тип текста.
+     * 
      * @return string
      */
     public function getContentTypeCode()
