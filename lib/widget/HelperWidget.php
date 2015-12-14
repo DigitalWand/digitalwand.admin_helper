@@ -383,7 +383,7 @@ abstract class HelperWidget
     public static function prepareToJs($string)
     {
         $string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
-        $string = addcslashes($string, '\\');
+        $string = addcslashes($string, "\r\n\"\\");
 
         return $string;
     }
