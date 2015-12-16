@@ -2,6 +2,7 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
+use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\ElementTable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
