@@ -85,7 +85,19 @@ class IblockElementWidget extends NumberWidget
         if (!empty($elementId)) {
             $rsElement = ElementTable::getById($elementId);
             $element = $rsElement->fetch();
+            
+            $rsIblock = IblockTable::getList([
+                'filter' => [
+                    'ID' => $element['IBLOCK_ID']
+                ],
+                'select' => [
+                    'IBLOCK_TYPE_ID'
+                ]
+            ]);
 
+            $iblock = $rsIblock->fetch();
+            $element['IBLOCK_TYPE_ID'] = $iblock['IBLOCK_TYPE_ID'];
+            
             return '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
             . '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
             . $elementId . '&lang=ru">[' . $elementId . '] ' . static::prepareToOutput($element['NAME']) . '</a>';
@@ -102,7 +114,19 @@ class IblockElementWidget extends NumberWidget
         if (!empty($elementId)) {
             $rsElement = ElementTable::getById($elementId);
             $element = $rsElement->fetch();
+            
+            $rsIblock = IblockTable::getList([
+                'filter' => [
+                    'ID' => $element['IBLOCK_ID']
+                ],
+                'select' => [
+                    'IBLOCK_TYPE_ID'
+                ]
+            ]);
 
+            $iblock = $rsIblock->fetch();
+            $element['IBLOCK_TYPE_ID'] = $iblock['IBLOCK_TYPE_ID'];
+            
             $html = '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
                 . '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
                 . $elementId . '&lang=ru">[' . $elementId . '] ' . static::prepareToOutput($element['NAME']) . '</a>';
