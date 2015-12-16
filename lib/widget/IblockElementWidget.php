@@ -2,7 +2,6 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
-use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\ElementTable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
@@ -84,23 +83,22 @@ class IblockElementWidget extends NumberWidget
         $elementId = $this->getValue();
 
         if (!empty($elementId)) {
-            $rsElement = ElementTable::getById($elementId);
-            $element = $rsElement->fetch();
-            
-            $rsIblock = IblockTable::getList([
+            $rsElement = ElementTable::getList([
                 'filter' => [
-                    'ID' => $element['IBLOCK_ID']
+                    'ID' => $elementId
                 ],
                 'select' => [
-                    'IBLOCK_TYPE_ID'
+                    'ID',
+                    'NAME',
+                    'IBLOCK_ID',
+                    'IBLOCK.IBLOCK_TYPE_ID',
                 ]
             ]);
 
-            $iblock = $rsIblock->fetch();
-            $element['IBLOCK_TYPE_ID'] = $iblock['IBLOCK_TYPE_ID'];
+            $element = $rsElement->fetch();
             
             return '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
-            . '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
+            . '&type=' . $element['IBLOCK_ELEMENT_IBLOCK_IBLOCK_TYPE_ID'] . '&ID='
             . $elementId . '&lang=ru">[' . $elementId . '] ' . static::prepareToOutput($element['NAME']) . '</a>';
         }
     }
@@ -113,23 +111,22 @@ class IblockElementWidget extends NumberWidget
         $elementId = $this->getValue();
 
         if (!empty($elementId)) {
-            $rsElement = ElementTable::getById($elementId);
-            $element = $rsElement->fetch();
-            
-            $rsIblock = IblockTable::getList([
+            $rsElement = ElementTable::getList([
                 'filter' => [
-                    'ID' => $element['IBLOCK_ID']
+                    'ID' => $elementId
                 ],
                 'select' => [
-                    'IBLOCK_TYPE_ID'
+                    'ID',
+                    'NAME',
+                    'IBLOCK_ID',
+                    'IBLOCK.IBLOCK_TYPE_ID',
                 ]
             ]);
-
-            $iblock = $rsIblock->fetch();
-            $element['IBLOCK_TYPE_ID'] = $iblock['IBLOCK_TYPE_ID'];
+            
+            $element = $rsElement->fetch();
             
             $html = '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
-                . '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
+                . '&type=' . $element['IBLOCK_ELEMENT_IBLOCK_IBLOCK_TYPE_ID'] . '&ID='
                 . $elementId . '&lang=ru">[' . $elementId . '] ' . static::prepareToOutput($element['NAME']) . '</a>';
         } else {
             $html = '';
