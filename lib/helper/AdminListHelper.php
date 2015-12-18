@@ -222,7 +222,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$filteredIDs[] = IntVal($id);
 			}
 			$this->groupActions($IDs, $_REQUEST['action']);
-		}elseif (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
+		}
+		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
 			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 			$className = $listHelperClass::getModel();
 			$id = isset($_GET['ID']) ? $_GET['ID'] : null;
