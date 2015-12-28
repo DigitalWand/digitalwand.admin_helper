@@ -31,5 +31,6 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Widget\VisualEditorWidget' => 'lib/widget/VisualEditorWidget.php',
         'DigitalWand\AdminHelper\Widget\UserWidget' => 'lib/widget/UserWidget.php',
         'DigitalWand\AdminHelper\Widget\OrmElementWidget' => 'lib/widget/OrmElementWidget.php',
+        'DigitalWand\AdminHelper\Widget\DocumentationWidget' => 'lib/widget/DocumentationWidget.php',
     )
 );
