@@ -81,7 +81,7 @@ class ComboBoxWidget extends HelperWidget
                         $selected = true;
                     }
                 } else {
-                    if ($id == $default) {
+                    if ($id === $default) {
                         $selected = true;
                     }
                 }
