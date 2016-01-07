@@ -65,6 +65,14 @@ class UrlWidget extends StringWidget
 
         return $value;
     }
+    
+    /**
+     * @inheritdoc
+     */
+    protected function getValueReadonly()
+    {
+        return $this->getValue();
+    }
 
     /**
      * @inheritdoc
