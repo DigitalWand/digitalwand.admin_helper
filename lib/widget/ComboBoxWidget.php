@@ -37,83 +37,9 @@ class ComboBoxWidget extends HelperWidget
      *
      * @return mixed
      */
-    protected function getEditHtml($forFilter = false)
+    protected function getEditHtml()
     {
-        $style = $this->getSettings('STYLE');
-        $multiple = $this->getSettings('MULTIPLE');
-        $multipleSelected = array();
-
-        if ($multiple) {
-            $multipleSelected = $this->getMultipleValue();
-        }
-
-        $variants = $this->getVariants();
-
-        if (empty($variants)) {
-            $result = 'Не удалось получить данные для выбора';
-        } else {
-            $name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
-            $result = "<select name='" . $name . ($multiple ? '[]' : null) . "' "
-                . ($multiple ? 'multiple="multiple"' : null) . " style='" . $style . "'>";
-
-            if (!$multiple) {
-                $variantEmpty = array(
-                    '' => array(
-                        'ID' => '',
-                        'TITLE' => Loc::getMessage('COMBO_BOX_LIST_EMPTY')
-                    )
-                );
-                $variants = $variantEmpty + $variants;
-            }
-
-            $default = $this->getValue();
-
-            if (is_null($default)) {
-                $default = $this->getSettings('DEFAULT_VARIANT');
-            }
-
-            foreach ($variants as $id => $data) {
-                $name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
-                $selected = false;
-
-                if ($multiple) {
-                    if (in_array($id, $multipleSelected)) {
-                        $selected = true;
-                    }
-                } else {
-                    if ($id == $default) {
-                        $selected = true;
-                    }
-                }
-
-                $result .= "<option value='" .
-                    static::prepareToTagAttr($id)
-                    . "' " . ($selected ? "selected" : "") . ">" .
-                    static::prepareToTagAttr($name)
-                    . "</option>";
-            }
-
-            $result .= "</select>";
-        }
-
-        return $result;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function processEditAction()
-    {
-        if ($this->getSettings('MULTIPLE')) {
-            $sphere = $this->data[$this->getCode()];
-            unset($this->data[$this->getCode()]);
-
-            foreach ($sphere as $sphereKey) {
-                $this->data[$this->getCode()][] = array('VALUE' => $sphereKey);
-            }
-        }
-
-        parent::processEditAction();
+        return $this->getComboBox();
     }
 
     /**
@@ -121,7 +47,66 @@ class ComboBoxWidget extends HelperWidget
      */
     protected function getMultipleEditHtml()
     {
-        return $this->getEditHtml();
+        return $this->getComboBox(true);
+    }
+
+    /**
+     * Возвращает ХТМЛ-код с комбобоксом.
+     * 
+     * @param bool $multiple Множественный режим.
+     * @param bool $forFilter Комбобокс будет выводиться в блоке с фильтром.
+     *
+     * @return string
+     */
+    protected function getComboBox($multiple = false, $forFilter = false)
+    {
+        if ($multiple) {
+            $value = $this->getMultipleValue();
+        } else {
+            $value = $this->getValue();
+        }
+        
+        $style = $this->getSettings('STYLE');
+
+        $variants = $this->getVariants();
+        
+        if (!$multiple)
+        {
+            array_unshift($variants, array(
+                'ID' => null,
+                'TITLE' => null
+            ));
+        }
+        
+        if (empty($variants)) {
+            $comboBox = Loc::getMessage('DIGITALWAND_AH_MISSING_VARIANTS');
+        } else {
+            $name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
+            $comboBox = '<select name="' . $name . ($multiple ? '[]' : null) . '" 
+                '. ($multiple ? 'multiple="multiple"' : null) . '
+                style="' . $style . '">';
+
+            foreach ($variants as $variant) {
+                $selected = false;
+
+                if ($variant['ID'] == $value) {
+                    $selected = true;
+                }
+
+                if ($multiple && in_array($variant['ID'], $value)) {
+                    $selected = true;
+                } elseif ($variant['ID'] === $value) {
+                    $selected = true;
+                }
+
+                $comboBox .= "<option value='" . static::prepareToTagAttr($variant['ID']) . "' " . ($selected ? "selected" : "") . ">"
+                    . static::prepareToTagAttr($variant['TITLE']) . "</option>";
+            }
+
+            $comboBox .= '</select>';
+        }
+
+        return $comboBox;
     }
 
     /**
@@ -133,6 +118,30 @@ class ComboBoxWidget extends HelperWidget
         $value = $variants[$this->getValue()]['TITLE'];
 
         return static::prepareToOutput($value);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getMultipleValueReadonly()
+    {
+        $variants = $this->getVariants();
+        $values = $this->getMultipleValue();
+        $result = '';
+
+        if (empty($variants)) {
+            $result = 'Не удалось получить данные для выбора';
+        } else {
+            foreach ($variants as $id => $data) {
+                $name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
+
+                if (in_array($id, $values)) {
+                    $result .= static::prepareToOutput($name) . '<br/>';
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -151,10 +160,12 @@ class ComboBoxWidget extends HelperWidget
     protected function getVariants()
     {
         $variants = $this->getSettings('VARIANTS');
+        
         if (is_array($variants) AND !empty($variants)) {
             return $this->formatVariants($variants);
-        } else if (is_callable($variants)) {
+        } elseif (is_callable($variants)) {
             $var = $variants();
+            
             if (is_array($var)) {
                 return $this->formatVariants($var);
             }
@@ -205,31 +216,24 @@ class ComboBoxWidget extends HelperWidget
     {
         print '<tr>';
         print '<td>' . $this->getSettings('TITLE') . '</td>';
-        print '<td>' . $this->getEditHtml(true) . '</td>';
+        print '<td>' . $this->getComboBox(false, true) . '</td>';
         print '</tr>';
     }
 
     /**
      * @inheritdoc
      */
-    protected function getMultipleValueReadonly()
+    public function processEditAction()
     {
-        $variants = $this->getVariants();
-        $values = $this->getMultipleValue();
-        $result = '';
+        if ($this->getSettings('MULTIPLE')) {
+            $sphere = $this->data[$this->getCode()];
+            unset($this->data[$this->getCode()]);
 
-        if (empty($variants)) {
-            $result = 'Не удалось получить данные для выбора';
-        } else {
-            foreach ($variants as $id => $data) {
-                $name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";
-
-                if (in_array($id, $values)) {
-                    $result .= static::prepareToOutput($name) . '<br/>';
-                }
+            foreach ($sphere as $sphereKey) {
+                $this->data[$this->getCode()][] = array('VALUE' => $sphereKey);
             }
         }
 
-        return $result;
+        parent::processEditAction();
     }
 }
