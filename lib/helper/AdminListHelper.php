@@ -1065,6 +1065,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 	}
 
+	/**
+	 * Очищает название поля от операторов фильтра
+	 * @param string $fieldName названия поля из фильтра
+	 * @return string название поля без без операторов фильтра
+	 */
     protected function escapeFilterFieldName($fieldName)
     {
         return str_replace(array('!','<', '<=', '>', '>=', '><', '=', '%'), '', $fieldName);
