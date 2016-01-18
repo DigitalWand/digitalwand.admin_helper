@@ -436,6 +436,12 @@ abstract class AdminBaseHelper
 	public static function getSectionField()
 	{
 		$sectionListHelper = static::getHelperClass(AdminSectionListHelper::className());
+
+		if (empty($sectionListHelper))
+		{
+			return null;
+		}
+
 		$sectionModelClass = $sectionListHelper::getModel();
 		$modelClass = static::getModel();
 
