@@ -278,8 +278,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$query[$this->pk()] = $_REQUEST[$this->pk()];
 		}
 		elseif (isset($_REQUEST['SECTION_ID']) && $_REQUEST['SECTION_ID']) {
-			$model = $this->getModel();
-			$this->data[$model::getSectionField()] = $_REQUEST['SECTION_ID'];
+			$this->data[static::getSectionField()] = $_REQUEST['SECTION_ID'];
 		}
 
 		$this->tabControl->Begin(array(
