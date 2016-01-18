@@ -222,7 +222,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$filteredIDs[] = IntVal($id);
 			}
 			$this->groupActions($IDs, $_REQUEST['action']);
-		}elseif (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
+		}
+		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
 			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 			$className = $listHelperClass::getModel();
 			$id = isset($_GET['ID']) ? $_GET['ID'] : null;
@@ -236,8 +237,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 				if ($sectionEditHelperClass) {
 					$element = $className::getById($id)->Fetch();
-					if ($element[$className::getSectionField()]) {
-						$params['ID'] = $element[$className::getSectionField()];
+					$sectionField = $listHelperClass::getSectionField();
+					if ($element[$sectionField]) {
+						$params['ID'] = $element[$sectionField];
 					}
 				}
 
@@ -272,8 +274,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->filterTypes = array();
 		$this->arFilterOpts = array();
 
-        $model = $this->getModel();
-        $sectionField = $this->getHelperClass(AdminSectionEditHelper::className()) ? $model::getSectionField() : null;
+		$sectionField = static::getSectionField();
 
 		foreach ($this->fields as $code => $settings) {
 			$widget = $this->createWidgetForField($code);
@@ -336,8 +337,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		if (static::getHelperClass(AdminSectionEditHelper::className())) {
-			$model = $this->getModel();
-			$this->arFilter[$model::getSectionField()] = $_GET['ID'];
+			$this->arFilter[static::getSectionField()] = $_GET['ID'];
 		}
 	}
 
@@ -418,12 +418,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 			if ($_GET['ID']) {
 				$params = $this->additionalUrlParams;
 				$sectionModel = $sectionEditHelper::getModel();
+				$sectionField = $sectionEditHelper::getSectionField();
 				$section = $sectionModel::getById($_GET['ID'])->Fetch();
 				if ($this->isPopup()) {
 					$params = array_merge($_GET);
 				}
-				if ($section[$sectionModel::getSectionField()]) {
-					$params['ID'] = $section[$sectionModel::getSectionField()];
+				if ($section[$sectionField]) {
+					$params['ID'] = $section[$sectionField];
 				}
 				else {
 					unset($params['ID']);
@@ -489,15 +490,15 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function groupActions($IDs, $action)
 	{
+		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+		$listHelperClass = $this->getHelperClass(AdminListHelper::className());
+
 		if (!isset($_REQUEST['model'])) {
 			$className = static::getModel();
 		}
 		else {
 			$className = $_REQUEST['model'];
 		}
-
-		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
-		$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 
 		if ($sectionEditHelperClass && !isset($_REQUEST['model-section'])) {
 			$sectionClassName = $sectionEditHelperClass::getModel();
@@ -513,9 +514,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 				unset($params['action_button']);
 				unset($params['ID']);
 				if ($sectionEditHelperClass) {
+					$sectionField = !isset($_REQUEST['model']) ? static::getSectionField() :
+						$sectionEditHelperClass::getSectionField();
 					$element = $className::getById($IDs[0])->Fetch();
-					if ($element[$className::getSectionField()]) {
-						$params['ID'] = $element[$className::getSectionField()];
+					if ($element[$sectionField]) {
+						$params['ID'] = $element[$sectionField];
 					}
 				}
 
@@ -539,12 +542,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 		if ($action == 'delete-section') {
 			if ($this->hasDeleteRights()) {
 				$section = $sectionClassName::getById($IDs[0])->Fetch();
+				$sectionField = $sectionEditHelperClass::getSectionField();
 				$params = $_GET;
 				unset($params['action']);
 				unset($params['action_button']);
 				unset($params['ID']);
-				if ($section[$sectionClassName::getSectionField()]) {
-					$params['ID'] = $section[$sectionClassName::getSectionField()];
+				if ($section[$sectionField]) {
+					$params['ID'] = $section[$sectionField];
 				}
 				foreach ($IDs as $id) {
 					$sectionClassName::delete($id);
@@ -939,6 +943,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw)
 	{
 		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+		$elementEditHelperClass = $this->getHelperClass(AdminEditHelper::className());
+		$sectionField = $sectionEditHelperClass::getSectionField();
         $sectionId = $_GET['SECTION_ID'] ? $_GET['SECTION_ID'] : $_GET['ID'];
 		$returnData = array();
         /**
@@ -961,7 +967,7 @@ abstract class AdminListHelper extends AdminBaseHelper
             }
         }
 
-        $sectionFilter[$sectionModel::getSectionField()] = $sectionId;
+        $sectionFilter[$sectionField] = $sectionId;
 
         $raw['SELECT'] = array_unique($raw['SELECT']);
 
@@ -1010,7 +1016,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$elementLimit = $limitData[1] - count($returnData);
 		$elementModel = static::$model;
 		$elementFilter = $this->arFilter;
-		$elementFilter[$elementModel::getSectionField()] = $sectionId;
+		$elementFilter[$elementEditHelperClass::getSectionField()] = $_GET['ID'];
 		// добавляем к общему количеству элементов количество элементов
 		$this->totalRowsCount += $elementModel::getCount($elementFilter);
 

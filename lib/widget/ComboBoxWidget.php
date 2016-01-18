@@ -52,7 +52,7 @@ class ComboBoxWidget extends HelperWidget
 
     /**
      * Возвращает ХТМЛ-код с комбобоксом.
-     * 
+     *
      * @param bool $multiple Множественный режим.
      * @param bool $forFilter Комбобокс будет выводиться в блоке с фильтром.
      *
@@ -65,11 +65,11 @@ class ComboBoxWidget extends HelperWidget
         } else {
             $value = $this->getValue();
         }
-        
+
         $style = $this->getSettings('STYLE');
 
         $variants = $this->getVariants();
-        
+
         if (!$multiple)
         {
             array_unshift($variants, array(
@@ -77,12 +77,12 @@ class ComboBoxWidget extends HelperWidget
                 'TITLE' => null
             ));
         }
-        
+
         if (empty($variants)) {
             $comboBox = Loc::getMessage('DIGITALWAND_AH_MISSING_VARIANTS');
         } else {
             $name = $forFilter ? $this->getFilterInputName() : $this->getEditInputName();
-            $comboBox = '<select name="' . $name . ($multiple ? '[]' : null) . '" 
+            $comboBox = '<select name="' . $name . ($multiple ? '[]' : null) . '"
                 '. ($multiple ? 'multiple="multiple"' : null) . '
                 style="' . $style . '">';
 
@@ -160,12 +160,12 @@ class ComboBoxWidget extends HelperWidget
     protected function getVariants()
     {
         $variants = $this->getSettings('VARIANTS');
-        
+
         if (is_array($variants) AND !empty($variants)) {
             return $this->formatVariants($variants);
         } elseif (is_callable($variants)) {
             $var = $variants();
-            
+
             if (is_array($var)) {
                 return $this->formatVariants($var);
             }

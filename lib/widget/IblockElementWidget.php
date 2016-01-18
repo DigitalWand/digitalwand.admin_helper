@@ -83,11 +83,22 @@ class IblockElementWidget extends NumberWidget
         $elementId = $this->getValue();
 
         if (!empty($elementId)) {
-            $rsElement = ElementTable::getById($elementId);
-            $element = $rsElement->fetch();
+            $rsElement = ElementTable::getList([
+                'filter' => [
+                    'ID' => $elementId
+                ],
+                'select' => [
+                    'ID',
+                    'NAME',
+                    'IBLOCK_ID',
+                    'IBLOCK.IBLOCK_TYPE_ID',
+                ]
+            ]);
 
+            $element = $rsElement->fetch();
+            
             return '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
-            . '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
+            . '&type=' . $element['IBLOCK_ELEMENT_IBLOCK_IBLOCK_TYPE_ID'] . '&ID='
             . $elementId . '&lang=ru">[' . $elementId . '] ' . static::prepareToOutput($element['NAME']) . '</a>';
         }
     }
@@ -100,11 +111,22 @@ class IblockElementWidget extends NumberWidget
         $elementId = $this->getValue();
 
         if (!empty($elementId)) {
-            $rsElement = ElementTable::getById($elementId);
+            $rsElement = ElementTable::getList([
+                'filter' => [
+                    'ID' => $elementId
+                ],
+                'select' => [
+                    'ID',
+                    'NAME',
+                    'IBLOCK_ID',
+                    'IBLOCK.IBLOCK_TYPE_ID',
+                ]
+            ]);
+            
             $element = $rsElement->fetch();
-
+            
             $html = '<a href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $element['IBLOCK_ID']
-                . '&type=' . $element['IBLOCK_TYPE_ID'] . '&ID='
+                . '&type=' . $element['IBLOCK_ELEMENT_IBLOCK_IBLOCK_TYPE_ID'] . '&ID='
                 . $elementId . '&lang=ru">[' . $elementId . '] ' . static::prepareToOutput($element['NAME']) . '</a>';
         } else {
             $html = '';
