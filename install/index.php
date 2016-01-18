@@ -15,7 +15,7 @@ class digitalwand_admin_helper extends CModule
     var $MODULE_DESCRIPTION;
     var $MODULE_GROUP_RIGHTS = 'Y';
     var $MODULE_CSS;
-    var $PARTNER_NAME = 'DigitalWand';
+    var $PARTNER_NAME = 'DigitalWand & Notamedia';
     var $PARTNER_URI = '';
 
     function digitalwand_admin_helper()
