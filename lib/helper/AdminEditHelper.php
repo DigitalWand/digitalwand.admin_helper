@@ -405,7 +405,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		}
 
 		$allWidgets = array();
-		$isNewRecord = empty($this->data[$this->pk()]);
 
 		foreach ($this->getFields() as $code => $settings)
 		{
@@ -421,17 +420,13 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
 			$allWidgets[] = $widget;
 
-			$default = $widget->getSettings('DEFAULT');
-			$readOnly = $widget->getSettings('READONLY');
-			$hideWhenCreate = $widget->getSettings('HIDE_WHEN_CREATE');
-
-			$readOnlyCase = $readOnly && (empty($default) || !$isNewRecord);
-			$hideWhenCreateCase = $hideWhenCreate && empty($default) && $isNewRecord;
-
-			if ($readOnlyCase || $hideWhenCreateCase)
-			{
+			if (empty($this->data[$this->pk()]) && ($widget->getSettings('READONLY') ||
+					$widget->getSettings('HIDE_WHEN_CREATE'))
+			) {
 				unset($this->data[$code]);
 			}
+
+
 		}
 
 		$this->addErrors($this->validationErrors);
