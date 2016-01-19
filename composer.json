@@ -1,6 +1,6 @@
 {
   "name": "digitalwand/digitalwand.admin_helper",
-  "description": "API for custom admin interface in Bitrix.",
+  "description": "API for custom admin interface in Bitrix by DigitalWand and Notamedia agency",
   "type": "bitrix-module",
   "license": "MIT",
   "keywords": [
@@ -14,8 +14,8 @@
   },
   "authors": [
     {
-      "name": "DigitalWand",
-      "email": "a.volkov@digitalwand.ru"
+      "name": "Alexey Volkov",
+      "email": "asgalex@gmail.com"
     },
     {
       "name": "Nik Samokhvalov",

@@ -49,3 +49,10 @@ AdminEditHelper.</li>
 
 Использовать данную структуру не обязательно, это лишь рекомендация, основанная на успешном опыте применения модуля
 в ряде проектов.
+
+## Разработчики
+
+<ul>
+<li><a href="http://digitalwand.ru/">DigitalWand</a></li>
+<li><a href="http://nota.media/">Notamedia</a></li>
+</ul>
