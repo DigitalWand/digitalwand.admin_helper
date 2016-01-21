@@ -221,7 +221,7 @@ class VisualEditorWidget extends TextAreaWidget
                 }
                 
                 if (!$_REQUEST[$bxCode] && $this->getSettings('REQUIRED') == true) {
-                    $this->addError('REQUIRED_FIELD_ERROR');
+                    $this->addError('DIGITALWAND_AH_REQUIRED_FIELD_ERROR');
                 }
                 
                 $this->data[$this->code] = $_REQUEST[$bxCode];
