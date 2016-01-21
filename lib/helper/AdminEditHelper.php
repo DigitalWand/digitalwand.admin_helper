@@ -378,6 +378,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * <ul>
 	 * <li> Проверка прав пользователя</li>
 	 * <li> Создание виджетов для каждого поля</li>
+	 * <li> Удаление значений для READONLY и HIDE_WHEN_CREATE полей</li>
 	 * <li> Изменение данных модели каждым виджетом (исходя из его внутренней логики)</li>
 	 * <li> Валидация значений каждого поля соответствующим виджетом</li>
 	 * <li> Проверка на ошибики валидации</li>
@@ -406,10 +407,24 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		$allWidgets = array();
 
 		foreach ($this->getFields() as $code => $settings) {
+			if ($settings['READONLY']) {
+				unset($this->data[$code]);
+			}
+		}
+
+		foreach ($this->getFields() as $code => $settings) {
 			$widget = $this->createWidgetForField($code, $this->data);
 			$widget->processEditAction();
 			$this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
 			$allWidgets[] = $widget;
+
+			if (empty($this->data[$this->pk()]) && ($widget->getSettings('READONLY') ||
+					$widget->getSettings('HIDE_WHEN_CREATE'))
+			) {
+				unset($this->data[$code]);
+			}
+
+
 		}
 
 		$this->addErrors($this->validationErrors);
