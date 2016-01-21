@@ -34,7 +34,7 @@ class NumberWidget extends StringWidget
     public function processEditAction()
     {
         if (!$this->checkRequired()) {
-            $this->addError('REQUIRED_FIELD_ERROR');
+            $this->addError('DIGITALWAND_AH_REQUIRED_FIELD_ERROR');
 
         } else if (!$this->isNumber($this->getValue())) {
             $this->addError('VALUE_IS_NOT_NUMERIC');
