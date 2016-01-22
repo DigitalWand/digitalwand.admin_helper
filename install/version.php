@@ -1,4 +1,4 @@
 <?
-define('ADMIN_HELPER_VERSION', '1.0');
-define('ADMIN_HELPER_VERSION_DATE', '2015-07-25');
+define('ADMIN_HELPER_VERSION', '2.0.0');
+define('ADMIN_HELPER_VERSION_DATE', '2016-01-22');
 ?>
