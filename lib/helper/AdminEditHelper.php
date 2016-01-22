@@ -407,7 +407,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		$allWidgets = array();
 
 		foreach ($this->getFields() as $code => $settings) {
-			if ($settings['READONLY']) {
+			if ($settings['READONLY'] && $code !== $this->pk()) {
 				unset($this->data[$code]);
 			}
 		}
