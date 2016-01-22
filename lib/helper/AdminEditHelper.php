@@ -418,13 +418,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->validationErrors = array_merge($this->validationErrors, $widget->getValidationErrors());
 			$allWidgets[] = $widget;
 
-			if (empty($this->data[$this->pk()]) && ($widget->getSettings('READONLY') ||
-					$widget->getSettings('HIDE_WHEN_CREATE'))
-			) {
+			if ($widget->getSettings('READONLY') || empty($this->data[$this->pk()]) 
+				&& $widget->getSettings('HIDE_WHEN_CREATE')) {
 				unset($this->data[$code]);
 			}
-
-
 		}
 
 		$this->addErrors($this->validationErrors);
