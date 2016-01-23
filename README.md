@@ -2,8 +2,12 @@
 API для сборки кастомных админок в Битриксе
 
 Документацию по модулю лучше пока смотреть по комментариям в коде модуля. 
+
+Есть хорошая вводная статья в блоге: [Генератор админок «Битрикса»](http://samokhvalov.info/blog/all/bitrix-admin-helper/).
+
 Простой рабочий пример реализован отдельным модулем 
-[digitalwand.admin_helper_example](https://github.com/DigitalWand/digitalwand.admin_helper_example)
+[demo.adminhelper](https://github.com/niksamokhvalov/demo.adminhelper)
+
 
 ## Концепция
 Данный модуль реализует подход MVC для создания административного интерфейса.
