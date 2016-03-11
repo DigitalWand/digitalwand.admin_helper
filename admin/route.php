@@ -37,6 +37,7 @@ if (isset($_SESSION["SESS_SORT_ORDER"][$uniq])) {
 
 $module = getRequestParams('module');
 $view = getRequestParams('view');
+$entity = getRequestParams('entity');
 
 if (!$module OR !$view OR !Loader::IncludeModule($module)) {
 	include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
