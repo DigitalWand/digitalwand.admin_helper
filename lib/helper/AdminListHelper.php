@@ -6,6 +6,7 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
 use DigitalWand\AdminHelper\EntityManager;
+use DigitalWand\AdminHelper\Widget\DocumentationWidget;
 
 Loc::loadMessages(__FILE__);
 
@@ -1332,10 +1333,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
-	 * Выводит форму фильтрации списка
+	 * Выводит форму фильтрации списка и кнопку на документацию, если есть
 	 */
 	public function createFilterForm()
 	{
+        DocumentationWidget::widget()->init($this->getButton('DOCUMENTATION', array()))->show();
+
 		$this->setContext(AdminListHelper::OP_CREATE_FILTER_FORM);
 		print ' <form name="find_form" method="GET" action="' . static::getUrl($this->additionalUrlParams) . '?">';
 
