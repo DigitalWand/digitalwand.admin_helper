@@ -1336,6 +1336,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	public function createFilterForm()
 	{
+        //нужно пробрасывать параметр popup в форму, если она является таковой
+        if($this->isPopup())
+        {
+            $this->additionalUrlParams['popup'] = 'Y';
+        }
+
 		$this->setContext(AdminListHelper::OP_CREATE_FILTER_FORM);
 		print ' <form name="find_form" method="GET" action="' . static::getUrl($this->additionalUrlParams) . '?">';
 
