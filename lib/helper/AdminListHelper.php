@@ -419,7 +419,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$params = $this->additionalUrlParams;
 				$sectionModel = $sectionEditHelper::getModel();
 				$sectionField = $sectionEditHelper::getSectionField();
-				$section = $sectionModel::getById($_GET['ID'])->Fetch();
+				$section = $sectionModel::getById($this->getPk())->Fetch();
 				if ($this->isPopup()) {
 					$params = array_merge($_GET);
 				}
@@ -516,7 +516,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				if ($sectionEditHelperClass) {
 					$sectionField = !isset($_REQUEST['model']) ? static::getSectionField() :
 						$sectionEditHelperClass::getSectionField();
-					$element = $className::getById($IDs[0])->Fetch();
+					$element = $className::getById($this->getPk())->Fetch();
 					if ($element[$sectionField]) {
 						$params['ID'] = $element[$sectionField];
 					}
@@ -541,7 +541,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if ($action == 'delete-section') {
 			if ($this->hasDeleteRights()) {
-				$section = $sectionClassName::getById($IDs[0])->Fetch();
+				$section = $sectionClassName::getById($this->getPk())->Fetch();
 				$sectionField = $sectionEditHelperClass::getSectionField();
 				$params = $_GET;
 				unset($params['action']);
@@ -550,9 +550,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 				if ($section[$sectionField]) {
 					$params['ID'] = $section[$sectionField];
 				}
-				foreach ($IDs as $id) {
-					$sectionClassName::delete($id);
-				}
+
+				$sectionClassName::delete($this->getPk());
+
 				LocalRedirect($listHelperClass::getUrl($params));
 			}
 			else {
