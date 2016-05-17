@@ -119,7 +119,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			if ($this->editAction()) {
 				if (isset($_REQUEST['apply'])) {
 					$id = $this->data[$this->pk()];
-					$url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
+					$url = $this->app->GetCurPageParam($this->pk() . '=' . (is_array($id) ? $id[$this->pk()] : $id), array('ID'));
 				}
 				else {
 					if (isset($_REQUEST['save'])) {
