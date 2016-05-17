@@ -119,7 +119,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			if ($this->editAction()) {
 				if (isset($_REQUEST['apply'])) {
 					$id = $this->data[$this->pk()];
-					$url = $this->app->GetCurPageParam($this->pk() . '=' . $id);
+					$url = $this->app->GetCurPageParam($this->pk() . '=' . (is_array($id) ? $id[$this->pk()] : $id), array('ID'));
 				}
 				else {
 					if (isset($_REQUEST['save'])) {
@@ -430,7 +430,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		if ($success) {
 			$this->setContext(AdminEditHelper::OP_EDIT_ACTION_AFTER);
 			$existing = false;
-			$id = isset($_REQUEST['FIELDS'][$this->pk()]) ? $_REQUEST['FIELDS'][$this->pk()] : $_REQUEST[$this->pk()];
+			$id = $this->getPk();
 
 			if ($id) {
 				/** @var DataManager $className */
@@ -487,9 +487,9 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	protected function loadElement($select = array())
 	{
-		if (isset($_REQUEST[$this->pk()])) {
+		if ($this->getPk() !== null) {
 			$className = static::getModel();
-			$result = $className::getById($_REQUEST[$this->pk()]);
+			$result = $className::getById($this->getPk());
 
 			return $result->fetch();
 		}
@@ -515,9 +515,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	protected function saveElement($id = null)
 	{
-		$className = static::getModel();
-		$entityManager = new EntityManager($className, $this->data, $id, $this);
-
+		$entityManager = $this->getEntityManager($id);
 		$saveResult = $entityManager->save();
 		$this->addNotes($entityManager->getNotes());
 
@@ -542,9 +540,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 			return false;
 		}
-
-		$className = static::getModel();
-		$entityManager = new EntityManager($className, array(), $id, $this);
+		
+		$entityManager = $this->getEntityManager($id);
 
 		$deleteResult = $entityManager->delete();
 		$this->addNotes($entityManager->getNotes());

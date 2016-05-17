@@ -172,7 +172,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->prepareAdminVariables();
 
 		$className = static::getModel();
-		$oSort = new \CAdminSorting($this->getListTableID(), static::pk(), "desc");
+		$oSort = new \CAdminSorting($this->getListTableID(), $this->pk(), "desc");
 		$this->list = new \CAdminList($this->getListTableID(), $oSort);
 		$this->list->InitFilter($this->arFilterFields);
 
@@ -419,7 +419,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$params = $this->additionalUrlParams;
 				$sectionModel = $sectionEditHelper::getModel();
 				$sectionField = $sectionEditHelper::getSectionField();
-				$section = $sectionModel::getById($_GET['ID'])->Fetch();
+				$section = $sectionModel::getById($this->getPk())->Fetch();
 				if ($this->isPopup()) {
 					$params = array_merge($_GET);
 				}
@@ -516,14 +516,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 				if ($sectionEditHelperClass) {
 					$sectionField = !isset($_REQUEST['model']) ? static::getSectionField() :
 						$sectionEditHelperClass::getSectionField();
-					$element = $className::getById($IDs[0])->Fetch();
+					$element = $className::getById($this->getPk())->Fetch();
 					if ($element[$sectionField]) {
 						$params['ID'] = $element[$sectionField];
 					}
 				}
 
 				foreach ($IDs as $id) {
-					$entityManager = new EntityManager($className, array(), $id, $this);
+					$entityManager = $this->getEntityManager($id);
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
@@ -541,7 +541,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if ($action == 'delete-section') {
 			if ($this->hasDeleteRights()) {
-				$section = $sectionClassName::getById($IDs[0])->Fetch();
+				$section = $sectionClassName::getById($this->getPk())->Fetch();
 				$sectionField = $sectionEditHelperClass::getSectionField();
 				$params = $_GET;
 				unset($params['action']);
@@ -550,9 +550,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 				if ($section[$sectionField]) {
 					$params['ID'] = $section[$sectionField];
 				}
-				foreach ($IDs as $id) {
-					$sectionClassName::delete($id);
-				}
+
+				$sectionClassName::delete($this->getPk());
+
 				LocalRedirect($listHelperClass::getUrl($params));
 			}
 			else {
@@ -750,8 +750,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		$className = static::getModel();
-		$visibleColumns[] = static::pk();
-		$sectionsVisibleColumns[] = static::sectionPk();
+		$visibleColumns[] = $this->pk();
+		$sectionsVisibleColumns[] = $this->sectionPk();
 
 		$raw = array(
 			'SELECT' => $visibleColumns,
@@ -988,7 +988,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		// добавляем к выборке разделы
 		$rsSections = $sectionModel::getList(array(
-			'filter' => $sectionFilter,
+			'filter' => $this->sectionsFilter($sectionFilter),
 			'select' => $sectionsVisibleColumns,
 			'order' => $sectionSort,
 			'limit' => $limitData[1],
@@ -1033,7 +1033,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		$elementParams = array(
-			'filter' => $elementFilter,
+			'filter' => $this->elementsFilter($elementFilter),
 			'select' => $elementVisibleColumns,
 			'order' => $elementSort,
 		);
@@ -1156,7 +1156,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		else {
 			$query = array_merge($this->additionalUrlParams, array(
 				'lang' => LANGUAGE_ID,
-				static::pk() => $data[static::pk()]
+				$this->pk() => $data[$this->pk()]
 			));
 
 			return array($class::getUrl($query));
@@ -1303,7 +1303,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getData($className, $filter, $select, $sort, $raw)
 	{
 		$parameters = array(
-			'filter' => $filter,
+			'filter' => $this->elementsFilter($filter),
 			'select' => $select,
 			'order' => $sort
 		);
@@ -1440,5 +1440,25 @@ abstract class AdminListHelper extends AdminBaseHelper
 	public static function getUrl(array $params = array())
 	{
 		return static::getViewURL(static::getViewName(), static::$listPageUrl, $params);
+	}
+
+	/**
+	 * Кастомизация фильтра разделов
+	 * @param $filter
+	 * @return mixed
+	 */
+	protected function sectionsFilter($filter)
+	{
+		return $filter;
+	}
+
+	/**
+	 * Кастомизация фильтра элементов
+	 * @param $filter
+	 * @return mixed
+	 */
+	protected function elementsFilter($filter)
+	{
+		return $filter;
 	}
 }
