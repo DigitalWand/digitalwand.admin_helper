@@ -6,6 +6,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ModuleManager;
+use DigitalWand\AdminHelper\EntityManager;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
@@ -599,6 +600,17 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+	 * Возвращает значение первичного ключа таблицы используемой модели
+	 * @return array|int|null
+	 * 
+	 * @api
+	 */
+	public function getPk()
+	{
+		return isset($_REQUEST['FIELDS'][$this->pk()]) ? $_REQUEST['FIELDS'][$this->pk()] : $_REQUEST[$this->pk()];
+	}
+
+	/**
 	 * Возвращает первичный ключ таблицы используемой модели разделов. Для HL-инфоблоков битрикс - всегда ID.
      * Но может поменяться для какой-либо другой сущности.
      *
@@ -836,6 +848,16 @@ abstract class AdminBaseHelper
 		else {
 			return false;
 		}
+	}
+
+	/**
+	 * Возвращает новый объект EntityManager
+	 * @param $id
+	 * @return EntityManager
+	 */
+	protected function getEntityManager($id)
+	{
+		return new EntityManager(static::getModel(), empty($this->data) ? array() : $this->data, $id, $this);
 	}
 
 	/**

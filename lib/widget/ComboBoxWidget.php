@@ -161,14 +161,14 @@ class ComboBoxWidget extends HelperWidget
     {
         $variants = $this->getSettings('VARIANTS');
 
-        if (is_array($variants) AND !empty($variants)) {
-            return $this->formatVariants($variants);
-        } elseif (is_callable($variants)) {
+        if (is_callable($variants)) {
             $var = $variants();
 
             if (is_array($var)) {
                 return $this->formatVariants($var);
             }
+        }elseif (is_array($variants) AND !empty($variants)) {
+            return $this->formatVariants($variants);
         }
 
         return array();
