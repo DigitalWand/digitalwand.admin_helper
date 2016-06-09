@@ -130,7 +130,7 @@ class ComboBoxWidget extends HelperWidget
         $result = '';
 
         if (empty($variants)) {
-            $result = 'Не удалось получить данные для выбора';
+            $result = Loc::getMessage('DIGITALWAND_AH_MISSING_VARIANTS');
         } else {
             foreach ($variants as $id => $data) {
                 $name = strlen($data["TITLE"]) > 0 ? $data["TITLE"] : "";

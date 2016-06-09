@@ -353,7 +353,7 @@ abstract class HelperWidget
         if ($hideTags) {
             return preg_replace('/<.+>/mU', '', $string);
         } else {
-            return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+            return htmlspecialchars($string, ENT_QUOTES, SITE_CHARSET);
         }
     }
     
@@ -370,7 +370,7 @@ abstract class HelperWidget
     public static function prepareToTagAttr($string)
     {
         // Не используйте addcslashes в этом методе, иначе в тегах будут дубли обратных слешей
-        return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+        return htmlspecialchars($string, ENT_QUOTES, SITE_CHARSET);
     }
 
     /**
@@ -382,7 +382,7 @@ abstract class HelperWidget
      */
     public static function prepareToJs($string)
     {
-        $string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+        $string = htmlspecialchars($string, ENT_QUOTES, SITE_CHARSET);
         $string = addcslashes($string, "\r\n\"\\");
 
         return $string;

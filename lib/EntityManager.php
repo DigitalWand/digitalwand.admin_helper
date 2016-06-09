@@ -329,7 +329,7 @@ class EntityManager
 		foreach ($references as $fieldName => $reference) {
 			if (array_key_exists($fieldName, $this->data)) {
 				if (!is_array($this->data[$fieldName])) {
-					$result->addError(new Entity\EntityError('Связь должна быть множественным полем'));
+					$result->addError(new Entity\EntityError(Loc::getMessage('DIGITALWAND_AH_RELATION_SHOULD_BE_MULTIPLE_FIELD')));
 
 					return $result;
 				}
@@ -460,7 +460,7 @@ class EntityManager
 		$fieldWidget = $this->getFieldWidget($referenceName);
 
 		if (!empty($referenceData[$fieldWidget->getMultipleField('ID')])) {
-			throw new ArgumentException('Аргумент data не может содержать идентификатор элемента', 'data');
+			throw new ArgumentException(Loc::getMessage('DIGITALWAND_AH_ARGUMENT_CANT_CONTAIN_ID', array('%A%' => 'referenceData')), 'referenceData');
 		}
 
 		$refClass = $reference->getRefEntity()->getDataClass();
@@ -496,7 +496,7 @@ class EntityManager
 		$fieldWidget = $this->getFieldWidget($referenceName);
 
 		if (empty($referenceData[$fieldWidget->getMultipleField('ID')])) {
-			throw new ArgumentException('Аргумент data должен содержать идентификатор элемента', 'data');
+			throw new ArgumentException(Loc::getMessage('DIGITALWAND_AH_ARGUMENT_SHOULD_CONTAIN_ID', array('%A%' => 'referenceData')), 'referenceData');
 		}
 
 		// Сравнение старых данных и новых, обновляется только при различиях
