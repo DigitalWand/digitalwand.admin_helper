@@ -103,6 +103,13 @@ abstract class AdminEditHelper extends AdminBaseHelper
 		$this->tabControl = new \CAdminForm(str_replace("\\", "", get_called_class()), $this->tabs);
 
 		if (isset($_REQUEST['apply']) OR isset($_REQUEST['save'])) {
+			if (
+				isset($_SERVER["HTTP_BX_AJAX"])
+				||
+				isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && $_SERVER["HTTP_X_REQUESTED_WITH"] === "XMLHttpRequest"
+			) {
+				\CUtil::JSPostUnescape();
+			}
 			$this->data = $_REQUEST['FIELDS'];
 
 			if (isset($_REQUEST[$this->pk()])) {
