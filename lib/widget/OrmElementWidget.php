@@ -136,7 +136,7 @@ class OrmElementWidget extends NumberWidget
                 $return .= InputType("radio", $this->getEditInputName(), $element['ID'], $this->getValue(), false, $element['TITLE']);
             }
         } else {
-            $return = 'Элементы не найдены';
+            $return = Loc::getMessage('DIGITALWAND_AH_ORM_MISSING_ELEMENTS');
         }
 
         return $return;
