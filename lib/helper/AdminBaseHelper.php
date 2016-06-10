@@ -6,6 +6,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ModuleManager;
+use DigitalWand\AdminHelper\EntityManager;
 use DigitalWand\AdminHelper\Widget\HelperWidget;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Highloadblock as HL;
@@ -107,6 +108,15 @@ abstract class AdminBaseHelper
 	 * @api
 	 */
 	static protected $model;
+
+	/**
+	 * @var string
+	 * Имя класса используемого менеджера сущностей. Используется для выполнения CRUD-операций.
+	 *
+	 * @see DataManager
+	 * @api
+	 */
+	static protected $entityManager = '\DigitalWand\AdminHelper\EntityManager';
 
 	/**
 	 * @var string
@@ -596,6 +606,17 @@ abstract class AdminBaseHelper
 	public function pk()
 	{
 		return 'ID';
+	}
+
+	/**
+	 * Возвращает значение первичного ключа таблицы используемой модели
+	 * @return array|int|null
+	 * 
+	 * @api
+	 */
+	public function getPk()
+	{
+		return isset($_REQUEST['FIELDS'][$this->pk()]) ? $_REQUEST['FIELDS'][$this->pk()] : $_REQUEST[$this->pk()];
 	}
 
 	/**

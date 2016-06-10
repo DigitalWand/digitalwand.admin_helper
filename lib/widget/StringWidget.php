@@ -157,8 +157,7 @@ class StringWidget extends HelperWidget
         if ($this->getSettings('MULTIPLE')) {
         } else {
             if ($this->getSettings('EDIT_LINK') || $this->getSettings('SECTION_LINK')) {
-                $entityClass = $this->entityName;
-                $pk = $entityClass::getEntity()->getPrimary();
+                $pk = $this->helper->pk();
 
                 if ($this->getSettings('SECTION_LINK')) {
                     $params = $this->helper->isPopup() ? $_GET : array();
