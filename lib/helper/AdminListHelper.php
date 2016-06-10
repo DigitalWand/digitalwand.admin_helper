@@ -523,7 +523,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 				}
 
 				foreach ($IDs as $id) {
-					$entityManager = $this->getEntityManager($id);
+					/** @var EntityManager $entityManager */
+					$entityManager = new static::$entityManager(static::getModel(), empty($this->data) ? array() : $this->data, $id, $this);
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
@@ -988,7 +989,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		// добавляем к выборке разделы
 		$rsSections = $sectionModel::getList(array(
-			'filter' => $this->sectionsFilter($sectionFilter),
+			'filter' => $this->getSectionsFilter($sectionFilter),
 			'select' => $sectionsVisibleColumns,
 			'order' => $sectionSort,
 			'limit' => $limitData[1],
@@ -1033,7 +1034,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		$elementParams = array(
-			'filter' => $this->elementsFilter($elementFilter),
+			'filter' => $this->getElementsFilter($elementFilter),
 			'select' => $elementVisibleColumns,
 			'order' => $elementSort,
 		);
@@ -1303,7 +1304,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getData($className, $filter, $select, $sort, $raw)
 	{
 		$parameters = array(
-			'filter' => $this->elementsFilter($filter),
+			'filter' => $this->getElementsFilter($filter),
 			'select' => $select,
 			'order' => $sort
 		);
@@ -1441,7 +1442,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param $filter
 	 * @return mixed
 	 */
-	protected function sectionsFilter($filter)
+	protected function getSectionsFilter(array $filter)
 	{
 		return $filter;
 	}
@@ -1451,7 +1452,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param $filter
 	 * @return mixed
 	 */
-	protected function elementsFilter($filter)
+	protected function getElementsFilter($filter)
 	{
 		return $filter;
 	}

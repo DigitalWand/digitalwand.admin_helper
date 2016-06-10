@@ -515,7 +515,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 */
 	protected function saveElement($id = null)
 	{
-		$entityManager = $this->getEntityManager($id);
+		/** @var EntityManager $entityManager */
+		$entityManager = new static::$entityManager(static::getModel(), empty($this->data) ? array() : $this->data, $id, $this);
 		$saveResult = $entityManager->save();
 		$this->addNotes($entityManager->getNotes());
 
@@ -541,7 +542,8 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			return false;
 		}
 		
-		$entityManager = $this->getEntityManager($id);
+		/** @var EntityManager $entityManager */
+		$entityManager = new static::$entityManager(static::getModel(), empty($this->data) ? array() : $this->data, $id, $this);
 
 		$deleteResult = $entityManager->delete();
 		$this->addNotes($entityManager->getNotes());

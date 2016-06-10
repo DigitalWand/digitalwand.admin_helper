@@ -111,6 +111,15 @@ abstract class AdminBaseHelper
 
 	/**
 	 * @var string
+	 * Имя класса используемого менеджера сущностей. Используется для выполнения CRUD-операций.
+	 *
+	 * @see DataManager
+	 * @api
+	 */
+	static protected $entityManager = '\DigitalWand\AdminHelper\EntityManager';
+
+	/**
+	 * @var string
 	 * Назвние модуля данной модели.
 	 * При наследовании класса необходимо указать нзвание модуля, в котором он находится.
 	 * А можно и не указывать, в этому случае он определится автоматически по namespace класса
@@ -848,16 +857,6 @@ abstract class AdminBaseHelper
 		else {
 			return false;
 		}
-	}
-
-	/**
-	 * Возвращает новый объект EntityManager
-	 * @param $id
-	 * @return EntityManager
-	 */
-	protected function getEntityManager($id)
-	{
-		return new EntityManager(static::getModel(), empty($this->data) ? array() : $this->data, $id, $this);
 	}
 
 	/**
