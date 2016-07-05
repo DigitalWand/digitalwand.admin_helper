@@ -221,10 +221,9 @@ class CheckboxWidget extends HelperWidget
                     return $field->getDataType(); //FIXME: deprecated? На что нужно заменить?
                 }
             }
-            
-            if(is_array($entityMap[$columnName])){
-                return $entityMap[$columnName]['data_type'];
-            }
+
+        } else if (isset($entityMap[$columnName]['data_type'])) {
+            return $entityMap[$columnName]['data_type'];
         }
 
         return static::TYPE_STRING;
