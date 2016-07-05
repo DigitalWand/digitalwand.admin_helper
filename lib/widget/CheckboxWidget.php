@@ -8,6 +8,11 @@ Loc::loadMessages(__FILE__);
 
 /**
  * Виджет "галочка"
+ *
+ * Доступные опции:
+ * <ul>
+ * <li> <b>FIELD_TYPE</b> - Тип данных для хранения булевых значений (строка, целые числа, булево) </li>
+ * </ul>
  */
 class CheckboxWidget extends HelperWidget
 {
@@ -193,27 +198,35 @@ class CheckboxWidget extends HelperWidget
 
     /**
      * Получить тип чекбокса по типу поля.
+     * По-умолчанию возвращает TYPE_STRING
      *
      * @return mixed
      */
     public function getCheckboxType()
     {
-        $fieldType = '';
-        $entity = $this->getEntityName();
-        $entityMap = $entity::getMap();
+        $settingsFieldType = $this->getSettings('FIELD_TYPE');
+        $checkTypes = array(static::TYPE_STRING, static::TYPE_BOOLEAN, static::TYPE_INT);
         $columnName = $this->getCode();
 
-        if (!isset($entityMap[$columnName])) {
-            foreach ($entityMap as $field) {
-                if ($field->getColumnName() === $columnName) {
-                    $fieldType = $field->getDataType();
-                    break;
+        if ($settingsFieldType AND in_array($settingsFieldType, $checkTypes)) {
+            return $settingsFieldType;
+
+        } else if (!isset($entityMap[$columnName])) {
+
+            $entity = $this->getEntityName();
+            $entityMap = $entity::getMap();
+
+            foreach ($entityMap as $field/** @var \Bitrix\Main\Entity\ScalarField $field */) {
+                if (is_object($field) AND $field->getColumnName() === $columnName) {
+                    return $field->getDataType(); //FIXME: deprecated? На что нужно заменить?
                 }
             }
-        } else {
-            $fieldType = $entityMap[$columnName]['data_type'];
+            
+            if(is_array($entityMap[$columnName])){
+                return $entityMap[$columnName]['data_type'];
+            }
         }
 
-        return $fieldType;
+        return static::TYPE_STRING;
     }
 }
