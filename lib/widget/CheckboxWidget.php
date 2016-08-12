@@ -18,6 +18,7 @@ class CheckboxWidget extends HelperWidget
 {
     /**
      * Строковый тип чекбокса (Y/N)
+     * FIXME: если верить битриксу, мжет быть ещё и экзотичный случай со строками "true" и "false"!
      */
     const TYPE_STRING = 'string';
     /**
@@ -48,36 +49,6 @@ class CheckboxWidget extends HelperWidget
     protected static $defaults = array(
         'EDIT_IN_LIST' => true
     );
-
-    /**
-     * @inheritdoc
-     */
-    protected function getEditHtml()
-    {
-        $html = '';
-
-        $modeType = $this->getCheckboxType();
-
-        switch ($modeType) {
-            case static::TYPE_STRING: {
-                $checked = $this->getValue() == self::TYPE_STRING_YES ? 'checked' : '';
-
-                $html = '<input type="hidden" name="' . $this->getEditInputName() . '" value="' . self::TYPE_STRING_NO . '" />';
-                $html .= '<input type="checkbox" name="' . $this->getEditInputName() . '" value="' . self::TYPE_STRING_YES . '" ' . $checked . ' />';
-                break;
-            }
-            case static::TYPE_INT:
-            case static::TYPE_BOOLEAN: {
-                $checked = $this->getValue() == self::TYPE_INT_YES ? 'checked' : '';
-
-                $html = '<input type="hidden" name="' . $this->getEditInputName() . '" value="' . self::TYPE_INT_NO . '" />';
-                $html .= '<input type="checkbox" name="' . $this->getEditInputName() . '" value="' . self::TYPE_INT_YES . '" ' . $checked . ' />';
-                break;
-            }
-        }
-
-        return $html;
-    }
 
     /**
      * @inheritdoc
@@ -192,14 +163,43 @@ class CheckboxWidget extends HelperWidget
         parent::processEditAction();
 
         if ($this->getCheckboxType() === static::TYPE_BOOLEAN) {
-            $this->data[$this->getCode()] = (bool) $this->data[$this->getCode()];
+            $this->data[$this->getCode()] = (bool)$this->data[$this->getCode()];
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getEditHtml()
+    {
+        $html = '';
+
+        $modeType = $this->getCheckboxType();
+
+        switch ($modeType) {
+            case static::TYPE_STRING: {
+                $checked = $this->getValue() == self::TYPE_STRING_YES ? 'checked' : '';
+
+                $html = '<input type="hidden" name="' . $this->getEditInputName() . '" value="' . self::TYPE_STRING_NO . '" />';
+                $html .= '<input type="checkbox" name="' . $this->getEditInputName() . '" value="' . self::TYPE_STRING_YES . '" ' . $checked . ' />';
+                break;
+            }
+            case static::TYPE_INT:
+            case static::TYPE_BOOLEAN: {
+                $checked = $this->getValue() == self::TYPE_INT_YES ? 'checked' : '';
+
+                $html = '<input type="hidden" name="' . $this->getEditInputName() . '" value="' . self::TYPE_INT_NO . '" />';
+                $html .= '<input type="checkbox" name="' . $this->getEditInputName() . '" value="' . self::TYPE_INT_YES . '" ' . $checked . ' />';
+                break;
+            }
+        }
+
+        return $html;
     }
 
     /**
      * Получить тип чекбокса по типу поля.
      * По-умолчанию возвращает TYPE_STRING
-     *
      * @return mixed
      */
     public function getCheckboxType()
@@ -211,19 +211,39 @@ class CheckboxWidget extends HelperWidget
         if ($settingsFieldType AND in_array($settingsFieldType, $checkTypes)) {
             return $settingsFieldType;
 
-        } else if (!isset($entityMap[$columnName])) {
-
+        } else {
             $entity = $this->getEntityName();
             $entityMap = $entity::getMap();
 
-            foreach ($entityMap as $field/** @var \Bitrix\Main\Entity\ScalarField $field */) {
-                if (is_object($field) AND $field->getColumnName() === $columnName) {
-                    return $field->getDataType(); //FIXME: deprecated? На что нужно заменить?
+            if (!isset($entityMap[$columnName])) {
+                foreach ($entityMap as $field/** @var \Bitrix\Main\Entity\ScalarField $field */) {
+                    if (is_object($field) AND $field->getColumnName() === $columnName) {
+                        return $field->getDataType(); //FIXME: deprecated? На что нужно заменить?
+                    }
                 }
+
+            } elseif (isset($entityMap[$columnName]['values']) AND
+                is_array($entityMap[$columnName]['values']) AND
+                count($entityMap[$columnName]['values']) == 2
+            ) {
+                $value = reset($entityMap[$columnName]['values']);
+                if (is_string($value)) {
+                    return static::TYPE_STRING;
+                } elseif (is_bool($value) OR is_integer($value)) {
+                    return static::TYPE_BOOLEAN;
+                }
+
+            } elseif (isset($entityMap[$columnName]['data_type'])) {
+                return $entityMap[$columnName]['data_type'];
+
             }
 
-        } else if (isset($entityMap[$columnName]['data_type'])) {
-            return $entityMap[$columnName]['data_type'];
+            /**
+             * Теоретически, рзработчик мог ввести полную хрень, указывая варианты значений для сущности
+             * В этом случае ни одна проверка выше не сработает.
+             * FIXME: а нужен ли эксепшн?
+             */
+//            throw new \Bitrix\Main\ArgumentTypeException("Unknown checkbox type");
         }
 
         return static::TYPE_STRING;
