@@ -242,8 +242,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 						$params['ID'] = $element[$sectionField];
 					}
 				}
-
-				LocalRedirect($listHelperClass::getUrl($params));
 			}
 		}
 
@@ -532,7 +530,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 						break;
 					}
 				}
-				LocalRedirect($listHelperClass::getUrl($params));
 			}
 			else {
 				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
@@ -553,7 +550,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 				foreach ($IDs as $id) {
 					$sectionClassName::delete($id);
 				}
-				LocalRedirect($listHelperClass::getUrl($params));
 			}
 			else {
 				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
