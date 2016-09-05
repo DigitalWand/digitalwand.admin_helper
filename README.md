@@ -1,7 +1,7 @@
 # digitalwand.admin_helper
 API для сборки кастомных админок в Битриксе
 
-Документацию по модулю лучше пока смотреть по комментариям в коде модуля. 
+Документация по модулю доступна по адресу [http://api.digitalwand.ru/admin_helper/](http://api.digitalwand.ru/admin_helper/). Её же можно прочитать в комментариях в коде модуля. 
 
 Есть хорошая вводная статья в блоге: [Генератор админок «Битрикса»](http://samokhvalov.info/blog/all/bitrix-admin-helper/).
 
