@@ -182,8 +182,6 @@ class FileWidget extends HelperWidget
      */
     public function processEditAction()
     {
-        parent::processEditAction();
-        
         if ($this->getSettings('MULTIPLE')) {
             if ($this->getSettings('READONLY') === true) {
                 //удаляем все добавленные файлы в режиме только для чтения
@@ -310,6 +308,7 @@ class FileWidget extends HelperWidget
 
             $this->saveFile($name, $path, $type, $description);
         }
+        parent::processEditAction();
     }
 
     protected function saveFile($name, $path, $type = false, $description = null)
