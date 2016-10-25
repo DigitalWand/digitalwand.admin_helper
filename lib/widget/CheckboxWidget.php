@@ -217,6 +217,8 @@ class CheckboxWidget extends HelperWidget
 
             if (!isset($entityMap[$columnName])) {
                 foreach ($entityMap as $field/** @var \Bitrix\Main\Entity\ScalarField $field */) {
+                    if($field instanceof \Bitrix\Main\Entity\ReferenceField)
+                        continue;
                     if (is_object($field) AND $field->getColumnName() === $columnName) {
                         return $field->getDataType(); //FIXME: deprecated? На что нужно заменить?
                     }
