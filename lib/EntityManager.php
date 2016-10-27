@@ -244,7 +244,12 @@ class EntityManager
 
 		$model = $this->modelClass;
 
-        $result = $model::delete($this->helper->getPk()); // удаляем основную сущность
+		//Если передается массив, то получаем ИД записи
+		if (is_array($this->helper->getPk())) {
+			$result = $model::delete($this->itemId); // удаляем основную сущность
+		} else {
+			$result = $model::delete($this->helper->getPk()); // удаляем основную сущность
+		}
 		if(!$result->isSuccess()){  // если не удалилась
 			$db->rollbackTransaction(); // то восстанавливаем зависимые сущности
 			return $result; // возвращаем ошибку
