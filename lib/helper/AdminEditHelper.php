@@ -170,7 +170,10 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$this->data = $this->loadElement($select);
 
 			if (!$this->data) {
-				//TODO: элемент не найден
+				global $APPLICATION, $adminPage, $adminMenu, $USER;
+				\CHTTP::SetStatus(404);
+				include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
+				die();
 			}
 
 			if (isset($_REQUEST['action']) || isset($_REQUEST['action_button'])) {
