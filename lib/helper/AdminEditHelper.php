@@ -169,15 +169,13 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 			$this->data = $this->loadElement($select);
 
-			if (!$this->data) {
-				global $APPLICATION, $adminPage, $adminMenu, $USER;
-				\CHTTP::SetStatus(404);
-				include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
-				die();
+			$id = isset($_REQUEST[$this->pk()]) ? $_REQUEST[$this->pk()] : null;
+
+			if (!$this->data && !is_null($id)) {
+				$this->show404();
 			}
 
 			if (isset($_REQUEST['action']) || isset($_REQUEST['action_button'])) {
-				$id = isset($_REQUEST['ID']) ? $_REQUEST['ID'] : null;
 				$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
 				$this->customActions($action, $id);
 			}

@@ -1160,6 +1160,19 @@ abstract class AdminBaseHelper
 	}
 
 	/**
+	 * Отобразить страницу 404 ошибка
+	 */
+	protected function show404()
+	{
+		// инициализация глобальных переменных, необходимых для вывода страницы административного раздела в
+		// текущей области видимости
+		global $APPLICATION, $adminPage, $adminMenu, $USER;
+		\CHTTP::SetStatus(404);
+		include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
+		die();
+	}
+
+	/**
 	 * Выставляет текущий контекст исполнения.
      *
 	 * @param $context
