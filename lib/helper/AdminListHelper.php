@@ -826,8 +826,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 					}
 					$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 					foreach ($this->fields as $code => $settings) {
-						$this->addRowCell($row, $code, $data,
+						if(in_array($code, $listSelect)) {
+							$this->addRowCell($row, $code, $data,
 							isset($this->tableColumnsMap[$code]) ? $this->tableColumnsMap[$code] : false);
+						}
 					}
 					$row->AddActions($this->getRowActions($data));
 				}
@@ -835,18 +837,21 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		else // Обычный вывод элементов без использования разделов
 		{
-			$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
-			$res = new \CAdminResult($res, $this->getListTableID());
-			$res->NavStart();
-			// отключаем отображение всех элементов
-			$res->bShowAll = false;
+            $this->totalRowsCount = $className::getCount($this->arFilter);
+            $res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
+            $res = new \CAdminResult($res, $this->getListTableID());
+			$this->customNavStart($res);
+            // отключаем отображение всех элементов
+            $res->bShowAll = false;
 			$this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
 			while ($data = $res->NavNext(false)) {
 				$this->modifyRowData($data);
 				list($link, $name) = $this->getRow($data);
 				$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 				foreach ($this->fields as $code => $settings) {
-					$this->addRowCell($row, $code, $data);
+                    if(in_array($code, $listSelect)) {
+                        $this->addRowCell($row, $code, $data);
+                    }
 				}
 				$row->AddActions($this->getRowActions($data));
 			}
@@ -1310,10 +1315,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function getData($className, $filter, $select, $sort, $raw)
 	{
+        $limits = $this->getLimits();
 		$parameters = array(
 			'filter' => $this->getElementsFilter($filter),
 			'select' => $select,
-			'order' => $sort
+			'order' => $sort,
+            'offset' => $limits[0],
+            'limit' => $limits[1],
 		);
 
 		/** @var Result $res */
