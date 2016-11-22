@@ -823,10 +823,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 					}
 					$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 					foreach ($this->fields as $code => $settings) {
-                        if(in_array($code, $listSelect)) {
-                            $this->addRowCell($row, $code, $data,
-                                isset($this->tableColumnsMap[$code]) ? $this->tableColumnsMap[$code] : false);
-                        }
+						if(in_array($code, $listSelect)) {
+							$this->addRowCell($row, $code, $data,
+							isset($this->tableColumnsMap[$code]) ? $this->tableColumnsMap[$code] : false);
+						}
 					}
 					$row->AddActions($this->getRowActions($data));
 				}
