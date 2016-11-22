@@ -4,6 +4,10 @@ namespace DigitalWand\AdminHelper\Widget;
 
 class DateTimeWidget extends HelperWidget
 {
+	static protected $defaults = array(
+		'FILTER' => 'BETWEEN',
+	);
+	
 	/**
 	 * Генерирует HTML для редактирования поля
 	 * @see AdminEditHelper::showField();

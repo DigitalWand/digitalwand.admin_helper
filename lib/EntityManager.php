@@ -244,7 +244,17 @@ class EntityManager
 
 		$model = $this->modelClass;
 
-        $result = $model::delete($this->helper->getPk()); // удаляем основную сущность
+		//Если передается массив, то получаем ИД записи
+        if (!is_null($this->itemId)) {
+            $result = $model::delete($this->itemId); // удаляем основную сущность
+        } elseif (!is_array($this->helper->getPk())) {
+            $result = $model::delete($this->helper->getPk()); // удаляем основную сущность
+        } else {
+            $result = new Entity\DeleteResult();
+            $error = new Entity\EntityError('Can\'t find element\'s ID');
+            $result->addError($error);
+        }
+
 		if(!$result->isSuccess()){  // если не удалилась
 			$db->rollbackTransaction(); // то восстанавливаем зависимые сущности
 			return $result; // возвращаем ошибку

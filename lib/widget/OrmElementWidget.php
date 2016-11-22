@@ -187,7 +187,7 @@ class OrmElementWidget extends NumberWidget
                 'type="text">' +
                 '<input type="button"' +
                 'value="..."' +
-                'onClick="jsUtils.OpenWindow(<?=$popupUrl?>, <?=$windowWidth?>, <?=$windowHeight?>);">' +
+                'onClick="jsUtils.OpenWindow(\'<?=$popupUrl?>\', <?=$windowWidth?>, <?=$windowHeight?>);">' +
                 '&nbsp;<span id="sp_<?=md5($name)?>_{{field_id}}" >{{element_title}}</span>'
             );
             <?

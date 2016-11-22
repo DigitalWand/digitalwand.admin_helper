@@ -41,6 +41,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * @var bool
+	 * Выводить кнопку экспорта в Excel
+	 * @api
+	 */
+	protected $exportExcel = true;
+	/**
+	 * @var bool
 	 * Является ли список всплывающим окном для выбора элементов из списка.
 	 * В этой версии не должно быть операций удаления/перехода к редактированию.
 	 */
@@ -242,8 +248,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 						$params['ID'] = $element[$sectionField];
 					}
 				}
-
-				LocalRedirect($listHelperClass::getUrl($params));
 			}
 		}
 
@@ -533,7 +537,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 						break;
 					}
 				}
-				LocalRedirect($listHelperClass::getUrl($params));
 			}
 			else {
 				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
@@ -552,9 +555,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 					$params['ID'] = $section[$sectionField];
 				}
 
-				$sectionClassName::delete($this->getPk());
-
-				LocalRedirect($listHelperClass::getUrl($params));
+				foreach ($IDs as $id) {
+					$sectionClassName::delete($id);
+				}
 			}
 			else {
 				$this->addErrors(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'));
@@ -838,6 +841,8 @@ abstract class AdminListHelper extends AdminBaseHelper
             $res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
             $res = new \CAdminResult($res, $this->getListTableID());
 			$this->customNavStart($res);
+            // отключаем отображение всех элементов
+            $res->bShowAll = false;
 			$this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
 			while ($data = $res->NavNext(false)) {
 				$this->modifyRowData($data);
@@ -854,7 +859,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		$this->list->AddFooter($this->getFooter($res));
 		$this->list->AddGroupActionTable($this->getGroupActions(), $this->groupActionsParams);
-		$this->list->AddAdminContextMenu($this->getContextMenu());
+		$this->list->AddAdminContextMenu($this->getContextMenu(), $this->exportExcel);
 
 		$this->list->BeginPrologContent();
 		echo $this->prologHtml;
@@ -1100,6 +1105,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$this->navParams['navParams']['SHOW_ALL'],
 			(int)$this->navParams['navParams']['PAGEN']
 		);
+		// отключаем отображение всех элементов
+		$res->bShowAll = false;
 
 		$res->NavRecordCount = $this->totalRowsCount;
 		if ($res->NavRecordCount < 1)

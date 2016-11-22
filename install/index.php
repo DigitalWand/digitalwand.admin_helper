@@ -30,7 +30,6 @@ class digitalwand_admin_helper extends CModule
 
     function DoInstall()
     {
-        global $APPLICATION;
 
         $eventManager = \Bitrix\Main\EventManager::getInstance();
 
@@ -44,14 +43,10 @@ class digitalwand_admin_helper extends CModule
             '\DigitalWand\AdminHelper\EventHandlers',
             'onPageStart'
         );
-
-        $APPLICATION->IncludeAdminFile(Loc::getMessage('ADMIN_HELPER_INSTALL_TITLE'), __DIR__ . '/step.php');
     }
 
     function DoUninstall()
     {
-        global $APPLICATION;
-
         $eventManager = \Bitrix\Main\EventManager::getInstance();
 
         UnRegisterModule($this->MODULE_ID);
@@ -63,8 +58,6 @@ class digitalwand_admin_helper extends CModule
             '\DigitalWand\AdminHelper\EventHandlers',
             'onPageStart'
         );
-
-        $APPLICATION->IncludeAdminFile(Loc::getMessage('ADMIN_HELPER_INSTALL_TITLE'), __DIR__ . '/unstep.php');
     }
 
     function InstallFiles()
