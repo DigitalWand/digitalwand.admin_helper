@@ -229,27 +229,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 			$this->groupActions($IDs, $_REQUEST['action']);
 		}
-		/*if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
-			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
-			$className = $listHelperClass::getModel();
-			$id = isset($_GET['ID']) ? $_GET['ID'] : null;
-			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
-			if($action!='edit' && $_REQUEST['cancel'] != 'Y'){
-				$params = $_GET;
-				unset($params['action']);
-				unset($params['action_button']);
-				$this->customActions($action, $id);
-				$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
-
-				if ($sectionEditHelperClass) {
-					$element = $className::getById($id)->Fetch();
-					$sectionField = $listHelperClass::getSectionField();
-					if ($element[$sectionField]) {
-						$params['ID'] = $element[$sectionField];
-					}
-				}
-			}
-		}*/
 
 		if ($this->isPopup()) {
 			$this->genPopupActionJS();
@@ -1510,7 +1489,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Получить оставшуюся часть составного первичного ключа
-	 * 
+	 *
 	 * @param $className
 	 * @param null $sectionClassName
 	 * @param $id
