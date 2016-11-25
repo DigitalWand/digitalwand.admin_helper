@@ -229,7 +229,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 			$this->groupActions($IDs, $_REQUEST['action']);
 		}
-		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
+		/*if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0 ) {
 			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 			$className = $listHelperClass::getModel();
 			$id = isset($_GET['ID']) ? $_GET['ID'] : null;
@@ -249,7 +249,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					}
 				}
 			}
-		}
+		}*/
 
 		if ($this->isPopup()) {
 			$this->genPopupActionJS();
@@ -423,7 +423,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$params = $this->additionalUrlParams;
 				$sectionModel = $sectionEditHelper::getModel();
 				$sectionField = $sectionEditHelper::getSectionField();
-				$section = $sectionModel::getById($this->getPk())->Fetch();
+				$section = $sectionModel::getById(array_merge(
+						[$this->pk() => $_GET['ID']],
+						$this->getCommonPrimaryFilterById($sectionModel, null, $_GET['ID']))
+				)->Fetch();
 				if ($this->isPopup()) {
 					$params = array_merge($_GET);
 				}
@@ -513,22 +516,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if ($action == 'delete') {
 			if ($this->hasDeleteRights()) {
-				$params = $_GET;
-				unset($params['action']);
-				unset($params['action_button']);
-				unset($params['ID']);
-				if ($sectionEditHelperClass) {
-					$sectionField = !isset($_REQUEST['model']) ? static::getSectionField() :
-						$sectionEditHelperClass::getSectionField();
-					$element = $className::getById($this->getPk())->Fetch();
-					if ($element[$sectionField]) {
-						$params['ID'] = $element[$sectionField];
+				foreach ($this->getIds() as $id) {
+					$model = $className;
+					if (strpos($id[$this->pk()], 's') === 0) {
+						$model = $sectionClassName;
+						$id[$this->pk()] = substr($id[$this->pk()], 1);
 					}
-				}
-
-				foreach ($IDs as $id) {
 					/** @var EntityManager $entityManager */
-					$entityManager = new static::$entityManager(static::getModel(), empty($this->data) ? array() : $this->data, $id, $this);
+					$entityManager = new static::$entityManager($model, empty($this->data) ? [] : $this->data, $id, $this);
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
@@ -545,17 +540,17 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if ($action == 'delete-section') {
 			if ($this->hasDeleteRights()) {
-				$section = $sectionClassName::getById($this->getPk())->Fetch();
-				$sectionField = $sectionEditHelperClass::getSectionField();
-				$params = $_GET;
-				unset($params['action']);
-				unset($params['action_button']);
-				unset($params['ID']);
-				if ($section[$sectionField]) {
-					$params['ID'] = $section[$sectionField];
-				}
-
 				foreach ($IDs as $id) {
+					$id = array_merge([$this->pk() => $id], $this->getCommonPrimaryFilterById($sectionClassName, null, $id));
+					// TODO: определение модели по id и удаление с отношениями
+					/*$entityManager = new static::$entityManager($sectionClassName, [], $id, $this);
+					$result = $entityManager->delete();
+					$this->addNotes($entityManager->getNotes());
+					if(!$result->isSuccess()){
+
+						$this->addErrors($result->getErrorMessages());
+						break;
+					}*/
 					$sectionClassName::delete($id);
 				}
 			}
@@ -1476,5 +1471,61 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getElementsFilter($filter)
 	{
 		return $filter;
+	}
+
+	/**
+	 * @return array
+	 */
+	protected function getIds()
+	{
+		$className = static::getModel();
+		if (isset($_REQUEST['model'])) {
+			$className = $_REQUEST['model'];
+		}
+
+		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+		if ($sectionEditHelperClass && !isset($_REQUEST['model-section'])) {
+			$sectionClassName = $sectionEditHelperClass::getModel();
+		}
+		else {
+			$sectionClassName = $_REQUEST['model-section'];
+		}
+
+		if (is_array($this->getPk()[$this->pk()]) ) {
+			$ids = [];
+			foreach ($this->getPk()[$this->pk()] as $id) {
+				$ids[] = array_merge(
+					[$this->pk() => $id],
+					$this->getCommonPrimaryFilterById($className, $sectionClassName, $id)
+				);
+			}
+		} else {
+			$ids = [$this->getPk()];
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * @param $className
+	 * @param null $sectionClassName
+	 * @param $id
+	 * @return array
+	 */
+	protected function getCommonPrimaryFilterById($className, $sectionClassName = null, $id)
+	{
+		if (!empty($this->getHelperClass($sectionClassName)) && strpos($id, 's') === 0) {
+			$primary = $sectionClassName::getEntity()->getPrimary();
+		} else {
+			$primary = $className::getEntity()->getPrimary();
+		}
+
+		if (count($primary) === 1) {
+			return [];
+		}
+
+		$primary = array_flip($primary);
+		unset($primary[$this->pk()]);
+		return array_intersect_key($this->getPk(), $primary);
 	}
 }
