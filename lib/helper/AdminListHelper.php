@@ -1474,6 +1474,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
+	 * Список идентификаторов для групповых операций
+	 *
 	 * @return array
 	 */
 	protected function getIds()
@@ -1507,6 +1509,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	}
 
 	/**
+	 * Получить оставшуюся часть составного первичного ключа
+	 * 
 	 * @param $className
 	 * @param null $sectionClassName
 	 * @param $id
