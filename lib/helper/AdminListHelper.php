@@ -230,6 +230,21 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$this->groupActions($IDs, $_REQUEST['action']);
 		}
 
+		if (isset($_REQUEST['action']) || isset($_REQUEST['action_button']) && count($this->getErrors()) == 0) {
+			$listHelperClass = $this->getHelperClass(AdminListHelper::className());
+			$className = $listHelperClass::getModel();
+			$id = isset($_GET['ID']) ? $_GET['ID'] : null;
+			$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
+			if ($action != 'edit' && $_REQUEST['cancel'] != 'Y') {
+				$params = $_GET;
+				unset($params['action']);
+				unset($params['action_button']);
+				$this->customActions($action, $id);
+			}
+
+			LocalRedirect($listHelperClass::getUrl($params));
+		}
+
 		if ($this->isPopup()) {
 			$this->genPopupActionJS();
 		}
@@ -479,10 +494,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
 		$listHelperClass = $this->getHelperClass(AdminListHelper::className());
 
-		if (!isset($_REQUEST['model'])) {
-			$className = static::getModel();
-		}
-		else {
+		$className = static::getModel();
+		if (isset($_REQUEST['model'])) {
 			$className = $_REQUEST['model'];
 		}
 
@@ -495,7 +508,34 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if ($action == 'delete') {
 			if ($this->hasDeleteRights()) {
-				foreach ($this->getIds() as $id) {
+
+				$IDs = $this->getIds();
+
+				// ищем правильный урл для перехода
+				if (!empty($IDs[0])) {
+
+					$id = $IDs[0][$this->pk()];
+					$model = $className;
+					$listHelper = $listHelperClass;
+					if (strpos($id, 's') === 0) {
+						$model = $sectionClassName;
+						$listHelper = $this->getHelperClass(AdminSectionListHelper::className());
+						$id = substr($id, 1);
+					}
+
+					if ($listHelper) {
+						$id = array_merge([$this->pk() => $id], $this->getCommonPrimaryFilterById($model, null, $id));
+						$element = $model::getById($id)->Fetch();
+						$sectionField = $listHelper::getSectionField();
+						if ($element[$sectionField]) {
+							$_GET[$this->pk()] = $element[$sectionField];
+						} else {
+							unset($_GET['ID']);
+						}
+					}
+				}
+
+				foreach ($IDs as $id) {
 					$model = $className;
 					if (strpos($id[$this->pk()], 's') === 0) {
 						$model = $sectionClassName;
@@ -506,7 +546,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
-
 						$this->addErrors($result->getErrorMessages());
 						break;
 					}
@@ -519,18 +558,33 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if ($action == 'delete-section') {
 			if ($this->hasDeleteRights()) {
+
+				// ищем правильный урл для перехода
+				if (!empty($IDs[0])) {
+					$id = array_merge([$this->pk() => $IDs[0]], $this->getCommonPrimaryFilterById($sectionClassName, null, $IDs[0]));
+					$sectionListHelperClass = $this->getHelperClass(AdminSectionListHelper::className());
+					if ($sectionListHelperClass) {
+						$element = $sectionClassName::getById($id)->Fetch();
+						$sectionField = $sectionListHelperClass::getSectionField();
+						if ($element[$sectionField]) {
+							$_GET[$this->pk()] = $element[$sectionField];
+						} else {
+							unset($_GET['ID']);
+						}
+					}
+				}
+
 				foreach ($IDs as $id) {
 					$id = array_merge([$this->pk() => $id], $this->getCommonPrimaryFilterById($sectionClassName, null, $id));
-					// TODO: определение модели по id и удаление с отношениями
-					/*$entityManager = new static::$entityManager($sectionClassName, [], $id, $this);
+					$entityManager = new static::$entityManager($sectionClassName, [], $id, $this);
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
-
 						$this->addErrors($result->getErrorMessages());
 						break;
-					}*/
-					$sectionClassName::delete($id);
+					}
+					// TODO: старое удаление
+					//$sectionClassName::delete($id);
 				}
 			}
 			else {
@@ -1472,8 +1526,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$sectionClassName = $_REQUEST['model-section'];
 		}
 
+		$ids = [];
 		if (is_array($this->getPk()[$this->pk()]) ) {
-			$ids = [];
 			foreach ($this->getPk()[$this->pk()] as $id) {
 				$ids[] = array_merge(
 					[$this->pk() => $id],
