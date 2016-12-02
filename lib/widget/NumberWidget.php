@@ -25,7 +25,7 @@ class NumberWidget extends StringWidget
     {
         if ($this->getSettings('REQUIRED') == true) {
             $value = $this->getValue();
-            return !is_null($value);
+            return !is_null($value) && $value !== '';
         } else {
             return true;
         }
