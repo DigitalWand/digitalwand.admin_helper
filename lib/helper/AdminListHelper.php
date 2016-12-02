@@ -655,7 +655,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * Является ли список всплывающим окном для выбора элементов из списка.
 	 * В этой версии не должно быть операций удаления/перехода к редактированию.
 	 *
-     * @return boolean
+	 * @return boolean
 	 */
 	public function isPopup()
 	{
@@ -666,31 +666,31 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * Функция определяет js-функцию для двойонго клика по строке.
 	 * Вызывается в том случае, если окно открыто в режиме попапа.
 	 *
-     * @api
+	 * @api
 	 */
 	protected function genPopupActionJS()
 	{
 		$this->popupClickFunctionCode = '<script>
-            function ' . $this->popupClickFunctionName . '(data){
-                var input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '[' . $this->fieldPopupResultIndex . ']");
-                if(!input)
-                    input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '");
-                if(input)
-                {
-                    input.value = data.ID;
-                    if (window.opener.BX)
-                        window.opener.BX.fireEvent(input, "change");
-                }
-                var span = window.opener.document.getElementById("sp_' . md5($this->fieldPopupResultName) . '_' . $this->fieldPopupResultIndex . '");
-                if(!span)
-                    span = window.opener.document.getElementById("sp_' . $this->fieldPopupResultName . '");
-                if(!span)
-                    span = window.opener.document.getElementById("' . $this->fieldPopupResultName . '_link");
-                if(span)
-                    span.innerHTML = data["' . $this->fieldPopupResultElTitle . '"];
-                window.close();
-            }
-        </script>';
+			function ' . $this->popupClickFunctionName . '(data){
+				var input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '[' . $this->fieldPopupResultIndex . ']");
+				if(!input)
+					input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '");
+				if(input)
+				{
+					input.value = data.ID;
+					if (window.opener.BX)
+						window.opener.BX.fireEvent(input, "change");
+				}
+				var span = window.opener.document.getElementById("sp_' . md5($this->fieldPopupResultName) . '_' . $this->fieldPopupResultIndex . '");
+				if(!span)
+					span = window.opener.document.getElementById("sp_' . $this->fieldPopupResultName . '");
+				if(!span)
+					span = window.opener.document.getElementById("' . $this->fieldPopupResultName . '_link");
+				if(span)
+					span.innerHTML = data["' . $this->fieldPopupResultElTitle . '"];
+				window.close();
+			}
+		</script>';
 	}
 
 	/**
@@ -842,9 +842,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		else // Обычный вывод элементов без использования разделов
 		{
-            $this->totalRowsCount = $className::getCount($this->arFilter);
-            $res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
-            $res = new \CAdminResult($res, $this->getListTableID());
+			$this->totalRowsCount = $className::getCount($this->arFilter);
+			$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
+			$res = new \CAdminResult($res, $this->getListTableID());
 			$this->customNavStart($res);
 			// отключаем отображение всех элементов, если установлено св-во
 			$res->bShowAll = $this->showAll;
@@ -854,9 +854,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 				list($link, $name) = $this->getRow($data);
 				$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 				foreach ($this->fields as $code => $settings) {
-                    if(in_array($code, $listSelect)) {
-                        $this->addRowCell($row, $code, $data);
-                    }
+					if(in_array($code, $listSelect)) {
+						$this->addRowCell($row, $code, $data);
+					}
 				}
 				$row->AddActions($this->getRowActions($data));
 			}
@@ -949,7 +949,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Получение смешанного списка из разделов и элементов.
-     *
+	 *
 	 * @param $sectionsVisibleColumns
 	 * @param $elementVisibleColumns
 	 * @param $sort
@@ -961,31 +961,31 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
 		$elementEditHelperClass = $this->getHelperClass(AdminEditHelper::className());
 		$sectionField = $sectionEditHelperClass::getSectionField();
-        $sectionId = $_GET['SECTION_ID'] ? $_GET['SECTION_ID'] : $_GET['ID'];
+		$sectionId = $_GET['SECTION_ID'] ? $_GET['SECTION_ID'] : $_GET['ID'];
 		$returnData = array();
-        /**
-         * @var DataManager $sectionModel
-         */
+		/**
+		 * @var DataManager $sectionModel
+		 */
 		$sectionModel = $sectionEditHelperClass::getModel();
 		$sectionFilter = array();
 
-        // добавляем из фильтра те поля которые есть у разделов
-        foreach ($this->arFilter as $field => $value) {
-            $fieldName = $this->escapeFilterFieldName($field);
+		// добавляем из фильтра те поля которые есть у разделов
+		foreach ($this->arFilter as $field => $value) {
+			$fieldName = $this->escapeFilterFieldName($field);
 
-            if(!empty($this->tableColumnsMap[$fieldName])) {
-                $field = str_replace($fieldName, $this->tableColumnsMap[$fieldName], $field);
-                $fieldName = $this->tableColumnsMap[$fieldName];
-            }
+			if(!empty($this->tableColumnsMap[$fieldName])) {
+				$field = str_replace($fieldName, $this->tableColumnsMap[$fieldName], $field);
+				$fieldName = $this->tableColumnsMap[$fieldName];
+			}
 
-            if (in_array($fieldName, $sectionsVisibleColumns)) {
-                $sectionFilter[$field] = $value;
-            }
-        }
+			if (in_array($fieldName, $sectionsVisibleColumns)) {
+				$sectionFilter[$field] = $value;
+			}
+		}
 
-        $sectionFilter[$sectionField] = $sectionId;
+		$sectionFilter[$sectionField] = $sectionId;
 
-        $raw['SELECT'] = array_unique($raw['SELECT']);
+		$raw['SELECT'] = array_unique($raw['SELECT']);
 
 		// при использовании в качестве popup окна исключаем раздел из выборке
 		// что бы не было возможности сделать раздел родителем самого себя
@@ -1092,10 +1092,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param string $fieldName названия поля из фильтра
 	 * @return string название поля без без операторов фильтра
 	 */
-    protected function escapeFilterFieldName($fieldName)
-    {
-        return str_replace(array('!','<', '<=', '>', '>=', '><', '=', '%'), '', $fieldName);
-    }
+	protected function escapeFilterFieldName($fieldName)
+	{
+		return str_replace(array('!','<', '<=', '>', '>=', '><', '=', '%'), '', $fieldName);
+	}
 
 	/**
 	 * Выполняет CDBResult::NavNext с той разницей, что общее количество элементов берется не из count($arResult),
@@ -1142,12 +1142,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Преобразует данные строки, перед тем как добавлять их в список.
-     *
+	 *
 	 * @param $data
 	 *
-     * @see AdminListHelper::getList()
-     *
-     * @api
+	 * @see AdminListHelper::getList()
+	 *
+	 * @api
 	 */
 	protected function modifyRowData(&$data)
 	{
@@ -1155,13 +1155,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Настройки строки таблицы.
-     *
+	 *
 	 * @param array $data Данные текущей строки БД.
 	 * @param bool|string $class Класс хелпера через метод getUrl которого идет получение ссылки.
 	 *
-     * @return array Возвращает ссылку на детальную страницу и её название.
+	 * @return array Возвращает ссылку на детальную страницу и её название.
 	 *
-     * @api
+	 * @api
 	 */
 	protected function getRow($data, $class = false)
 	{
@@ -1189,9 +1189,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param $code Сивольный код поля.
 	 * @param $data Данные текущей строки.
 	 *
-     * @throws Exception
+	 * @throws Exception
 	 *
-     * @see HelperWidget::generateRow()
+	 * @see HelperWidget::generateRow()
 	 */
 	protected function addRowSectionCell($row, $code, $data)
 	{
@@ -1202,8 +1202,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		/**
-         * @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget
-         */
+		 * @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget
+		 */
 		$widget = $this->sectionFields[$code]['WIDGET'];
 
 		$widget->setHelper($this);
@@ -1226,12 +1226,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 *
 	 * @param $data Данные текущей строки.
 	 * @param $section Признак списка для раздела.
-     *
+	 *
 	 * @return array
-     *
-     * @see CAdminListRow::AddActions
-     *
-     * @api
+	 *
+	 * @see CAdminListRow::AddActions
+	 *
+	 * @api
 	 */
 	protected function getRowActions($data, $section = false)
 	{
@@ -1276,28 +1276,28 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Для каждой ячейки таблицы создаёт виджет соответствующего типа. Виджет подготавливает необходимый HTML-код
-     * для списка.
+	 * для списка.
 	 *
 	 * @param \CAdminListRow $row Объект строки списка записей.
 	 * @param string $code Сивольный код поля.
 	 * @param array $data Данные текущей строки.
 	 * @param bool $virtualCode
 	 *
-     * @throws Exception
+	 * @throws Exception
 	 *
-     * @see HelperWidget::generateRow()
+	 * @see HelperWidget::generateRow()
 	 */
 	protected function addRowCell($row, $code, $data, $virtualCode = false)
 	{
 		$widget = $this->createWidgetForField($code, $data);
 		$this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
 
-        // устанавливаем виртуальный код ячейки, используется при слиянии столбцов
+		// устанавливаем виртуальный код ячейки, используется при слиянии столбцов
 		if ($virtualCode) {
 			$widget->setCode($virtualCode);
 		}
 
-        $widget->generateRow($row, $data);
+		$widget->generateRow($row, $data);
 
 		if ($virtualCode) {
 			$widget->setCode($code);
@@ -1315,18 +1315,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param array $raw
 	 *
 	 * @return Result
-     *
-     * @api
+	 *
+	 * @api
 	 */
 	protected function getData($className, $filter, $select, $sort, $raw)
 	{
-        $limits = $this->getLimits();
+		$limits = $this->getLimits();
 		$parameters = array(
 			'filter' => $this->getElementsFilter($filter),
 			'select' => $select,
 			'order' => $sort,
-            'offset' => $limits[0],
-            'limit' => $limits[1],
+			'offset' => $limits[0],
+			'limit' => $limits[1],
 		);
 
 		/** @var Result $res */
@@ -1357,33 +1357,33 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	public function createFilterForm()
 	{
-        //нужно пробрасывать параметр popup в форму, если она является таковой
-        if($this->isPopup())
-        {
-            $this->additionalUrlParams['popup'] = 'Y';
-        }
+		//нужно пробрасывать параметр popup в форму, если она является таковой
+		if($this->isPopup())
+		{
+			$this->additionalUrlParams['popup'] = 'Y';
+		}
 
 		$this->setContext(AdminListHelper::OP_CREATE_FILTER_FORM);
 		print ' <form name="find_form" method="GET" action="' . static::getUrl($this->additionalUrlParams) . '?">';
 
-        $sectionHelper = $this->getHelperClass(AdminSectionEditHelper::className());
-        if($sectionHelper) {
-            $sectionsInterfaceSettings = static::getInterfaceSettings($sectionHelper::getViewName());
-            foreach($this->arFilterOpts as $code => &$name) {
-                if(!empty($this->tableColumnsMap[$code])) {
-                    $name = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']->getSettings('TITLE');
-                }
-            }
-        }
+		$sectionHelper = $this->getHelperClass(AdminSectionEditHelper::className());
+		if($sectionHelper) {
+			$sectionsInterfaceSettings = static::getInterfaceSettings($sectionHelper::getViewName());
+			foreach($this->arFilterOpts as $code => &$name) {
+				if(!empty($this->tableColumnsMap[$code])) {
+					$name = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']->getSettings('TITLE');
+				}
+			}
+		}
 
 		$oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->arFilterOpts);
 		$oFilter->Begin();
 
 		foreach ($this->arFilterOpts as $code => $name) {
 			$widget = $this->createWidgetForField($code);
-            if($widget->getSettings('TITLE') != $this->arFilterOpts[$code]) {
-                $widget->setSetting('TITLE', $this->arFilterOpts[$code]);
-            }
+			if($widget->getSettings('TITLE') != $this->arFilterOpts[$code]) {
+				$widget->setSetting('TITLE', $this->arFilterOpts[$code]);
+			}
 			$widget->showFilterHtml();
 		}
 
