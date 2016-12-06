@@ -13,3 +13,4 @@ $MESS['DIGITALWAND_ADMIN_HELPER_LIST_SECTION_DELETE'] = 'Удалить разд
 $MESS['DIGITALWAND_ADMIN_HELPER_LIST_SELECT'] = 'Выбрать';
 $MESS['DIGITALWAND_ADMIN_HELPER_LIST_DELETE_FORBIDDEN'] = 'Не хватает прав доступа для удаления элемента';
 $MESS['DIGITALWAND_ADMIN_HELPER_LIST_WRITE_FORBIDDEN'] = 'Не хватает прав доступа для изменения элемента';
+$MESS['DIGITALWAND_ADMIN_HELPER_LIST_SECTION_HELPER_NOT_FOUND'] = 'Хелпер для раздела не найден';
