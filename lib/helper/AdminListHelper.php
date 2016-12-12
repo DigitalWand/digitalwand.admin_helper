@@ -47,6 +47,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected $exportExcel = true;
 	/**
 	 * @var bool
+	 * Выводить в списке кол-во элементов пункт Все
+	 */
+	protected $showAll = true;
+	/**
+	 * @var bool
 	 * Является ли список всплывающим окном для выбора элементов из списка.
 	 * В этой версии не должно быть операций удаления/перехода к редактированию.
 	 */
@@ -876,8 +881,8 @@ abstract class AdminListHelper extends AdminBaseHelper
             $res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
             $res = new \CAdminResult($res, $this->getListTableID());
 			$this->customNavStart($res);
-            // отключаем отображение всех элементов
-            $res->bShowAll = false;
+			// отключаем отображение всех элементов, если установлено св-во
+			$res->bShowAll = $this->showAll;
 			$this->list->NavText($res->GetNavPrint(Loc::getMessage("PAGES")));
 			while ($data = $res->NavNext(false)) {
 				$this->modifyRowData($data);
@@ -1142,7 +1147,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			(int)$this->navParams['navParams']['PAGEN']
 		);
 		// отключаем отображение всех элементов
-		$res->bShowAll = false;
+		$res->bShowAll = $this->showAll;
 
 		$res->NavRecordCount = $this->totalRowsCount;
 		if ($res->NavRecordCount < 1)
