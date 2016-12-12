@@ -262,9 +262,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Подготавливает переменные, используемые для инициализации списка.
-     *
-     * - добавляет поля в список фильтра только если FILTER не задано false по умолчанию для виджета и поле не является
-     * полем связи сущностью разделов
+	 *
+	 * - добавляет поля в список фильтра только если FILTER не задано false по умолчанию для виджета и поле не является
+	 * полем связи сущностью разделов
 	 */
 	protected function prepareAdminVariables()
 	{
@@ -281,10 +281,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$widget = $this->createWidgetForField($code);
 
 			if (
-                ($sectionField != $code && $widget->getSettings('FILTER') !==false)
-                &&
-                ((isset($settings['FILTER']) AND $settings['FILTER'] != false) OR !isset($settings['FILTER']))
-            ) {
+				($sectionField != $code && $widget->getSettings('FILTER') !==false)
+				&&
+				((isset($settings['FILTER']) AND $settings['FILTER'] != false) OR !isset($settings['FILTER']))
+			) {
 
 				$this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_FILTER);
 				$filterVarName = 'find_' . $code;
@@ -398,10 +398,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Подготавливает массив с настройками контекстного меню. По-умолчанию добавлена кнопка "создать элемент".
-     *
+	 *
 	 * @see $contextMenu
-     *
-     * @api
+	 *
+	 * @api
 	 */
 	protected function getContextMenu()
 	{
@@ -465,16 +465,16 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Возвращает массив с настройками групповых действий над списком.
-     *
-     * @return array
-     *
+	 *
+	 * @return array
+	 *
 	 * @api
 	 */
 	protected function getGroupActions()
 	{
 		$result = array();
 
-        if (!$this->isPopup()) {
+		if (!$this->isPopup()) {
 			if ($this->hasDeleteRights()) {
 				$result = array('delete' => Loc::getMessage("DIGITALWAND_ADMIN_HELPER_LIST_DELETE"));
 			}
@@ -488,8 +488,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 *
 	 * @param array $IDs
 	 * @param string $action
-     *
-     * @api
+	 *
+	 * @api
 	 */
 	protected function groupActions($IDs, $action)
 	{
@@ -690,7 +690,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * Является ли список всплывающим окном для выбора элементов из списка.
 	 * В этой версии не должно быть операций удаления/перехода к редактированию.
 	 *
-     * @return boolean
+	 * @return boolean
 	 */
 	public function isPopup()
 	{
@@ -701,31 +701,31 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * Функция определяет js-функцию для двойонго клика по строке.
 	 * Вызывается в том случае, если окно открыто в режиме попапа.
 	 *
-     * @api
+	 * @api
 	 */
 	protected function genPopupActionJS()
 	{
 		$this->popupClickFunctionCode = '<script>
-            function ' . $this->popupClickFunctionName . '(data){
-                var input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '[' . $this->fieldPopupResultIndex . ']");
-                if(!input)
-                    input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '");
-                if(input)
-                {
-                    input.value = data.ID;
-                    if (window.opener.BX)
-                        window.opener.BX.fireEvent(input, "change");
-                }
-                var span = window.opener.document.getElementById("sp_' . md5($this->fieldPopupResultName) . '_' . $this->fieldPopupResultIndex . '");
-                if(!span)
-                    span = window.opener.document.getElementById("sp_' . $this->fieldPopupResultName . '");
-                if(!span)
-                    span = window.opener.document.getElementById("' . $this->fieldPopupResultName . '_link");
-                if(span)
-                    span.innerHTML = data["' . $this->fieldPopupResultElTitle . '"];
-                window.close();
-            }
-        </script>';
+			function ' . $this->popupClickFunctionName . '(data){
+				var input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '[' . $this->fieldPopupResultIndex . ']");
+				if(!input)
+					input = window.opener.document.getElementById("' . $this->fieldPopupResultName . '");
+				if(input)
+				{
+					input.value = data.ID;
+					if (window.opener.BX)
+						window.opener.BX.fireEvent(input, "change");
+				}
+				var span = window.opener.document.getElementById("sp_' . md5($this->fieldPopupResultName) . '_' . $this->fieldPopupResultIndex . '");
+				if(!span)
+					span = window.opener.document.getElementById("sp_' . $this->fieldPopupResultName . '");
+				if(!span)
+					span = window.opener.document.getElementById("' . $this->fieldPopupResultName . '_link");
+				if(span)
+					span.innerHTML = data["' . $this->fieldPopupResultElTitle . '"];
+				window.close();
+			}
+		</script>';
 	}
 
 	/**
@@ -877,9 +877,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		else // Обычный вывод элементов без использования разделов
 		{
-            $this->totalRowsCount = $className::getCount($this->getElementsFilter($this->arFilter));
-            $res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
-            $res = new \CAdminResult($res, $this->getListTableID());
+			$this->totalRowsCount = $className::getCount($this->getElementsFilter($this->arFilter));
+			$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
+			$res = new \CAdminResult($res, $this->getListTableID());
 			$this->customNavStart($res);
 			// отключаем отображение всех элементов, если установлено св-во
 			$res->bShowAll = $this->showAll;
@@ -889,9 +889,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 				list($link, $name) = $this->getRow($data);
 				$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 				foreach ($this->fields as $code => $settings) {
-                    if(in_array($code, $listSelect)) {
-                        $this->addRowCell($row, $code, $data);
-                    }
+					if(in_array($code, $listSelect)) {
+						$this->addRowCell($row, $code, $data);
+					}
 				}
 				$row->AddActions($this->getRowActions($data));
 			}
@@ -985,7 +985,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Получение смешанного списка из разделов и элементов.
-     *
+	 *
 	 * @param $sectionsVisibleColumns
 	 * @param $elementVisibleColumns
 	 * @param $sort
@@ -997,31 +997,31 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
 		$elementEditHelperClass = $this->getHelperClass(AdminEditHelper::className());
 		$sectionField = $sectionEditHelperClass::getSectionField();
-        $sectionId = $_GET['SECTION_ID'] ? $_GET['SECTION_ID'] : $_GET['ID'];
+		$sectionId = $_GET['SECTION_ID'] ? $_GET['SECTION_ID'] : $_GET['ID'];
 		$returnData = array();
-        /**
-         * @var DataManager $sectionModel
-         */
+		/**
+		 * @var DataManager $sectionModel
+		 */
 		$sectionModel = $sectionEditHelperClass::getModel();
 		$sectionFilter = array();
 
-        // добавляем из фильтра те поля которые есть у разделов
-        foreach ($this->arFilter as $field => $value) {
-            $fieldName = $this->escapeFilterFieldName($field);
+		// добавляем из фильтра те поля которые есть у разделов
+		foreach ($this->arFilter as $field => $value) {
+			$fieldName = $this->escapeFilterFieldName($field);
 
-            if(!empty($this->tableColumnsMap[$fieldName])) {
-                $field = str_replace($fieldName, $this->tableColumnsMap[$fieldName], $field);
-                $fieldName = $this->tableColumnsMap[$fieldName];
-            }
+			if(!empty($this->tableColumnsMap[$fieldName])) {
+				$field = str_replace($fieldName, $this->tableColumnsMap[$fieldName], $field);
+				$fieldName = $this->tableColumnsMap[$fieldName];
+			}
 
-            if (in_array($fieldName, $sectionsVisibleColumns)) {
-                $sectionFilter[$field] = $value;
-            }
-        }
+			if (in_array($fieldName, $sectionsVisibleColumns)) {
+				$sectionFilter[$field] = $value;
+			}
+		}
 
-        $sectionFilter[$sectionField] = $sectionId;
+		$sectionFilter[$sectionField] = $sectionId;
 
-        $raw['SELECT'] = array_unique($raw['SELECT']);
+		$raw['SELECT'] = array_unique($raw['SELECT']);
 
 		// при использовании в качестве popup окна исключаем раздел из выборке
 		// что бы не было возможности сделать раздел родителем самого себя
@@ -1128,10 +1128,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param string $fieldName названия поля из фильтра
 	 * @return string название поля без без операторов фильтра
 	 */
-    protected function escapeFilterFieldName($fieldName)
-    {
-        return str_replace(array('!','<', '<=', '>', '>=', '><', '=', '%'), '', $fieldName);
-    }
+	protected function escapeFilterFieldName($fieldName)
+	{
+		return str_replace(array('!','<', '<=', '>', '>=', '><', '=', '%'), '', $fieldName);
+	}
 
 	/**
 	 * Выполняет CDBResult::NavNext с той разницей, что общее количество элементов берется не из count($arResult),
@@ -1178,12 +1178,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Преобразует данные строки, перед тем как добавлять их в список.
-     *
+	 *
 	 * @param $data
 	 *
-     * @see AdminListHelper::getList()
-     *
-     * @api
+	 * @see AdminListHelper::getList()
+	 *
+	 * @api
 	 */
 	protected function modifyRowData(&$data)
 	{
@@ -1191,7 +1191,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Настройки строки таблицы.
-     *
+	 *
 	 * @param array $data Данные текущей строки БД.
 	 * @param bool|string $class Класс хелпера через метод getUrl которого идет получение ссылки.
 	 *
