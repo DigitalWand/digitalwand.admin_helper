@@ -872,7 +872,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 		else // Обычный вывод элементов без использования разделов
 		{
-            $this->totalRowsCount = $className::getCount($this->arFilter);
+            $this->totalRowsCount = $className::getCount($this->getElementsFilter($this->arFilter));
             $res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
             $res = new \CAdminResult($res, $this->getListTableID());
 			$this->customNavStart($res);
@@ -1027,7 +1027,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sectionSort = array();
 		$limitData = $this->getLimits();
 		// добавляем к общему количеству элементов количество разделов
-		$this->totalRowsCount = $sectionModel::getCount($sectionFilter);
+		$this->totalRowsCount = $sectionModel::getCount($this->getSectionsFilter($sectionFilter));
 		foreach ($sort as $field => $direction) {
 			if (in_array($field, $sectionsVisibleColumns)) {
 				$sectionSort[$field] = $direction;
@@ -1065,7 +1065,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$elementFilter = $this->arFilter;
 		$elementFilter[$elementEditHelperClass::getSectionField()] = $_GET['ID'];
 		// добавляем к общему количеству элементов количество элементов
-		$this->totalRowsCount += $elementModel::getCount($elementFilter);
+		$this->totalRowsCount += $elementModel::getCount($this->getElementsFilter($elementFilter));
 
 		// возвращае данные без элементов если разделы занимают всю страницу выборки
 		if (!empty($returnData) && $limitData[0] == 0 && $limitData[1] == $this->totalRowsCount) {
