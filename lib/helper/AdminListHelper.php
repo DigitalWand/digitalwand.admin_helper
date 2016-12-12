@@ -1195,9 +1195,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param array $data Данные текущей строки БД.
 	 * @param bool|string $class Класс хелпера через метод getUrl которого идет получение ссылки.
 	 *
-     * @return array Возвращает ссылку на детальную страницу и её название.
+	 * @return array Возвращает ссылку на детальную страницу и её название.
 	 *
-     * @api
+	 * @api
 	 */
 	protected function getRow($data, $class = false)
 	{
@@ -1225,9 +1225,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param $code Сивольный код поля.
 	 * @param $data Данные текущей строки.
 	 *
-     * @throws Exception
+	 * @throws Exception
 	 *
-     * @see HelperWidget::generateRow()
+	 * @see HelperWidget::generateRow()
 	 */
 	protected function addRowSectionCell($row, $code, $data)
 	{
@@ -1238,8 +1238,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		/**
-         * @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget
-         */
+		 * @var \DigitalWand\AdminHelper\Widget\HelperWidget $widget
+		 */
 		$widget = $this->sectionFields[$code]['WIDGET'];
 
 		$widget->setHelper($this);
@@ -1262,12 +1262,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 *
 	 * @param $data Данные текущей строки.
 	 * @param $section Признак списка для раздела.
-     *
+	 *
 	 * @return array
-     *
-     * @see CAdminListRow::AddActions
-     *
-     * @api
+	 *
+	 * @see CAdminListRow::AddActions
+	 *
+	 * @api
 	 */
 	protected function getRowActions($data, $section = false)
 	{
@@ -1312,28 +1312,28 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 	/**
 	 * Для каждой ячейки таблицы создаёт виджет соответствующего типа. Виджет подготавливает необходимый HTML-код
-     * для списка.
+	 * для списка.
 	 *
 	 * @param \CAdminListRow $row Объект строки списка записей.
 	 * @param string $code Сивольный код поля.
 	 * @param array $data Данные текущей строки.
 	 * @param bool $virtualCode
 	 *
-     * @throws Exception
+	 * @throws Exception
 	 *
-     * @see HelperWidget::generateRow()
+	 * @see HelperWidget::generateRow()
 	 */
 	protected function addRowCell($row, $code, $data, $virtualCode = false)
 	{
 		$widget = $this->createWidgetForField($code, $data);
 		$this->setContext(AdminListHelper::OP_ADD_ROW_CELL);
 
-        // устанавливаем виртуальный код ячейки, используется при слиянии столбцов
+		// устанавливаем виртуальный код ячейки, используется при слиянии столбцов
 		if ($virtualCode) {
 			$widget->setCode($virtualCode);
 		}
 
-        $widget->generateRow($row, $data);
+		$widget->generateRow($row, $data);
 
 		if ($virtualCode) {
 			$widget->setCode($code);
@@ -1351,18 +1351,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * @param array $raw
 	 *
 	 * @return Result
-     *
-     * @api
+	 *
+	 * @api
 	 */
 	protected function getData($className, $filter, $select, $sort, $raw)
 	{
-        $limits = $this->getLimits();
+		$limits = $this->getLimits();
 		$parameters = array(
 			'filter' => $this->getElementsFilter($filter),
 			'select' => $select,
 			'order' => $sort,
-            'offset' => $limits[0],
-            'limit' => $limits[1],
+			'offset' => $limits[0],
+			'limit' => $limits[1],
 		);
 
 		/** @var Result $res */
@@ -1393,33 +1393,33 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	public function createFilterForm()
 	{
-        //нужно пробрасывать параметр popup в форму, если она является таковой
-        if($this->isPopup())
-        {
-            $this->additionalUrlParams['popup'] = 'Y';
-        }
+		//нужно пробрасывать параметр popup в форму, если она является таковой
+		if($this->isPopup())
+		{
+			$this->additionalUrlParams['popup'] = 'Y';
+		}
 
 		$this->setContext(AdminListHelper::OP_CREATE_FILTER_FORM);
 		print ' <form name="find_form" method="GET" action="' . static::getUrl($this->additionalUrlParams) . '?">';
 
-        $sectionHelper = $this->getHelperClass(AdminSectionEditHelper::className());
-        if($sectionHelper) {
-            $sectionsInterfaceSettings = static::getInterfaceSettings($sectionHelper::getViewName());
-            foreach($this->arFilterOpts as $code => &$name) {
-                if(!empty($this->tableColumnsMap[$code])) {
-                    $name = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']->getSettings('TITLE');
-                }
-            }
-        }
+		$sectionHelper = $this->getHelperClass(AdminSectionEditHelper::className());
+		if($sectionHelper) {
+			$sectionsInterfaceSettings = static::getInterfaceSettings($sectionHelper::getViewName());
+			foreach($this->arFilterOpts as $code => &$name) {
+				if(!empty($this->tableColumnsMap[$code])) {
+					$name = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']->getSettings('TITLE');
+				}
+			}
+		}
 
 		$oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->arFilterOpts);
 		$oFilter->Begin();
 
 		foreach ($this->arFilterOpts as $code => $name) {
 			$widget = $this->createWidgetForField($code);
-            if($widget->getSettings('TITLE') != $this->arFilterOpts[$code]) {
-                $widget->setSetting('TITLE', $this->arFilterOpts[$code]);
-            }
+			if($widget->getSettings('TITLE') != $this->arFilterOpts[$code]) {
+				$widget->setSetting('TITLE', $this->arFilterOpts[$code]);
+			}
 			$widget->showFilterHtml();
 		}
 
