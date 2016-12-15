@@ -314,7 +314,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$this->arFilterOpts[$code] = $widget->getSettings('TITLE');
 			}
 
-			if (!isset($settings['LIST']) || $settings['LIST'] != false) {
+			if (!isset($settings['LIST']) || $settings['LIST'] === true) {
 				$this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_HEADER);
 				$mergedColumn = false;
 				// проверяем есть ли столбец раздела с таким названием
@@ -334,7 +334,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 						"id" => $code,
 						"content" => $widget->getSettings('LIST_TITLE') ? $widget->getSettings('LIST_TITLE') : $widget->getSettings('TITLE'),
 						"sort" => $code,
-						"default" => isset($settings['HEADER']) && $settings['HEADER'] == true,
+						"default" => !isset($settings['HEADER']) || $settings['HEADER'] === true,
 						'admin_list_helper_sort' => $widget->getSettings('LIST_COLUMN_SORT') ? $widget->getSettings('LIST_COLUMN_SORT') : 100
 					);
 				}
@@ -363,12 +363,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		foreach ($sectionsInterfaceSettings['FIELDS'] as $code => $settings) {
 
-			if (!isset($settings['LIST']) || $settings['LIST'] != false) {
+			if (!isset($settings['LIST']) || $settings['LIST'] === true) {
 				$arSectionsHeaders[] = array(
 					"id" => $code,
 					"content" => isset($settings['LIST_TITLE']) ? $settings['LIST_TITLE'] : $settings['TITLE'],
 					"sort" => $code,
-					"default" => isset($settings['HEADER']) && $settings['HEADER'] == true,
+					"default" => !isset($settings['HEADER']) || $settings['HEADER'] === true,
 					'admin_list_helper_sort' => isset($settings['LIST_COLUMN_SORT']) ? $settings['LIST_COLUMN_SORT'] : 100
 				);
 			}
