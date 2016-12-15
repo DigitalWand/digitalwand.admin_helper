@@ -749,7 +749,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$sectionsVisibleColumns = array();
 			foreach ($visibleColumns as $k => $v) {
 				if (isset($this->sectionFields[$v])) {
-					if(!in_array($k, $elementFields)){
+					if(!in_array($v, $elementFields)){
 						unset($visibleColumns[$k]);
 					}
 					$sectionsVisibleColumns[] = $v;
@@ -799,14 +799,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if ($sectionEditHelper) // Вывод разделов и элементов в одном списке
 		{
-			$elementVisibleColumns = [];
-			foreach ($visibleColumns as $k => $v) {
-				if (in_array($v, $elementFields)) {
-					$elementVisibleColumns[] = $v;
-				}
-			}
-
-			$mixedData = $this->getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw);
+			$mixedData = $this->getMixedData($sectionsVisibleColumns, $visibleColumns, $sort, $raw);
 			$res = new \CDbResult;
 			$res->InitFromArray($mixedData);
 			$res = new \CAdminResult($res, $this->getListTableID());
