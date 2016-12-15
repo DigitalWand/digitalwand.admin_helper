@@ -725,13 +725,21 @@ abstract class AdminListHelper extends AdminBaseHelper
 		if ($sectionEditHelper) { // если есть реализация класса AdminSectionEditHelper, значит используются разделы
 			$sectionHeaders = $this->getSectionsHeader();
 			foreach ($sectionHeaders as $sectionHeader) {
+				$found = false;
 				foreach ($headers as $i => $elementHeader) {
-					if ($sectionHeader['id'] == $elementHeader['id']) {
-						unset($headers[$i]);
+					if ($sectionHeader['content'] == $elementHeader['content'] || $sectionHeader['id'] == $elementHeader['id']) {
+						if (!$elementHeader['default'] && $sectionHeader['default']) {
+							$headers[$i] = $sectionHeader;
+						} else {
+							$found = true;	
+						}
+						break;
 					}
 				}
+				if (!$found) {
+					$headers[] = $sectionHeader;
+				}
 			}
-			$headers = array_merge($headers, $sectionHeaders);
 		}
 
 		// сортировка столбцов с сохранением исходной позиции в
@@ -752,7 +760,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 					if(!in_array($v, $elementFields)){
 						unset($visibleColumns[$k]);
 					}
-					$sectionsVisibleColumns[] = $v;
+					if (!isset($this->sectionFields[$v]['LIST']) || $this->sectionFields[$v]['LIST'] !== false) {
+						$sectionsVisibleColumns[] = $v;
+					}
 				}
 			}
 			$visibleColumns = array_values($visibleColumns);
@@ -770,11 +780,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 		);
 
 		foreach ($this->fields as $name => $settings) {
+			$key = array_search($name, $visibleColumns);
 			if ((isset($settings['VIRTUAL']) AND $settings['VIRTUAL'] == true)) {
-				$key = array_search($name, $visibleColumns);
 				unset($visibleColumns[$key]);
 				unset($this->arFilter[$name]);
 				unset($sort[$name]);
+			}
+			if (isset($settings['LIST']) && $settings['LIST'] === false) {
+				unset($visibleColumns[$key]);
 			}
 			if (isset($settings['FORCE_SELECT']) AND $settings['FORCE_SELECT'] == true) {
 				$visibleColumns[] = $name;
