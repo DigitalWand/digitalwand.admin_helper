@@ -352,9 +352,12 @@ class OrmElementWidget extends NumberWidget
         }
 
         if ($valueList) {
-            $rsEntity = $linkedModel::getList(array(
-                'filter' => array('ID' => $valueList)
-            ));
+            $entityQuery = $linkedModel::query();
+            $entityQuery->setFilter(['ID' => $valueList])->setSelect(['*']);
+            if (!empty($this->getSettings('TITLE_FIELD_NAME'))) {
+                $entityQuery->addSelect($this->getSettings('TITLE_FIELD_NAME'));
+            }
+            $rsEntity = $entityQuery->exec();
 
             while ($entity = $rsEntity->fetch()) {
                 if (in_array($entity['ID'], $valueList)) {
