@@ -171,7 +171,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 			$id = isset($_REQUEST[$this->pk()]) ? $_REQUEST[$this->pk()] : null;
 
-			if (!$this->data && !is_null($id)) {
+			if ($this->data === false && !is_null($id)) {
 				$this->show404();
 			}
 
