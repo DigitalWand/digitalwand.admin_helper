@@ -595,8 +595,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 						$this->addErrors($result->getErrorMessages());
 						break;
 					}
-					// TODO: старое удаление
-					//$sectionClassName::delete($id);
 				}
 			}
 			else {
