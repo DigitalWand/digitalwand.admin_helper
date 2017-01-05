@@ -510,11 +510,15 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		if ($action == 'delete') {
 			if ($this->hasDeleteRights()) {
-				$IDs = $this->getIds();
+				$complexPrimaryKey = is_array($className::getEntity()->getPrimary());
+				if ($complexPrimaryKey) {
+					$IDs = $this->getIds();
+				}
+
 				// ищем правильный урл для перехода
 				if (!empty($IDs[0])) {
 
-					$id = $IDs[0][$this->pk()];
+					$id = $complexPrimaryKey ? $IDs[0][$this->pk()] : $IDs[0];
 					$model = $className;
 
 					if (strpos($id, 's') === 0) {
