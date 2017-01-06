@@ -244,8 +244,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 				unset($params['action']);
 				unset($params['action_button']);
 				$this->customActions($action, $id);
+				LocalRedirect($listHelperClass::getUrl($params));
 			}
-			LocalRedirect($listHelperClass::getUrl($params));
 		}
 
 		if ($this->isPopup()) {
