@@ -569,7 +569,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * 
      * @api
 	 */
-	protected function customActions($action, $id)
+	protected function customActions($action, $id = null)
 	{
 		if ($action == 'delete' AND !is_null($id)) {
 			$result = $this->deleteElement($id);
