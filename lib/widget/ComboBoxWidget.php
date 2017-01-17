@@ -2,6 +2,7 @@
 
 namespace DigitalWand\AdminHelper\Widget;
 
+use Bitrix\Main\Entity\EnumField;
 use Bitrix\Main\Localization\Loc;
 
 Loc::loadMessages(__FILE__);
@@ -153,7 +154,7 @@ class ComboBoxWidget extends HelperWidget
      *      '789' => array('ID' => 789, 'TITLE' => 'pish-pish'),
      * )
      * </code>
-     * 
+     *
      * Результат будет выводиться в комбобоксе.
      * @return array
      */
@@ -169,6 +170,14 @@ class ComboBoxWidget extends HelperWidget
             }
         }elseif (is_array($variants) AND !empty($variants)) {
             return $this->formatVariants($variants);
+        }
+        else {
+        	// попытаемся получить список вариантов из описания поля в ORM
+	        $field = ($this->entityName)::getEntity()->getField($this->getCode());
+	        if ($field instanceof EnumField)
+	        {
+		        return $this->formatVariants($field->getValues());
+	        }
         }
 
         return array();
