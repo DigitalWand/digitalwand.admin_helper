@@ -244,8 +244,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 				unset($params['action']);
 				unset($params['action_button']);
 				$this->customActions($action, $id);
+				LocalRedirect($listHelperClass::getUrl($params));
 			}
-			LocalRedirect($listHelperClass::getUrl($params));
 		}
 
 		if ($this->isPopup()) {
@@ -634,9 +634,20 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$className = static::getModel();
 			$sectionsInterfaceSettings = false;
 		}
+
+		$idForLog = $id;
+		$complexPrimaryKey = is_array($className::getEntity()->getPrimary());
+		if ($complexPrimaryKey) {
+			$oldRequest = $_REQUEST;
+			$_REQUEST = [$this->pk() => $id];
+			$id = $this->getCommonPrimaryFilterById($className, null, $id);
+			$idForLog = json_encode($id);
+			$_REQUEST = $oldRequest;
+		}
+
 		$el = $className::getById($id);
 		if ($el->getSelectedRowsCount() == 0) {
-			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR"), $id);
+			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR"), $idForLog);
 			return;
 		}
 
@@ -672,7 +683,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$errors = $result->getErrorMessages();
 		if (empty($this->validationErrors) AND !empty($errors)) {
 			$fieldList = implode("\n", $errors);
-			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList, $id);
+			$this->list->AddGroupError(Loc::getMessage("MAIN_ADMIN_SAVE_ERROR") . " " . $fieldList, $idForLog);
 		}
 
 		if (!empty($errors)) {
