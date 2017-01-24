@@ -253,10 +253,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		// Получаем параметры навигации
-		$navSize = \CAdminResult::GetNavSize($this->getListTableID());
+		$navUniqSettings = array('sNavID' => $this->getListTableID());
 		$this->navParams = array(
-			'nPageSize' => $navSize,
-			'navParams' => \CAdminResult::GetNavParams($navSize)
+			'nPageSize' => \CAdminResult::GetNavSize($this->getListTableID()),
+			'navParams' => \CAdminResult::GetNavParams($navUniqSettings)
 		);
 	}
 
