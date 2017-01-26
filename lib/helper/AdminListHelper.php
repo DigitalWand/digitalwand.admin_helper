@@ -2,6 +2,8 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
+use Bitrix\Main\Context;
+use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
@@ -183,7 +185,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->prepareAdminVariables();
 
 		$className = static::getModel();
-		$oSort = new \CAdminSorting($this->getListTableID(), $this->pk(), "desc");
+		$oSort = $this->initSortingParameters(Context::getCurrent()->getRequest());
 		$this->list = new \CAdminList($this->getListTableID(), $oSort);
 		$this->list->InitFilter($this->arFilterFields);
 
@@ -259,6 +261,24 @@ abstract class AdminListHelper extends AdminBaseHelper
 			'navParams' => \CAdminResult::GetNavParams($navUniqSettings)
 		);
 	}
+
+    /**
+     * Инициализирует параметры сортировки на основании запроса
+     * @return \CAdminSorting
+     */
+	protected function initSortingParameters(HttpRequest $request)
+    {
+        $sortByParameter = 'by';
+        $sortOrderParameter = 'order';
+
+        $sortBy = $request->get($sortByParameter);
+        $sortBy = $sortBy ?: static::pk();
+
+        $sortOrder = $request->get($sortOrderParameter);
+        $sortOrder = $sortOrder ?: 'desc';
+
+        return new \CAdminSorting($this->getListTableID(), $sortBy, $sortOrder, $sortByParameter, $sortOrderParameter);
+    }
 
 	/**
 	 * Подготавливает переменные, используемые для инициализации списка.
