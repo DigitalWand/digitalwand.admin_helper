@@ -278,7 +278,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sortOrder = $sortOrder ?: 'desc';
 
 		return new \CAdminSorting($this->getListTableID(), $sortBy, $sortOrder, $sortByParameter, $sortOrderParameter);
-		}
+	}
 
 	/**
 	 * Подготавливает переменные, используемые для инициализации списка.
