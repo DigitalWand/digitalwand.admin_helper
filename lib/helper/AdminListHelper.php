@@ -262,23 +262,23 @@ abstract class AdminListHelper extends AdminBaseHelper
 		);
 	}
 
-    /**
-     * Инициализирует параметры сортировки на основании запроса
-     * @return \CAdminSorting
-     */
+	/**
+	 * Инициализирует параметры сортировки на основании запроса
+	 * @return \CAdminSorting
+	 */
 	protected function initSortingParameters(HttpRequest $request)
-    {
-        $sortByParameter = 'by';
-        $sortOrderParameter = 'order';
+	{
+		$sortByParameter = 'by';
+		$sortOrderParameter = 'order';
 
-        $sortBy = $request->get($sortByParameter);
-        $sortBy = $sortBy ?: static::pk();
+		$sortBy = $request->get($sortByParameter);
+		$sortBy = $sortBy ?: static::pk();
 
-        $sortOrder = $request->get($sortOrderParameter);
-        $sortOrder = $sortOrder ?: 'desc';
+		$sortOrder = $request->get($sortOrderParameter);
+		$sortOrder = $sortOrder ?: 'desc';
 
-        return new \CAdminSorting($this->getListTableID(), $sortBy, $sortOrder, $sortByParameter, $sortOrderParameter);
-    }
+		return new \CAdminSorting($this->getListTableID(), $sortBy, $sortOrder, $sortByParameter, $sortOrderParameter);
+		}
 
 	/**
 	 * Подготавливает переменные, используемые для инициализации списка.
