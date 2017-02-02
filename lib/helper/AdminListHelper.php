@@ -779,7 +779,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 						if (!$elementHeader['default'] && $sectionHeader['default']) {
 							$headers[$i] = $sectionHeader;
 						} else {
-							$found = true;	
+							$found = true;
 						}
 						break;
 					}
@@ -1021,7 +1021,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw)
 	{
+		/** @var AdminSectionEditHelper $sectionEditHelperClass */
 		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+		/** @var AdminEditHelper $elementEditHelperClass */
 		$elementEditHelperClass = $this->getHelperClass(AdminEditHelper::className());
 		$sectionField = $sectionEditHelperClass::getSectionField();
 		$sectionId = $_GET['SECTION_ID'] ? $_GET['SECTION_ID'] : $_GET['ID'];
@@ -1437,6 +1439,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 					$name = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']->getSettings('TITLE');
 				}
 			}
+
+			unset($name);
 		}
 
 		$oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->arFilterOpts);
