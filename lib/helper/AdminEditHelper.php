@@ -474,10 +474,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				$widget->processAfterSaveAction();
 			}
 
-			if (!$existing) {
-				LocalRedirect(static::getUrl(array('ID' => $result->getId(), 'lang' => LANGUAGE_ID)));
-			}
-
 			return true;
 		}
 
