@@ -507,6 +507,11 @@ abstract class HelperWidget
                 $to = $_REQUEST['find_' . $field . '_to'];
                 if (is_a($this, 'DateWidget')) {
                     $to = date('Y-m-d 23:59:59', strtotime($to));
+                } else if (
+                        is_a($this, '\DigitalWand\AdminHelper\Widget\DateTimeWidget') &&
+                        !preg_match('/\d{2}:\d{2}:\d{2}/', $to)
+                ) {
+                    $to = date('d.m.Y 23:59:59', strtotime($to));
                 }
             }
 
