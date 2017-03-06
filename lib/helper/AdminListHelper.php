@@ -2,6 +2,8 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
+use Bitrix\Main\Context;
+use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
@@ -183,7 +185,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->prepareAdminVariables();
 
 		$className = static::getModel();
-		$oSort = new \CAdminSorting($this->getListTableID(), $this->pk(), "desc");
+		$oSort = $this->initSortingParameters(Context::getCurrent()->getRequest());
 		$this->list = new \CAdminList($this->getListTableID(), $oSort);
 		$this->list->InitFilter($this->arFilterFields);
 
@@ -255,9 +257,27 @@ abstract class AdminListHelper extends AdminBaseHelper
 		// Получаем параметры навигации
 		$navUniqSettings = array('sNavID' => $this->getListTableID());
 		$this->navParams = array(
-			'nPageSize' => \CAdminResult::GetNavSize($navUniqSettings),
+			'nPageSize' => \CAdminResult::GetNavSize($this->getListTableID()),
 			'navParams' => \CAdminResult::GetNavParams($navUniqSettings)
 		);
+	}
+
+	/**
+	 * Инициализирует параметры сортировки на основании запроса
+	 * @return \CAdminSorting
+	 */
+	protected function initSortingParameters(HttpRequest $request)
+	{
+		$sortByParameter = 'by';
+		$sortOrderParameter = 'order';
+
+		$sortBy = $request->get($sortByParameter);
+		$sortBy = $sortBy ?: static::pk();
+
+		$sortOrder = $request->get($sortOrderParameter);
+		$sortOrder = $sortOrder ?: 'desc';
+
+		return new \CAdminSorting($this->getListTableID(), $sortBy, $sortOrder, $sortByParameter, $sortOrderParameter);
 	}
 
 	/**
@@ -1588,7 +1608,8 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function getCommonPrimaryFilterById($className, $sectionClassName = null, $id)
 	{
-		if (!empty($this->getHelperClass($sectionClassName)) && strpos($id, 's') === 0) {
+        $class = $this->getHelperClass($sectionClassName);
+        if (!empty($class) && strpos($id, 's') === 0) {
 			$primary = $sectionClassName::getEntity()->getPrimary();
 		} else {
 			$primary = $className::getEntity()->getPrimary();
