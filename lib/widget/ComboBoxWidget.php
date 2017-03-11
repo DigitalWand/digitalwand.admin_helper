@@ -177,7 +177,7 @@ class ComboBoxWidget extends HelperWidget
 	        $field = ($this->entityName)::getEntity()->getField($this->getCode());
 	        if ($field instanceof EnumField)
 	        {
-		        return $this->formatVariants($field->getValues());
+		        return $this->formatVariants(array_flip($field->getValues()));
 	        }
         }
 
