@@ -553,7 +553,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 						$id[$this->pk()] = substr($id[$this->pk()], 1);
 					}
 					/** @var EntityManager $entityManager */
-					$entityManager = new static::$entityManager($model, empty($this->data) ? [] : $this->data, $id,
+					$entityManager = new static::$entityManager($model, empty($this->data) ? array() : $this->data, $id,
 						$this);
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
@@ -592,7 +592,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 				foreach ($IDs as $id) {
 					$id = $this->getCommonPrimaryFilterById($sectionClassName, null, $id);
-					$entityManager = new static::$entityManager($sectionClassName, [], $id, $this);
+					$entityManager = new static::$entityManager($sectionClassName, array(), $id, $this);
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
@@ -643,7 +643,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$complexPrimaryKey = is_array($className::getEntity()->getPrimary());
 		if ($complexPrimaryKey) {
 			$oldRequest = $_REQUEST;
-			$_REQUEST = [$this->pk() => $id];
+			$_REQUEST = array($this->pk() => $id);
 			$id = $this->getCommonPrimaryFilterById($className, null, $id);
 			$idForLog = json_encode($id);
 			$_REQUEST = $oldRequest;
@@ -1552,13 +1552,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$sectionClassName = $_REQUEST['model-section'];
 		}
 
-		if (isset($this->getPk()[$this->pk()]) && is_array($this->getPk()[$this->pk()])) {
-			foreach ($this->getPk()[$this->pk()] as $id) {
+        $pkValue = $this->getPk();
+        if (isset($pkValue[$this->pk()]) && is_array($pkValue[$this->pk()])) {
+			foreach ($pkValue[$this->pk()] as $id) {
 				$class = strpos($id, 's') === 0 ? $sectionClassName : $className;
 				$ids[] = $this->getCommonPrimaryFilterById($class, null, $id);
 			}
 		} else {
-			$ids = [$this->getPk()];
+			$ids = array($this->getPk());
 		}
 
 		return $ids;
@@ -1574,14 +1575,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function getCommonPrimaryFilterById($className, $sectionClassName = null, $id)
 	{
-		if (!empty($this->getHelperClass($sectionClassName)) && strpos($id, 's') === 0) {
+		if ($this->getHelperClass($sectionClassName) && strpos($id, 's') === 0) {
 			$primary = $sectionClassName::getEntity()->getPrimary();
 		} else {
 			$primary = $className::getEntity()->getPrimary();
 		}
 
 		if (count($primary) === 1) {
-			return [$this->pk() => $id];
+			return array($this->pk() => $id);
 		}
 
 		$key = $this->getPk();
