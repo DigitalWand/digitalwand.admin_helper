@@ -58,6 +58,8 @@ use Bitrix\Main\Entity\DataManager;
  *     Указывает, можно ли редактировать данное поле в спискке</li>
  * <li><b>MULTIPLE</b> - bool является ли поле множественным</li>
  * <li><b>MULTIPLE_FIELDS</b> - bool поля используемые в хранилище множественных значений и их алиасы</li>
+ * <li><b>LIST</b> - отображать ли поле в списке доступных в настройках столбцов таблицы (по-умолчанию true)</li>
+ * <li><b>HEADER</b> - является ли столбец отображаемым по-умолчанию, если вывод столбцов таблицы не настроен (по-умолчанию true)</li>
  * </ul>
  *
  * Как сделать виджет множественным?
@@ -505,6 +507,11 @@ abstract class HelperWidget
                 $to = $_REQUEST['find_' . $field . '_to'];
                 if (is_a($this, 'DateWidget')) {
                     $to = date('Y-m-d 23:59:59', strtotime($to));
+                } else if (
+                        is_a($this, '\DigitalWand\AdminHelper\Widget\DateTimeWidget') &&
+                        !preg_match('/\d{2}:\d{2}:\d{2}/', $to)
+                ) {
+                    $to = date('d.m.Y 23:59:59', strtotime($to));
                 }
             }
 

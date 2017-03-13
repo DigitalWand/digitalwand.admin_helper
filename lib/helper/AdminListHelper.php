@@ -2,6 +2,8 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
+use Bitrix\Main\Context;
+use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
@@ -183,7 +185,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->prepareAdminVariables();
 
 		$className = static::getModel();
-		$oSort = new \CAdminSorting($this->getListTableID(), $this->pk(), "desc");
+		$oSort = $this->initSortingParameters(Context::getCurrent()->getRequest());
 		$this->list = new \CAdminList($this->getListTableID(), $oSort);
 		$this->list->InitFilter($this->arFilterFields);
 
@@ -255,9 +257,27 @@ abstract class AdminListHelper extends AdminBaseHelper
 		// Получаем параметры навигации
 		$navUniqSettings = array('sNavID' => $this->getListTableID());
 		$this->navParams = array(
-			'nPageSize' => \CAdminResult::GetNavSize($navUniqSettings),
+			'nPageSize' => \CAdminResult::GetNavSize($this->getListTableID()),
 			'navParams' => \CAdminResult::GetNavParams($navUniqSettings)
 		);
+	}
+
+	/**
+	 * Инициализирует параметры сортировки на основании запроса
+	 * @return \CAdminSorting
+	 */
+	protected function initSortingParameters(HttpRequest $request)
+	{
+		$sortByParameter = 'by';
+		$sortOrderParameter = 'order';
+
+		$sortBy = $request->get($sortByParameter);
+		$sortBy = $sortBy ?: static::pk();
+
+		$sortOrder = $request->get($sortOrderParameter);
+		$sortOrder = $sortOrder ?: 'desc';
+
+		return new \CAdminSorting($this->getListTableID(), $sortBy, $sortOrder, $sortByParameter, $sortOrderParameter);
 	}
 
 	/**
@@ -306,7 +326,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$this->arFilterOpts[$code] = $widget->getSettings('TITLE');
 			}
 
-			if (!isset($settings['HEADER']) OR $settings['HEADER'] != false) {
+			if (!isset($settings['LIST']) || $settings['LIST'] === true) {
 				$this->setContext(AdminListHelper::OP_ADMIN_VARIABLES_HEADER);
 				$mergedColumn = false;
 				// проверяем есть ли столбец раздела с таким названием
@@ -326,7 +346,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 						"id" => $code,
 						"content" => $widget->getSettings('LIST_TITLE') ? $widget->getSettings('LIST_TITLE') : $widget->getSettings('TITLE'),
 						"sort" => $code,
-						"default" => true,
+						"default" => !isset($settings['HEADER']) || $settings['HEADER'] === true,
 						'admin_list_helper_sort' => $widget->getSettings('LIST_COLUMN_SORT') ? $widget->getSettings('LIST_COLUMN_SORT') : 100
 					);
 				}
@@ -355,12 +375,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 		foreach ($sectionsInterfaceSettings['FIELDS'] as $code => $settings) {
 
-			if (isset($settings['HEADER']) && $settings['HEADER'] == true) {
+			if (!isset($settings['LIST']) || $settings['LIST'] === true) {
 				$arSectionsHeaders[] = array(
 					"id" => $code,
 					"content" => isset($settings['LIST_TITLE']) ? $settings['LIST_TITLE'] : $settings['TITLE'],
 					"sort" => $code,
-					"default" => true,
+					"default" => !isset($settings['HEADER']) || $settings['HEADER'] === true,
 					'admin_list_helper_sort' => isset($settings['LIST_COLUMN_SORT']) ? $settings['LIST_COLUMN_SORT'] : 100
 				);
 			}
@@ -773,13 +793,21 @@ abstract class AdminListHelper extends AdminBaseHelper
 		if ($sectionEditHelper) { // если есть реализация класса AdminSectionEditHelper, значит используются разделы
 			$sectionHeaders = $this->getSectionsHeader();
 			foreach ($sectionHeaders as $sectionHeader) {
+				$found = false;
 				foreach ($headers as $i => $elementHeader) {
-					if ($sectionHeader['id'] == $elementHeader['id']) {
-						unset($headers[$i]);
+					if ($sectionHeader['content'] == $elementHeader['content'] || $sectionHeader['id'] == $elementHeader['id']) {
+						if (!$elementHeader['default'] && $sectionHeader['default']) {
+							$headers[$i] = $sectionHeader;
+						} else {
+							$found = true;	
+						}
+						break;
 					}
 				}
+				if (!$found) {
+					$headers[] = $sectionHeader;
+				}
 			}
-			$headers = array_merge($headers, $sectionHeaders);
 		}
 
 		// сортировка столбцов с сохранением исходной позиции в
@@ -790,16 +818,19 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->list->AddHeaders($headers);
 		$visibleColumns = $this->list->GetVisibleHeaderColumns();
 
+		$modelClass = $this->getModel();
+		$elementFields = array_keys($modelClass::getEntity()->getFields());
+
 		if ($sectionEditHelper) {
-			$modelClass = $this->getModel();
-			$elementFields = array_keys($modelClass::getEntity()->getFields());
 			$sectionsVisibleColumns = array();
 			foreach ($visibleColumns as $k => $v) {
 				if (isset($this->sectionFields[$v])) {
-					if(!in_array($k, $elementFields)){
+					if(!in_array($v, $elementFields)){
 						unset($visibleColumns[$k]);
 					}
-					$sectionsVisibleColumns[] = $v;
+					if (!isset($this->sectionFields[$v]['LIST']) || $this->sectionFields[$v]['LIST'] !== false) {
+						$sectionsVisibleColumns[] = $v;
+					}
 				}
 			}
 			$visibleColumns = array_values($visibleColumns);
@@ -817,11 +848,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 		);
 
 		foreach ($this->fields as $name => $settings) {
+			$key = array_search($name, $visibleColumns);
 			if ((isset($settings['VIRTUAL']) AND $settings['VIRTUAL'] == true)) {
-				$key = array_search($name, $visibleColumns);
 				unset($visibleColumns[$key]);
 				unset($this->arFilter[$name]);
 				unset($sort[$name]);
+			}
+			if (isset($settings['LIST']) && $settings['LIST'] === false) {
+				unset($visibleColumns[$key]);
 			}
 			if (isset($settings['FORCE_SELECT']) AND $settings['FORCE_SELECT'] == true) {
 				$visibleColumns[] = $name;
