@@ -796,7 +796,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$sectionsVisibleColumns = array();
 			foreach ($visibleColumns as $k => $v) {
 				if (isset($this->sectionFields[$v])) {
-					if(!in_array($k, $elementFields)){
+					if(!in_array($v, $elementFields)){
 						unset($visibleColumns[$k]);
 					}
 					$sectionsVisibleColumns[] = $v;
