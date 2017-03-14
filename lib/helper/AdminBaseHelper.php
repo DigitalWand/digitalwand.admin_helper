@@ -254,6 +254,18 @@ abstract class AdminBaseHelper
 	protected $context = '';
 
 	/**
+	 * Флаг использования разделов, необходимо переопределять в дочернем классе
+	 * @var bool
+	 */
+	static protected $useSections = false;
+
+	/**
+	 * Правило именования хелперов для разделов по умолчанию
+	 * @var string
+	 */
+	static protected $sectionSuffix = 'Sections';
+
+	/**
 	 * @param array $fields список используемых полей и виджетов для них
 	 * @param array $tabs список вкладок для детальной страницы
 	 * @param string $module название модуля
