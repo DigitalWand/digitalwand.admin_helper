@@ -1,0 +1,28 @@
+language: php
+
+# This triggers builds to run on the new TravisCI infrastructure.
+# See: http://docs.travis-ci.com/user/workers/container-based-infrastructure/
+sudo: false
+
+dist: trusty
+
+php:
+  - 7.0
+
+matrix:
+  fast_finish: true
+
+before_install:
+  # PHP 5.3+: set up test environment using Composer.
+  - composer self-update
+  - composer require wimg/php-compatibility --dev --prefer-dist
+
+before_script:
+  # Install "PHPCompatibility coding standard" in PHP_CodeSniffer
+  # there is an issue with composer installation https://github.com/wimg/PHPCompatibility/issues/102
+  - mkdir --parents vendor/squizlabs/php_codesniffer/CodeSniffer/Standards/PHPCompatibility
+  - cp -R vendor/wimg/php-compatibility/* vendor/squizlabs/php_codesniffer/CodeSniffer/Standards/PHPCompatibility
+  - sed -i "s/short_open_tag = .*/short_open_tag = On/" ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+
+script:
+  - vendor/bin/phpcs -d date.timezone=Europe/Moscow --ignore=*/vendor/* --standard=PHPCompatibility --runtime-set testVersion 5.3-7.1 ./
