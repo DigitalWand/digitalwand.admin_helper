@@ -83,17 +83,17 @@ class IblockElementWidget extends NumberWidget
         $elementId = $this->getValue();
 
         if (!empty($elementId)) {
-            $rsElement = ElementTable::getList([
-                'filter' => [
+            $rsElement = ElementTable::getList(array(
+                'filter' => array(
                     'ID' => $elementId
-                ],
-                'select' => [
+                ),
+                'select' => array(
                     'ID',
                     'NAME',
                     'IBLOCK_ID',
                     'IBLOCK.IBLOCK_TYPE_ID',
-                ]
-            ]);
+                )
+            ));
 
             $element = $rsElement->fetch();
             
@@ -111,17 +111,17 @@ class IblockElementWidget extends NumberWidget
         $elementId = $this->getValue();
 
         if (!empty($elementId)) {
-            $rsElement = ElementTable::getList([
-                'filter' => [
+            $rsElement = ElementTable::getList(array(
+                'filter' => array(
                     'ID' => $elementId
-                ],
-                'select' => [
+                ),
+                'select' => array(
                     'ID',
                     'NAME',
                     'IBLOCK_ID',
                     'IBLOCK.IBLOCK_TYPE_ID',
-                ]
-            ]);
+                )
+            ));
             
             $element = $rsElement->fetch();
             
