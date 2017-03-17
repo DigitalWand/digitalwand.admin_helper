@@ -1452,9 +1452,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sectionHelper = $this->getHelperClass(AdminSectionEditHelper::className());
 		if($sectionHelper) {
 			$sectionsInterfaceSettings = static::getInterfaceSettings($sectionHelper::getViewName());
-			foreach($this->arFilterOpts as $code => &$name) {
+			foreach($this->arFilterOpts as $code => $name) {
 				if(!empty($this->tableColumnsMap[$code])) {
-					$name = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']->getSettings('TITLE');
+                    $newName = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']
+                        ->getSettings('TITLE');
+                    $this->arFilterOpts[$code] = $newName;
 				}
 			}
 		}
