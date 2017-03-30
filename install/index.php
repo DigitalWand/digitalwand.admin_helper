@@ -1,6 +1,8 @@
 <?php
 
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\EventManager;
+use Bitrix\Main\ModuleManager;
 
 Loc::loadMessages(__FILE__);
 
@@ -32,18 +34,8 @@ class digitalwand_admin_helper extends CModule
     {
         global $APPLICATION;
 
-        $eventManager = \Bitrix\Main\EventManager::getInstance();
-
-        RegisterModule($this->MODULE_ID);
+        $this->InstallDB();
         $this->InstallFiles();
-
-        $eventManager->registerEventHandler(
-            'main',
-            'OnPageStart',
-            $this->MODULE_ID,
-            '\DigitalWand\AdminHelper\EventHandlers',
-            'onPageStart'
-        );
 
         $APPLICATION->IncludeAdminFile(Loc::getMessage('ADMIN_HELPER_INSTALL_TITLE'), __DIR__ . '/step.php');
     }
@@ -52,11 +44,17 @@ class digitalwand_admin_helper extends CModule
     {
         global $APPLICATION;
 
-        $eventManager = \Bitrix\Main\EventManager::getInstance();
+        $this->UnInstallDB();
 
-        UnRegisterModule($this->MODULE_ID);
+        $APPLICATION->IncludeAdminFile(Loc::getMessage('ADMIN_HELPER_INSTALL_TITLE'), __DIR__ . '/unstep.php');
+    }
 
-        $eventManager->unRegisterEventHandler(
+    function InstallDB()
+    {
+        ModuleManager::registerModule($this->MODULE_ID);
+
+        $eventManager = EventManager::getInstance();
+        $eventManager->registerEventHandler(
             'main',
             'OnPageStart',
             $this->MODULE_ID,
@@ -64,7 +62,21 @@ class digitalwand_admin_helper extends CModule
             'onPageStart'
         );
 
-        $APPLICATION->IncludeAdminFile(Loc::getMessage('ADMIN_HELPER_INSTALL_TITLE'), __DIR__ . '/unstep.php');
+        return true;
+    }
+
+    function UnInstallDB()
+    {
+        ModuleManager::unRegisterModule($this->MODULE_ID);
+
+        $eventManager = EventManager::getInstance();
+        $eventManager->unRegisterEventHandler(
+            'main',
+            'OnPageStart',
+            $this->MODULE_ID,
+            '\DigitalWand\AdminHelper\EventHandlers',
+            'onPageStart'
+        );
     }
 
     function InstallFiles()
