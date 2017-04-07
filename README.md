@@ -1,5 +1,8 @@
-# digitalwand.admin_helper
-API для сборки кастомных админок в Битриксе
+# digitalwand/admin_helper_lib
+
+API для сборки кастомных админок в Битриксе.
+
+Standalone-версия в виде библиотеки, предназначена для использования в собственных модулях. Роутинг должен обеспечиваться средствами модуля-клиента, для примера, см. [admin/route.php](https://github.com/DigitalWand/digitalwand.admin_helper/blob/2.x/admin/route.php) из полной версии. 
 
 Документация по модулю доступна по адресу [http://api.digitalwand.ru/admin_helper/](http://api.digitalwand.ru/admin_helper/). Её же можно прочитать в комментариях в коде модуля. 
 
