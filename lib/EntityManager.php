@@ -151,7 +151,7 @@ class EntityManager
 	/**
 	 * @var array Данные для связей.
 	 */
-	protected $referencesData;
+	protected $referencesData = array();
 	/**
 	 * @var AdminBaseHelper Хелпер.
 	 */

@@ -171,13 +171,13 @@ abstract class AdminEditHelper extends AdminBaseHelper
 
 			$id = isset($_REQUEST[$this->pk()]) ? $_REQUEST[$this->pk()] : null;
 
-			if (!$this->data && !is_null($id)) {
+			if ($this->data === false && !is_null($id)) {
 				$this->show404();
 			}
 
 			if (isset($_REQUEST['action']) || isset($_REQUEST['action_button'])) {
 				$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : $_REQUEST['action_button'];
-				$this->customActions($action, $id);
+				$this->customActions($action, $this->getPk());
 			}
 		}
 
@@ -474,10 +474,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				$widget->processAfterSaveAction();
 			}
 
-			if (!$existing) {
-				LocalRedirect(static::getUrl(array('ID' => $result->getId(), 'lang' => LANGUAGE_ID)));
-			}
-
 			return true;
 		}
 
@@ -569,7 +565,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 	 * 
      * @api
 	 */
-	protected function customActions($action, $id)
+	protected function customActions($action, $id = null)
 	{
 		if ($action == 'delete' AND !is_null($id)) {
 			$result = $this->deleteElement($id);

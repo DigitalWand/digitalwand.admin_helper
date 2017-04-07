@@ -25,7 +25,7 @@ class NumberWidget extends StringWidget
     {
         if ($this->getSettings('REQUIRED') == true) {
             $value = $this->getValue();
-            return !is_null($value);
+            return !is_null($value) && $value !== '';
         } else {
             return true;
         }
@@ -43,6 +43,6 @@ class NumberWidget extends StringWidget
 
     protected function isNumber($value)
     {
-        return intval($value) OR floatval($value) OR doubleval($value) OR is_null($value) OR empty($value);
+        return is_numeric($value) OR is_null($value) OR empty($value);
     }
 }
