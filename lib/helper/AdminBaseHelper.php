@@ -2,6 +2,7 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
+use Bitrix\Main\Entity\ReferenceField;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
 use Bitrix\Main\Localization\Loc;
@@ -456,7 +457,10 @@ abstract class AdminBaseHelper
 		$modelClass = static::getModel();
 
 		foreach ($modelClass::getMap() as $field => $data) {
-			if ($data['data_type'] === $sectionModelClass) {
+			if ($data instanceof ReferenceField && $data->getDataType() . 'Table' === $sectionModelClass) {
+				return str_replace('=this.', '', reset($data->getReference()));
+			}
+			if (is_array($data) && $data['data_type'] === $sectionModelClass) {
 				return str_replace('=this.', '', key($data['reference']));
 			}
 		}
