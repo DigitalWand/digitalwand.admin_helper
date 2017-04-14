@@ -2,12 +2,11 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
-use Bitrix\Main\Context;
-use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
 use DigitalWand\AdminHelper\EntityManager;
+use DigitalWand\AdminHelper\Sorting;
 
 Loc::loadMessages(__FILE__);
 
@@ -185,7 +184,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->prepareAdminVariables();
 
 		$className = static::getModel();
-		$oSort = $this->initSortingParameters(Context::getCurrent()->getRequest());
+		$oSort = $this->initSortingParameters();
 		$this->list = new \CAdminList($this->getListTableID(), $oSort);
 		$this->list->InitFilter($this->arFilterFields);
 
@@ -266,18 +265,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 * Инициализирует параметры сортировки на основании запроса
 	 * @return \CAdminSorting
 	 */
-	protected function initSortingParameters(HttpRequest $request)
+	protected function initSortingParameters()
 	{
 		$sortByParameter = 'by';
 		$sortOrderParameter = 'order';
 
-		$sortBy = $request->get($sortByParameter);
-		$sortBy = $sortBy ?: static::pk();
-
-		$sortOrder = $request->get($sortOrderParameter);
-		$sortOrder = $sortOrder ?: 'desc';
-
-		return new \CAdminSorting($this->getListTableID(), $sortBy, $sortOrder, $sortByParameter, $sortOrderParameter);
+		return new Sorting($this->getListTableID(), $this->getPk(), 'desc', $sortByParameter, $sortOrderParameter, $this);
 	}
 
 	/**

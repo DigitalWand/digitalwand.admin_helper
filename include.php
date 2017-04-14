@@ -16,6 +16,7 @@ Loader::registerAutoLoadClasses('digitalwand.admin_helper',
         'DigitalWand\AdminHelper\Helper\AdminSectionEditHelper' => 'lib/helper/AdminSectionEditHelper.php',
 
         'DigitalWand\AdminHelper\EntityManager' => 'lib/EntityManager.php',
+        'DigitalWand\AdminHelper\Sorting' => 'lib/Sorting.php',
 
         'DigitalWand\AdminHelper\Widget\HelperWidget' => 'lib/widget/HelperWidget.php',
         'DigitalWand\AdminHelper\Widget\CheckboxWidget' => 'lib/widget/CheckboxWidget.php',
