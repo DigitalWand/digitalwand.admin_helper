@@ -255,9 +255,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		// Получаем параметры навигации
-		$navUniqSettings = array('sNavID' => $this->getListTableID());
+		$navUniqSettings = array(
+			'nPageSize' => 20,
+			'sNavID' => $this->getListTableID()
+		);
 		$this->navParams = array(
-			'nPageSize' => \CAdminResult::GetNavSize($this->getListTableID()),
+			'nPageSize' => \CAdminResult::GetNavSize($this->getListTableID(), $navUniqSettings),
 			'navParams' => \CAdminResult::GetNavParams($navUniqSettings)
 		);
 	}
@@ -799,7 +802,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 						if (!$elementHeader['default'] && $sectionHeader['default']) {
 							$headers[$i] = $sectionHeader;
 						} else {
-							$found = true;	
+							$found = true;
 						}
 						break;
 					}
@@ -1150,6 +1153,16 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 		}
 
+		/**
+		 * Вернем результат с первой страницы если на текущей нет элементов.
+		 * Для списка элементов аналогичная проверка есть в $this->getLimits()
+		 */
+		if (!count($returnData) && $this->totalRowsCount > 0)
+		{
+			$this->navParams['navParams']['PAGEN'] = 1;
+			return $this->getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw);
+		}
+
 		return $returnData;
 	}
 
@@ -1167,6 +1180,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$this->navParams['navParams']['PAGEN'] = 1;
 			}
 			$from = $this->navParams['nPageSize'] * ((int)$this->navParams['navParams']['PAGEN'] - 1);
+
+			/**
+			 * Вернем результат с первой страницы если на текущей нет элементов.
+			 *
+			 * $this->totalRowsCount еще не заполнен при смешанном отображении элементов и разделов,
+			 * в $this->>getMixedData() есть отдельная проверка на этот счет
+			 */
+			if ($this->totalRowsCount && $from >= $this->totalRowsCount)
+			{
+				$this->navParams['navParams']['PAGEN'] = 1;
+				$from = 0;
+			}
 
 			return array($from, $this->navParams['nPageSize']);
 		}
