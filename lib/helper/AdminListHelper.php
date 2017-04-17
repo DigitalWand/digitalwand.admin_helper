@@ -270,7 +270,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sortByParameter = 'by';
 		$sortOrderParameter = 'order';
 
-		return new Sorting($this->getListTableID(), $this->getPk(), 'desc', $sortByParameter, $sortOrderParameter, $this);
+		return new Sorting($this->getListTableID(), $this->pk(), 'desc', $sortByParameter, $sortOrderParameter, $this);
 	}
 
 	/**
