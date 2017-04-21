@@ -1253,7 +1253,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		if (empty($class)) {
 			$class = static::getHelperClass(AdminEditHelper::className());
 		}
-		if ($this->isPopup()) {
+		if ($this->isPopup() || !class_exists($class)) { // хелпера для редактирования может не быть
 			return array();
 		}
 		else {
@@ -1336,15 +1336,16 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$query = array_merge($this->additionalUrlParams,
 				array($this->pk() => $data[$this->pk()]));
 			if ($this->hasWriteRights()) {
-				$sectionHelperClass = static::getHelperClass(AdminSectionEditHelper::className());
-				$editHelperClass = static::getHelperClass(AdminEditHelper::className());
+				$editHelperClass = static::getHelperClass($section ? AdminSectionEditHelper::className() : AdminEditHelper::className());
 
-				$actions['edit'] = array(
-					'ICON' => 'edit',
-					'DEFAULT' => true,
-					'TEXT' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_EDIT'),
-					'ACTION' => $this->list->ActionRedirect($section ? $sectionHelperClass::getUrl($query) : $editHelperClass::getUrl($query))
-				);
+				if (class_exists($editHelperClass)) {
+					$actions['edit'] = array(
+						'ICON' => 'edit',
+						'DEFAULT' => true,
+						'TEXT' => Loc::getMessage('DIGITALWAND_ADMIN_HELPER_LIST_EDIT'),
+						'ACTION' => $this->list->ActionRedirect($editHelperClass::getUrl($query))
+					);
+				}
 			}
 			if ($this->hasDeleteRights()) {
 				$actions['delete'] = array(
