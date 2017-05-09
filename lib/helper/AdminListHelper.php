@@ -568,9 +568,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 				foreach ($IDs as $id) {
 					$model = $className;
-					if (strpos($id[$this->pk()], 's') === 0) {
+					$id = $complexPrimaryKey ? $id[$this->pk()] : $id;
+					if (strpos($id, 's') === 0) {
 						$model = $sectionClassName;
-						$id[$this->pk()] = substr($id[$this->pk()], 1);
+						$id = substr($id, 1);
 					}
 					/** @var EntityManager $entityManager */
 					$entityManager = new static::$entityManager($model, empty($this->data) ? array() : $this->data, $id,
