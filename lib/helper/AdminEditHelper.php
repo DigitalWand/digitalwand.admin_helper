@@ -150,8 +150,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			}
 
 			if (isset($url)) {
-				if (defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE === 1 && ($errors = $this->getErrors()))
-				{
+				if (defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE === 1 && ($errors = $this->getErrors())) {
 					ob_end_clean();
 					$jsMessage = \CUtil::JSEscape(implode("\n", $errors));
 					echo '<script>top.BX.WindowManager.Get().ShowError("' . $jsMessage . '");</script>';
