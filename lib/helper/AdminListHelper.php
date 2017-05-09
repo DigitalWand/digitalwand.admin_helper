@@ -426,38 +426,38 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getContextMenu()
 	{
 		$contextMenu = array();
+		/** @var AdminSectionEditHelper $sectionEditHelper */
 		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::className());
 		if ($sectionEditHelper) {
-			$this->additionalUrlParams['SECTION_ID'] = $_GET['ID'];
+			$sectionId = $_GET['SECTION_ID'] ?: $_GET['ID'] ?: null;
+			$this->additionalUrlParams['SECTION_ID'] = $sectionId = $sectionId > 0 ? (int)$sectionId : null;
 		}
 
 		/**
 		 * Если задан для разделов добавляем кнопку создать раздел и
 		 * кнопку на уровень вверх если это не корневой раздел
 		 */
-		if ($sectionEditHelper && isset($_GET['ID'])) {
-			if ($_GET['ID']) {
-				$params = $this->additionalUrlParams;
-				$sectionModel = $sectionEditHelper::getModel();
-				$sectionField = $sectionEditHelper::getSectionField();
-				$section = $sectionModel::getById(
-					$this->getCommonPrimaryFilterById($sectionModel, null, $_GET['ID'])
-				)->Fetch();
-				if ($this->isPopup()) {
-					$params = array_merge($_GET);
-				}
-				if ($section[$sectionField]) {
-					$params['ID'] = $section[$sectionField];
-				}
-				else {
-					unset($params['ID']);
-				}
-				unset($params['SECTION_ID']);
-				$contextMenu[] = $this->getButton('LIST_SECTION_UP', array(
-					'LINK' => static::getUrl($params),
-					'ICON' => 'btn_list'
-				));
+		if (isset($sectionId)) {
+			$params = $this->additionalUrlParams;
+			$sectionModel = $sectionEditHelper::getModel();
+			$sectionField = $sectionEditHelper::getSectionField();
+			$section = $sectionModel::getById(
+				$this->getCommonPrimaryFilterById($sectionModel, null, $sectionId)
+			)->Fetch();
+			if ($this->isPopup()) {
+				$params = array_merge($_GET);
 			}
+			if ($section[$sectionField]) {
+				$params['ID'] = $section[$sectionField];
+			}
+			else {
+				unset($params['ID']);
+			}
+			unset($params['SECTION_ID']);
+			$contextMenu[] = $this->getButton('LIST_SECTION_UP', array(
+				'LINK' => static::getUrl($params),
+				'ICON' => 'btn_list'
+			));
 		}
 
 		/**
