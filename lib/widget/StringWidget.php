@@ -25,7 +25,8 @@ class StringWidget extends HelperWidget
 {
     static protected $defaults = array(
         'FILTER' => '%', //Фильтрация по подстроке, а не по точному соответствию.
-        'EDIT_IN_LIST' => true
+        'EDIT_IN_LIST' => true,
+        'DEFAULT_VALUE' => ''
     );
 
     /**
@@ -35,6 +36,7 @@ class StringWidget extends HelperWidget
     {
         $style = $this->getSettings('STYLE');
         $size = $this->getSettings('SIZE');
+        $default_value = $this->getSettings('DEFAULT_VALUE');
 
         $link = '';
 
@@ -59,7 +61,7 @@ class StringWidget extends HelperWidget
 
         return '<input type="text"
                        name="' . $this->getEditInputName() . '"
-                       value="' . static::prepareToTagAttr($this->getValue()) . '"
+                       value="' . (!empty($default_value)?$default_value:static::prepareToTagAttr($this->getValue())) . '"
                        size="' . $size . '"
                        style="' . $style . '"/>' . $link;
     }
