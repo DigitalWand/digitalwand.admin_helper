@@ -1047,7 +1047,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw)
 	{
+		/** @var AdminSectionEditHelper $sectionEditHelperClass */
 		$sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+		/** @var AdminEditHelper $elementEditHelperClass */
 		$elementEditHelperClass = $this->getHelperClass(AdminEditHelper::className());
 		$sectionField = $sectionEditHelperClass::getSectionField();
 		$sectionId = $_GET['SECTION_ID'] ? $_GET['SECTION_ID'] : $_GET['ID'];
@@ -1487,6 +1489,8 @@ abstract class AdminListHelper extends AdminBaseHelper
                     $this->arFilterOpts[$code] = $newName;
 				}
 			}
+
+			unset($name);
 		}
 
 		$oFilter = new \CAdminFilter($this->getListTableID() . '_filter', $this->arFilterOpts);

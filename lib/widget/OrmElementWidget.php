@@ -20,6 +20,7 @@ Loc::loadMessages(__FILE__);
  * - `WINDOW_WIDTH` — (int) значение width для всплывающего окна выбора элемента.
  * - `WINDOW_HEIGHT` — (int) значение height для всплывающего окна выбора элемента.
  * - `TITLE_FIELD_NAME` — (string) название поля, из которого выводить имя элемента.
+ * - `ENUM_ACTIVE_FILTER` — (array) фильтр активных элементов для отображения в виде списка (если TEMPLATE = radio)
  *
  * @author Nik Samokhvalov <nik@samokhvalov.info>
  */
@@ -32,7 +33,8 @@ class OrmElementWidget extends NumberWidget
         'WINDOW_HEIGHT' => 500,
         'TITLE_FIELD_NAME' => 'TITLE',
         'TEMPLATE' => 'select',
-        'ADDITIONAL_URL_PARAMS' => array()
+        'ADDITIONAL_URL_PARAMS' => array(),
+        'ENUM_ACTIVE_FILTER' => array(),
     );
 
     /**
@@ -60,12 +62,19 @@ class OrmElementWidget extends NumberWidget
      */
     public function getEditHtml()
     {
-        if ($this->getSettings('TEMPLATE') == 'radio') {
-            $html = $this->genEditHtmlInputs();
-        } else {
-            $html = $this->getEditHtmlSelect();
-        }
+        switch ($this->getSettings('TEMPLATE')) {
+            case 'radio':
+                $html = $this->genEditHtmlInputs();
+                break;
 
+            case 'select':
+                $html = $this->getEditHtmlSelectBox();
+                break;
+
+            default:
+                $html = $this->getEditHtmlSelect();
+                break;
+        }
         return $html;
     }
 
@@ -133,8 +142,34 @@ class OrmElementWidget extends NumberWidget
 
         if (!is_null($elementList)) {
             foreach ($elementList as $key => $element) {
-                $return .= InputType("radio", $this->getEditInputName(), $element['ID'], $this->getValue(), false, $element['TITLE']);
+                $return .= InputType("radio", $this->getEditInputName(), $element['ID'], $this->getValue(), false, $element[$this->getSettings('TITLE_FIELD_NAME')]) . '<br/>';
             }
+        } else {
+            $return = Loc::getMessage('DIGITALWAND_AH_ORM_MISSING_ELEMENTS');
+        }
+
+        return $return;
+    }
+
+    /**
+     * Генерирует HTML с выбором элемента в виде элемента select.
+     *
+     * @return string
+     */
+    public function getEditHtmlSelectBox()
+    {
+        // Поскольку "select" уже используется не по назначению, нативные селект обзовём SelectBox, как в ядре
+        $return = '';
+
+        $elementList = $this->getOrmElementList();
+        $titleField = $this->getSettings('TITLE_FIELD_NAME');
+
+        if (!is_null($elementList)) {
+            // @todo Добавить SelectBoxMFromArray() для мультиселекта
+            $return .= SelectBoxFromArray($this->getEditInputName(), array(
+                'REFERENCE' => array_map(function ($item) use ($titleField) { return $item[$titleField]; }, $elementList),
+                'REFERENCE_ID' => array_map(function ($item) use ($titleField) { return $item['ID']; }, $elementList),
+            ), $this->getValue(), '');
         } else {
             $return = Loc::getMessage('DIGITALWAND_AH_ORM_MISSING_ELEMENTS');
         }
@@ -395,12 +430,10 @@ class OrmElementWidget extends NumberWidget
         $linkedModel = $this->getLinkedModel();
 
         $rsEntity = $linkedModel::getList(array(
-            'filter' => array(
-                'ACTIVE' => 1
-            ),
+            'filter' => $this->getSettings('ENUM_ACTIVE_FILTER'),
             'select' => array(
                 'ID',
-                'TITLE'
+                $this->getSettings('TITLE_FIELD_NAME')
             )
         ));
 

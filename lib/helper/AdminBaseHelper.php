@@ -454,6 +454,7 @@ abstract class AdminBaseHelper
 		}
 
 		$sectionModelClass = $sectionListHelper::getModel();
+		$sectionModelClass = preg_replace('/Table$/', '', $sectionModelClass);
 		$modelClass = static::getModel();
 
 		foreach ($modelClass::getMap() as $field => $data) {
