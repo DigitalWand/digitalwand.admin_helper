@@ -2,6 +2,7 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
+use Bitrix\Main\Entity\ReferenceField;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
 use Bitrix\Main\Localization\Loc;
@@ -335,7 +336,7 @@ abstract class AdminBaseHelper
 	 * Привязывает класса хелпера из которого вызывается к интерфесу, используется при получении
 	 * данных об элементах управления из интерфейса.
 	 *
-	 * @param $class
+     * @param $class
 	 */
 	public static function setInterfaceClass($class)
 	{
@@ -344,7 +345,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает класс интерфейса к которому привязан хелпер из которого вызван метод.
-	 *
+     *
 	 * @return array
 	 */
 	public static function getInterfaceClass()
@@ -357,7 +358,7 @@ abstract class AdminBaseHelper
 	 *
 	 * @param string $module имя текущего модуля
 	 * @param $interfaceSettings
-	 *
+     *
 	 * @return bool
 	 * @internal
 	 */
@@ -388,7 +389,7 @@ abstract class AdminBaseHelper
 	 *
 	 * @param string $module Модуль, для которого нужно получить настройки.
 	 * @param string $view Название представления.
-	 *
+     *
 	 * @return array
 	 * @internal
 	 */
@@ -405,8 +406,8 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает имя текущего представления.
-	 *
+     * Возвращает имя текущего представления.
+     *
 	 * @return string
 	 * @api
 	 */
@@ -457,20 +458,11 @@ abstract class AdminBaseHelper
 		$modelClass = static::getModel();
 
 		foreach ($modelClass::getMap() as $field => $data) {
-			if (is_object($data)) {
-				$dataType = $data->getDataType();
-			} else {
-				$dataType = $data['data_type'];
+			if ($data instanceof ReferenceField && $data->getDataType() . 'Table' === $sectionModelClass) {
+				return str_replace('=this.', '', reset($data->getReference()));
 			}
-
-			if ($dataType === $sectionModelClass) {
-				if (is_object($data)) {
-					$reference = $data->getReference();
-				} else {
-					$reference = $data['reference'];
-				}
-
-				return str_replace('=this.', '', key($reference));
+			if (is_array($data) && $data['data_type'] === $sectionModelClass) {
+				return str_replace('=this.', '', key($data['reference']));
 			}
 		}
 
@@ -478,8 +470,8 @@ abstract class AdminBaseHelper
 	}
 
 	/**
-	 * Возвращает имя класса используемой модели.
-	 *
+     * Возвращает имя класса используемой модели.
+     *
 	 * @return \Bitrix\Main\Entity\DataManager|string
 	 *
 	 * @throws \Bitrix\Main\ArgumentException
@@ -498,9 +490,9 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает имя модуля. Если оно не задано, то определяет автоматически из namespace класса.
-	 *
+     *
 	 * @return string
-	 *
+     *
 	 * @throws LoaderException
 	 * @api
 	 */
@@ -538,15 +530,15 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает модифцированный массив с описанием элемента управления по его коду. Берет название и настройки
-	 * из админ-интерфейса, если они не заданы — используются значения по умолчанию.
-	 *
-	 * Если элемент управления описан в админ-интерфейсе, то дефолтные настройки и описанные в классе интерфейса
-	 * будут совмещены (смержены).
-	 *
+     * из админ-интерфейса, если они не заданы — используются значения по умолчанию.
+     *
+     * Если элемент управления описан в админ-интерфейсе, то дефолтные настройки и описанные в классе интерфейса
+     * будут совмещены (смержены).
+     *
 	 * @param $code
 	 * @param $params
 	 * @param array $keys
-	 *
+     *
 	 * @return array|bool
 	 */
 	protected function getButton($code, $params, $keys = array('name', 'TEXT'))
@@ -578,11 +570,11 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает список полей интерфейса.
-	 *
+     *
 	 * @see AdminBaseHelper::setInterfaceSettings()
-	 *
+     *
 	 * @return array
-	 *
+     *
 	 * @api
 	 */
 	public function getFields()
@@ -597,14 +589,14 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Получает название таблицы используемой модели.
-	 *
+     *
 	 * @return mixed
 	 */
 	public function table()
 	{
 		/**
-		 * @var DataManager $className
-		 */
+         * @var DataManager $className
+         */
 		$className = static::getModel();
 
 		return $className::getTableName();
@@ -634,11 +626,11 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает первичный ключ таблицы используемой модели разделов. Для HL-инфоблоков битрикс - всегда ID.
-	 * Но может поменяться для какой-либо другой сущности.
-	 *
+     * Но может поменяться для какой-либо другой сущности.
+     *
 	 * @return string
 	 *
-	 * @api
+     * @api
 	 */
 	public function sectionPk()
 	{
@@ -647,10 +639,10 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Устанавливает заголовок раздела в админке.
-	 *
+     *
 	 * @param string $title
 	 *
-	 * @api
+     * @api
 	 */
 	public function setTitle($title)
 	{
@@ -659,11 +651,11 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Функция для обработки дополнительных операций над элементами в админке. Как правило, должно оканчиваться
-	 * LocalRedirect после внесения изменений.
+     * LocalRedirect после внесения изменений.
 	 *
 	 * @param string $action Название действия.
 	 * @param null|int $id ID элемента.
-	 *
+     *
 	 * @api
 	 */
 	protected function customActions($action, $id = null)
@@ -673,10 +665,10 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Выполняется проверка прав на доступ к сущности.
-	 *
+     *
 	 * @return bool
 	 *
-	 * @api
+     * @api
 	 */
 	protected function hasRights()
 	{
@@ -685,10 +677,10 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Выполняется проверка прав на выполнение операций чтения элементов.
-	 *
+     *
 	 * @return bool
 	 *
-	 * @api
+     * @api
 	 */
 	protected function hasReadRights()
 	{
@@ -698,8 +690,8 @@ abstract class AdminBaseHelper
 	/**
 	 * Выполняется проверка прав на выполнение операций редактирования элементов.
 	 *
-	 * @return bool
-	 *
+     * @return bool
+     *
 	 * @api
 	 */
 	protected function hasWriteRights()
@@ -709,12 +701,12 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Проверка прав на изменение определенного элемента.
-	 *
+     *
 	 * @param array $element Массив данных элемента.
-	 *
+     *
 	 * @return bool
-	 *
-	 * @api
+     *
+     * @api
 	 */
 	protected function hasWriteRightsElement($element = array())
 	{
@@ -727,9 +719,9 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Выполняется проверка прав на выполнение опреаций удаления элементов.
-	 *
+     *
 	 * @return bool
-	 *
+     *
 	 * @api
 	 */
 	protected function hasDeleteRights()
@@ -739,7 +731,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Выводит сообщения об ошибках.
-	 *
+     *
 	 * @internal
 	 */
 	protected function showMessages()
@@ -768,7 +760,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * @return bool|\CApplicationException
-	 *
+     *
 	 * @internal
 	 */
 	protected function getLastException()
@@ -795,10 +787,10 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Добавляет ошибку или массив ошибок для показа пользователю.
-	 *
+     *
 	 * @param array|string $errors
 	 *
-	 * @api
+     * @api
 	 */
 	public function addErrors($errors)
 	{
@@ -816,10 +808,10 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Добавляет уведомление или список уведомлений для показа пользователю.
-	 *
+     *
 	 * @param array|string $notes
 	 *
-	 * @api
+     * @api
 	 */
 	public function addNotes($notes)
 	{
@@ -838,7 +830,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * @return bool|array
-	 *
+     *
 	 * @api
 	 */
 	protected function getErrors()
@@ -856,7 +848,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * @return bool
-	 *
+     *
 	 * @api
 	 */
 	protected function getNotes()
@@ -882,7 +874,7 @@ abstract class AdminBaseHelper
 	 * то это будет вглядеть так $listHelperClass = static::getHelperClass(AdminListHelper::getClass())
 	 *
 	 * @param $class
-	 *
+     *
 	 * @return string|bool
 	 */
 	public function getHelperClass($class)
@@ -920,7 +912,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает относительный namespace до хелперов в виде URL параметра.
-	 *
+     *
 	 * @return string
 	 */
 	public static function getEntityCode()
@@ -946,12 +938,12 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает URL страницы редактирования класса данного представления.
-	 *
+     *
 	 * @param array $params
 	 *
-	 * @return string
+     * @return string
 	 *
-	 * @api
+     * @api
 	 */
 	public static function getEditPageURL($params = array())
 	{
@@ -966,18 +958,18 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает URL страницы редактирования класса данного представления.
-	 *
+     *
 	 * @param array $params
 	 *
-	 * @return string
+     * @return string
 	 *
-	 * @api
+     * @api
 	 */
 	public static function getSectionsEditPageURL($params = array())
 	{
 		$sectionEditHelperClass = str_replace('List', 'SectionsEdit', get_called_class());
 
-		if (empty(static::$sectionsEditViewName) && class_exists($sectionEditHelperClass)) {
+        if (empty(static::$sectionsEditViewName) && class_exists($sectionEditHelperClass)) {
 			return $sectionEditHelperClass::getViewURL($sectionEditHelperClass::getViewName(), static::$sectionsEditPageUrl, $params);
 		}
 		else {
@@ -987,18 +979,18 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Возвращает URL страницы списка класса данного представления.
-	 *
+     *
 	 * @param array $params
 	 *
-	 * @return string
+     * @return string
 	 *
-	 * @api
+     * @api
 	 */
 	public static function getListPageURL($params = array())
 	{
 		$listHelperClass = str_replace('Edit', 'List', get_called_class());
 
-		if (empty(static::$listViewName) && class_exists($listHelperClass)) {
+        if (empty(static::$listViewName) && class_exists($listHelperClass)) {
 			return $listHelperClass::getViewURL($listHelperClass::getViewName(), static::$listPageUrl, $params);
 		}
 		else {
@@ -1012,10 +1004,10 @@ abstract class AdminBaseHelper
 	 * @param string $viewName Название представления.
 	 * @param string $defaultURL Позволяет указать URL напрямую. Если указано, то будет использовано это значение.
 	 * @param array $params Дополнительные query-параметры в URL.
-	 *
+     *
 	 * @return string
 	 *
-	 * @internal
+     * @internal
 	 */
 	public static function getViewURL($viewName, $defaultURL, $params = array())
 	{
@@ -1043,23 +1035,23 @@ abstract class AdminBaseHelper
 	/**
 	 * Возвращает адрес обработчика запросов к админ. интерфейсу.
 	 *
-	 * @return string
+     * @return string
 	 *
-	 * @api
+     * @api
 	 */
 	public static function getRouterURL()
 	{
 		return static::$routerUrl;
 	}
 
-	/**
-	 * Возвращает URL страницы с хелпером. Как правило, метод вызывается при генерации административного
-	 * меню (`menu.php`).
-	 *
-	 * @param array $params Дополнительные GET-параметры для подстановки в URL.
-	 *
-	 * @return string
-	 */
+    /**
+     * Возвращает URL страницы с хелпером. Как правило, метод вызывается при генерации административного
+     * меню (`menu.php`).
+     *
+     * @param array $params Дополнительные GET-параметры для подстановки в URL.
+     *
+     * @return string
+     */
 	public static function getUrl(array $params = array())
 	{
 		return static::getViewURL(static::getViewName(), null, $params);
@@ -1071,11 +1063,11 @@ abstract class AdminBaseHelper
 	 * @param string $code Ключ поля для данного виджета (должен быть в массиве $data).
 	 * @param array $data Данные объекта в виде массива.
 	 *
-	 * @return bool|\DigitalWand\AdminHelper\Widget\HelperWidget
-	 *
+     * @return bool|\DigitalWand\AdminHelper\Widget\HelperWidget
+     *
 	 * @throws \DigitalWand\AdminHelper\Helper\Exception
 	 *
-	 * @internal
+     * @internal
 	 */
 	public function createWidgetForField($code, &$data = array())
 	{
@@ -1103,7 +1095,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Метод вызывается при создании виджета для текущего поля. Может быть использован для изменения настроек виджета
-	 * на основе передаваемых данных.
+     * на основе передаваемых данных.
 	 *
 	 * @param \DigitalWand\AdminHelper\Widget\HelperWidget $widget
 	 * @param array $data
@@ -1114,7 +1106,7 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Если класс не объявлен, то битрикс генерирует новый класс в рантайме. Если класс уже есть, то возвращаем имя
-	 * как есть.
+     * как есть.
 	 *
 	 * @param $className
 	 * @return \Bitrix\Highloadblock\DataManager
@@ -1148,21 +1140,21 @@ abstract class AdminBaseHelper
 	 * Получает запись из БД с информацией об HL.
 	 *
 	 * @param string $className Название класса, обязательно без Table в конце и без указания неймспейса.
-	 *
+     *
 	 * @return array|false
 	 *
-	 * @throws \Bitrix\Main\ArgumentException
+     * @throws \Bitrix\Main\ArgumentException
 	 */
 	public static function getHLEntityInfo($className)
 	{
 		$className = str_replace('\\', '', $className);
 		$pos = strripos($className, 'Table', -5);
 
-		if ($pos !== false) {
+        if ($pos !== false) {
 			$className = substr($className, 0, $pos);
 		}
 
-		$parameters = array(
+        $parameters = array(
 			'filter' => array(
 				'NAME' => $className,
 			),
@@ -1187,10 +1179,10 @@ abstract class AdminBaseHelper
 
 	/**
 	 * Выставляет текущий контекст исполнения.
-	 *
+     *
 	 * @param $context
 	 *
-	 * @see $context
+     * @see $context
 	 */
 	protected function setContext($context)
 	{

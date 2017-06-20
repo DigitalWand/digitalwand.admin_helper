@@ -150,6 +150,12 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			}
 
 			if (isset($url)) {
+				if (defined('BX_PUBLIC_MODE') && BX_PUBLIC_MODE === 1 && ($errors = $this->getErrors())) {
+					ob_end_clean();
+					$jsMessage = \CUtil::JSEscape(implode("\n", $errors));
+					echo '<script>top.BX.WindowManager.Get().ShowError("' . $jsMessage . '");</script>';
+					die();
+				}
 				$this->setAppException($this->app->GetException());
 				LocalRedirect($url);
 			}
@@ -472,10 +478,6 @@ abstract class AdminEditHelper extends AdminBaseHelper
 				/** @var HelperWidget $widget */
 				$widget->setData($this->data);
 				$widget->processAfterSaveAction();
-			}
-
-			if (!$existing) {
-				LocalRedirect(static::getUrl(array('ID' => $result->getId(), 'lang' => LANGUAGE_ID)));
 			}
 
 			return true;

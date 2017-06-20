@@ -2,6 +2,8 @@
 
 namespace DigitalWand\AdminHelper\Helper;
 
+use Bitrix\Main\Context;
+use Bitrix\Main\HttpRequest;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Entity\DataManager;
 use Bitrix\Main\DB\Result;
@@ -183,7 +185,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$this->prepareAdminVariables();
 
 		$className = static::getModel();
-		$oSort = new \CAdminSorting($this->getListTableID(), $this->pk(), "desc");
+		$oSort = $this->initSortingParameters(Context::getCurrent()->getRequest());
 		$this->list = new \CAdminList($this->getListTableID(), $oSort);
 		$this->list->InitFilter($this->arFilterFields);
 
@@ -253,11 +255,32 @@ abstract class AdminListHelper extends AdminBaseHelper
 		}
 
 		// Получаем параметры навигации
-		$navUniqSettings = array('sNavID' => $this->getListTableID());
+		$navUniqSettings = array(
+			'nPageSize' => 20,
+			'sNavID' => $this->getListTableID()
+		);
 		$this->navParams = array(
-			'nPageSize' => \CAdminResult::GetNavSize($navUniqSettings),
+			'nPageSize' => \CAdminResult::GetNavSize($this->getListTableID(), $navUniqSettings),
 			'navParams' => \CAdminResult::GetNavParams($navUniqSettings)
 		);
+	}
+
+	/**
+	 * Инициализирует параметры сортировки на основании запроса
+	 * @return \CAdminSorting
+	 */
+	protected function initSortingParameters(HttpRequest $request)
+	{
+		$sortByParameter = 'by';
+		$sortOrderParameter = 'order';
+
+		$sortBy = $request->get($sortByParameter);
+		$sortBy = $sortBy ?: static::pk();
+
+		$sortOrder = $request->get($sortOrderParameter);
+		$sortOrder = $sortOrder ?: 'desc';
+
+		return new \CAdminSorting($this->getListTableID(), $sortBy, $sortOrder, $sortByParameter, $sortOrderParameter);
 	}
 
 	/**
@@ -406,38 +429,38 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getContextMenu()
 	{
 		$contextMenu = array();
+		/** @var AdminSectionEditHelper $sectionEditHelper */
 		$sectionEditHelper = static::getHelperClass(AdminSectionEditHelper::className());
 		if ($sectionEditHelper) {
-			$this->additionalUrlParams['SECTION_ID'] = $_GET['ID'];
+			$sectionId = $_GET['SECTION_ID'] ?: $_GET['ID'] ?: null;
+			$this->additionalUrlParams['SECTION_ID'] = $sectionId = $sectionId > 0 ? (int)$sectionId : null;
 		}
 
 		/**
 		 * Если задан для разделов добавляем кнопку создать раздел и
 		 * кнопку на уровень вверх если это не корневой раздел
 		 */
-		if ($sectionEditHelper && isset($_GET['ID'])) {
-			if ($_GET['ID']) {
-				$params = $this->additionalUrlParams;
-				$sectionModel = $sectionEditHelper::getModel();
-				$sectionField = $sectionEditHelper::getSectionField();
-				$section = $sectionModel::getById(
-					$this->getCommonPrimaryFilterById($sectionModel, null, $_GET['ID'])
-				)->Fetch();
-				if ($this->isPopup()) {
-					$params = array_merge($_GET);
-				}
-				if ($section[$sectionField]) {
-					$params['ID'] = $section[$sectionField];
-				}
-				else {
-					unset($params['ID']);
-				}
-				unset($params['SECTION_ID']);
-				$contextMenu[] = $this->getButton('LIST_SECTION_UP', array(
-					'LINK' => static::getUrl($params),
-					'ICON' => 'btn_list'
-				));
+		if (isset($sectionId)) {
+			$params = $this->additionalUrlParams;
+			$sectionModel = $sectionEditHelper::getModel();
+			$sectionField = $sectionEditHelper::getSectionField();
+			$section = $sectionModel::getById(
+				$this->getCommonPrimaryFilterById($sectionModel, null, $sectionId)
+			)->Fetch();
+			if ($this->isPopup()) {
+				$params = array_merge($_GET);
 			}
+			if ($section[$sectionField]) {
+				$params['ID'] = $section[$sectionField];
+			}
+			else {
+				unset($params['ID']);
+			}
+			unset($params['SECTION_ID']);
+			$contextMenu[] = $this->getButton('LIST_SECTION_UP', array(
+				'LINK' => static::getUrl($params),
+				'ICON' => 'btn_list'
+			));
 		}
 
 		/**
@@ -548,12 +571,13 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 				foreach ($IDs as $id) {
 					$model = $className;
-					if (strpos($id[$this->pk()], 's') === 0) {
+					$id = $complexPrimaryKey ? $id[$this->pk()] : $id;
+					if (strpos($id, 's') === 0) {
 						$model = $sectionClassName;
-						$id[$this->pk()] = substr($id[$this->pk()], 1);
+						$id = substr($id, 1);
 					}
 					/** @var EntityManager $entityManager */
-					$entityManager = new static::$entityManager($model, empty($this->data) ? [] : $this->data, $id,
+					$entityManager = new static::$entityManager($model, empty($this->data) ? array() : $this->data, $id,
 						$this);
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
@@ -592,7 +616,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 
 				foreach ($IDs as $id) {
 					$id = $this->getCommonPrimaryFilterById($sectionClassName, null, $id);
-					$entityManager = new static::$entityManager($sectionClassName, [], $id, $this);
+					$entityManager = new static::$entityManager($sectionClassName, array(), $id, $this);
 					$result = $entityManager->delete();
 					$this->addNotes($entityManager->getNotes());
 					if(!$result->isSuccess()){
@@ -643,7 +667,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$complexPrimaryKey = is_array($className::getEntity()->getPrimary());
 		if ($complexPrimaryKey) {
 			$oldRequest = $_REQUEST;
-			$_REQUEST = [$this->pk() => $id];
+			$_REQUEST = array($this->pk() => $id);
 			$id = $this->getCommonPrimaryFilterById($className, null, $id);
 			$idForLog = json_encode($id);
 			$_REQUEST = $oldRequest;
@@ -848,8 +872,10 @@ abstract class AdminListHelper extends AdminBaseHelper
 		// Поля для селекта (перевернутый массив)
 		$listSelect = array_flip($visibleColumns);
 		foreach ($this->fields as $code => $settings) {
-			$widget = $this->createWidgetForField($code);
-			$widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
+            if($_REQUEST['del_filter'] !== 'Y') {
+                $widget = $this->createWidgetForField($code);
+                $widget->changeGetListOptions($this->arFilter, $visibleColumns, $sort, $raw);
+            }
 			// Множественные поля не должны быть в селекте
 			if (!empty($settings['MULTIPLE'])) {
 				unset($listSelect[$code]);
@@ -1043,7 +1069,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$fieldName = $this->tableColumnsMap[$fieldName];
 			}
 
-			if (in_array($fieldName, $sectionsVisibleColumns)) {
+			if (isset($this->sectionFields[$fieldName])) {
 				$sectionFilter[$field] = $value;
 			}
 		}
@@ -1097,7 +1123,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$elementLimit = $limitData[1] - count($returnData);
 		$elementModel = static::$model;
 		$elementFilter = $this->arFilter;
-		$elementFilter[$elementEditHelperClass::getSectionField()] = $_GET['ID'];
+		$elementFilter[$elementEditHelperClass::getSectionField()] = $sectionId;
 		// добавляем к общему количеству элементов количество элементов
 		$this->totalRowsCount += $elementModel::getCount($this->getElementsFilter($elementFilter));
 
@@ -1130,6 +1156,16 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 		}
 
+		/**
+		 * Вернем результат с первой страницы если на текущей нет элементов.
+		 * Для списка элементов аналогичная проверка есть в $this->getLimits()
+		 */
+		if (!count($returnData) && $this->totalRowsCount > 0)
+		{
+			$this->navParams['navParams']['PAGEN'] = 1;
+			return $this->getMixedData($sectionsVisibleColumns, $elementVisibleColumns, $sort, $raw);
+		}
+
 		return $returnData;
 	}
 
@@ -1147,6 +1183,18 @@ abstract class AdminListHelper extends AdminBaseHelper
 				$this->navParams['navParams']['PAGEN'] = 1;
 			}
 			$from = $this->navParams['nPageSize'] * ((int)$this->navParams['navParams']['PAGEN'] - 1);
+
+			/**
+			 * Вернем результат с первой страницы если на текущей нет элементов.
+			 *
+			 * $this->totalRowsCount еще не заполнен при смешанном отображении элементов и разделов,
+			 * в $this->>getMixedData() есть отдельная проверка на этот счет
+			 */
+			if ($this->totalRowsCount && $from >= $this->totalRowsCount)
+			{
+				$this->navParams['navParams']['PAGEN'] = 1;
+				$from = 0;
+			}
 
 			return array($from, $this->navParams['nPageSize']);
 		}
@@ -1434,9 +1482,11 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$sectionHelper = $this->getHelperClass(AdminSectionEditHelper::className());
 		if($sectionHelper) {
 			$sectionsInterfaceSettings = static::getInterfaceSettings($sectionHelper::getViewName());
-			foreach($this->arFilterOpts as $code => &$name) {
+			foreach($this->arFilterOpts as $code => $name) {
 				if(!empty($this->tableColumnsMap[$code])) {
-					$name = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']->getSettings('TITLE');
+                    $newName = $sectionsInterfaceSettings['FIELDS'][$this->tableColumnsMap[$code]]['WIDGET']
+                        ->getSettings('TITLE');
+                    $this->arFilterOpts[$code] = $newName;
 				}
 			}
 
@@ -1570,13 +1620,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 			$sectionClassName = $_REQUEST['model-section'];
 		}
 
-		if (isset($this->getPk()[$this->pk()]) && is_array($this->getPk()[$this->pk()])) {
-			foreach ($this->getPk()[$this->pk()] as $id) {
+        $pkValue = $this->getPk();
+        if (isset($pkValue[$this->pk()]) && is_array($pkValue[$this->pk()])) {
+			foreach ($pkValue[$this->pk()] as $id) {
 				$class = strpos($id, 's') === 0 ? $sectionClassName : $className;
 				$ids[] = $this->getCommonPrimaryFilterById($class, null, $id);
 			}
 		} else {
-			$ids = [$this->getPk()];
+			$ids = array($this->getPk());
 		}
 
 		return $ids;
@@ -1592,14 +1643,14 @@ abstract class AdminListHelper extends AdminBaseHelper
 	 */
 	protected function getCommonPrimaryFilterById($className, $sectionClassName = null, $id)
 	{
-		if (!empty($this->getHelperClass($sectionClassName)) && strpos($id, 's') === 0) {
+		if ($this->getHelperClass($sectionClassName) && strpos($id, 's') === 0) {
 			$primary = $sectionClassName::getEntity()->getPrimary();
 		} else {
 			$primary = $className::getEntity()->getPrimary();
 		}
 
 		if (count($primary) === 1) {
-			return [$this->pk() => $id];
+			return array($this->pk() => $id);
 		}
 
 		$key = $this->getPk();
