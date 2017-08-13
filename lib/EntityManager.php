@@ -379,6 +379,7 @@ class EntityManager
 			$referenceDataSet = $this->linkDataSet($reference, $referenceDataSet);
 			$referenceStaleDataSet = $this->getReferenceDataSet($reference);
 			$fieldWidget = $this->getFieldWidget($fieldName);
+			$variantsField = $fieldWidget->getSettings('VARIANTS');
 
 			// Создание и обновление привязанных данных
 			$processedDataIds = array();
@@ -408,7 +409,10 @@ class EntityManager
 
 			if($result->isSuccess()){ // Удаление записей, которые не были созданы или обновлены
 				foreach ($referenceStaleDataSet as $referenceData) {
-					if (!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds)) {
+					if (
+						!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds) &&
+						array_key_exists($referenceData[$fieldWidget->getMultipleField('VALUE')], $variantsField)
+					) {
 						$result = $this->deleteReferenceData($reference,
 							$referenceData[$fieldWidget->getMultipleField('ID')]);
 						if(!$result->isSuccess()) {
