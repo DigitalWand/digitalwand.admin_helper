@@ -869,8 +869,6 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$visibleColumns = array_unique($visibleColumns);
 		$sectionsVisibleColumns = array_unique($sectionsVisibleColumns);
 
-		// Поля для селекта (перевернутый массив)
-		$listSelect = array_flip($visibleColumns);
 		foreach ($this->fields as $code => $settings) {
             if($_REQUEST['del_filter'] !== 'Y') {
                 $widget = $this->createWidgetForField($code);
@@ -878,11 +876,9 @@ abstract class AdminListHelper extends AdminBaseHelper
             }
 			// Множественные поля не должны быть в селекте
 			if (!empty($settings['MULTIPLE'])) {
-				unset($listSelect[$code]);
+            	$visibleColumns = array_diff($visibleColumns, array($code));
 			}
 		}
-		// Поля для селекта (множественные поля отфильтрованы)
-		$listSelect = array_flip($listSelect);
 
 		if ($sectionEditHelper) // Вывод разделов и элементов в одном списке
 		{
@@ -919,7 +915,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 					}
 					$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 					foreach ($this->fields as $code => $settings) {
-						if(in_array($code, $listSelect)) {
+						if(in_array($code, $visibleColumns)) {
 							$this->addRowCell($row, $code, $data,
 							isset($this->tableColumnsMap[$code]) ? $this->tableColumnsMap[$code] : false);
 						}
@@ -931,7 +927,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		else // Обычный вывод элементов без использования разделов
 		{
 			$this->totalRowsCount = $className::getCount($this->getElementsFilter($this->arFilter));
-			$res = $this->getData($className, $this->arFilter, $listSelect, $sort, $raw);
+			$res = $this->getData($className, $this->arFilter, $visibleColumns, $sort, $raw);
 			$res = new \CAdminResult($res, $this->getListTableID());
 			$this->customNavStart($res);
 			// отключаем отображение всех элементов, если установлено св-во
@@ -942,7 +938,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 				list($link, $name) = $this->getRow($data);
 				$row = $this->list->AddRow($data[$this->pk()], $data, $link, $name);
 				foreach ($this->fields as $code => $settings) {
-					if(in_array($code, $listSelect)) {
+					if(in_array($code, $visibleColumns)) {
 						$this->addRowCell($row, $code, $data);
 					}
 				}
