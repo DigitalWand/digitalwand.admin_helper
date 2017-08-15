@@ -376,8 +376,8 @@ class EntityManager
 			 * @var Entity\ReferenceField $reference
 			 */
 			$reference = $fields[$fieldName];
-			$referenceDataSet = $this->linkDataSet($reference, $referenceDataSet);
 			$referenceStaleDataSet = $this->getReferenceDataSet($reference);
+			$referenceDataSet = $this->linkDataSet($reference, $referenceDataSet, $referenceStaleDataSet);
 			$fieldWidget = $this->getFieldWidget($fieldName);
 			$variantsField = $fieldWidget->getSettings('VARIANTS');
 
@@ -599,10 +599,14 @@ class EntityManager
 	 *
 	 * @return array
 	 */
-	protected function linkData(Entity\ReferenceField $reference, array $referenceData)
+	protected function linkData(Entity\ReferenceField $reference, array $referenceData, array $referenceStaleDataSet)
 	{
 		// Парсим условия связи двух моделей
 		$referenceConditions = $this->getReferenceConditions($reference);
+
+		// Получение ID связанного элемента
+		if ($ID = $this->getLinkDataId($referenceData, $referenceStaleDataSet))
+			$referenceData['ID'] = $ID;
 
 		foreach ($referenceConditions as $refField => $refValue) {
 			// Так как в условиях связи между моделями в основном отношения типа this.field => ref.field или
@@ -629,13 +633,35 @@ class EntityManager
 	 *
 	 * @return array
 	 */
-	protected function linkDataSet(Entity\ReferenceField $reference, array $referenceDataSet)
+	protected function linkDataSet(
+		Entity\ReferenceField $reference,
+		array $referenceDataSet,
+		array $referenceStaleDataSet
+	)
 	{
 		foreach ($referenceDataSet as $key => $referenceData) {
-			$referenceDataSet[$key] = $this->linkData($reference, $referenceData);
+			$referenceDataSet[$key] = $this->linkData($reference, $referenceData, $referenceStaleDataSet);
 		}
 
 		return $referenceDataSet;
+	}
+
+	/**
+	 * Возвращает ID связанного элемента. Для поиска используются ранее полученные данные,
+	 * Что позволяет избежать дополнительных запросов для поиска ID элементов.
+	 * В звязанной таблице имя поля идентификатора всегда 'ID', а имя поля значения всегда 'VALUE'
+	 *
+	 * @param array $referenceDataSet устанавливаемое значение
+	 * @param array $referenceStaleDataSet установленные ранее значения
+	 */
+	protected function getLinkDataId(array $referenceDataSet, array $referenceStaleDataSet)
+	{
+		foreach ($referenceStaleDataSet as $item) {
+			if ($item['VALUE'] == $referenceDataSet['VALUE'])
+				return $item['ID'];
+		}
+
+		return null;
 	}
 
 	/**
