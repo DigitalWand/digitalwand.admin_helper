@@ -668,11 +668,11 @@ class EntityManager
 			// Поиск this.... в левом условии
 			$thisFieldMatch = array();
 			$refFieldMatch = array();
-			if (preg_match('/=this\.([A-z]+)/', $leftCondition, $thisFieldMatch) == 1) {
+			if (preg_match('/=this\.([A-z_]+)/', $leftCondition, $thisFieldMatch) == 1) {
 				$thisField = $thisFieldMatch[1];
 			} // Поиск ref.... в левом условии
 			else {
-				if (preg_match('/ref\.([A-z]+)/', $leftCondition, $refFieldMatch) == 1) {
+				if (preg_match('/ref\.([A-z_]+)/', $leftCondition, $refFieldMatch) == 1) {
 					$refField = $refFieldMatch[1];
 				}
 			}
@@ -688,7 +688,7 @@ class EntityManager
 				}
 			} // Поиск ref.... в правом условии
 			else {
-				if (preg_match('/ref\.([A-z]+)/', $rightCondition, $refFieldMatch) > 0) {
+				if (preg_match('/ref\.([A-z_]+)/', $rightCondition, $refFieldMatch) > 0) {
 					$refField = $refFieldMatch[1];
 				}
 			}
