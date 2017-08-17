@@ -153,7 +153,7 @@ class EntityManager
 	 */
 	protected $referencesData = array();
 	/**
-	 * Вспомогательный класс метода $this->ReferenceDataSet()
+	 * Вспомогательный массив метода $this->ReferenceDataSet()
 	 * @var array Данные для связей (то чт уже было в базе).
 	 */
 	protected $referenceDataSave = array();
