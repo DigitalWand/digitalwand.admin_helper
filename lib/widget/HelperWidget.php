@@ -1027,7 +1027,7 @@ abstract class HelperWidget
                  * @private
                  */
                 _getAddButton: function () {
-                    return '<input type="button" value="Добавить..." class="add-field-button">';
+                    return '<input type="button" value="<?=Loc::getMessage('DIGITALWAND_AH_MULTI_ADD')?>" class="add-field-button">';
                 },
                 /**
                  * Отслеживание событий
