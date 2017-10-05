@@ -232,7 +232,7 @@ abstract class HelperWidget
      */
     public function showBasicEditField($isPKField)
     {
-        if ($this->getSettings('HIDE_WHEN_CREATE') AND !isset($this->data['ID'])) {
+        if ($this->getSettings('HIDE_WHEN_CREATE') AND !isset($this->data[$this->helper->pk()])) {
             return;
         }
 
@@ -297,11 +297,11 @@ abstract class HelperWidget
     {
         $rsEntityData = null;
         $values = array();
-        if (!empty($this->data['ID'])) {
+        if (!empty($this->data[$this->helper->pk()])) {
             $entityName = $this->entityName;
             $rsEntityData = $entityName::getList(array(
                 'select' => array('REFERENCE_' => $this->getCode() . '.*'),
-                'filter' => array('=ID' => $this->data['ID'])
+                'filter' => array('=ID' => $this->data[$this->helper->pk()])
             ));
 
             if ($rsEntityData) {
@@ -814,7 +814,7 @@ abstract class HelperWidget
      */
     protected function getEditableListInputName()
     {
-        $id = $this->data['ID'];
+        $id = $this->data[$this->helper->pk()];
 
         return 'FIELDS[' . $id . '][' . $this->getCode() . ']';
     }
