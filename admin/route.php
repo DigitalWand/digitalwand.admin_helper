@@ -20,21 +20,6 @@ function getRequestParams($param)
 	}
 }
 
-/**
- * Очищаем переменные сессии, чтобы сортировка восстанавливалась с учетом $table_id.
- *
- * @global CMain $APPLICATION
- */
-global $APPLICATION;
-$uniq = md5($APPLICATION->GetCurPage());
-
-if (isset($_SESSION["SESS_SORT_BY"][$uniq])) {
-	unset($_SESSION["SESS_SORT_BY"][$uniq]);
-}
-if (isset($_SESSION["SESS_SORT_ORDER"][$uniq])) {
-	unset($_SESSION["SESS_SORT_ORDER"][$uniq]);
-}
-
 $module = getRequestParams('module');
 $view = getRequestParams('view');
 $entity = getRequestParams('entity');
