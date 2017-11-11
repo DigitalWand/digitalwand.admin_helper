@@ -901,7 +901,7 @@ abstract class AdminBaseHelper
 				$classNamespace = implode('\\', $сlassParts);
 
 				if ($helperNamespace == $classNamespace) {
-					return $settings['helper'];
+					return '\\'.$settings['helper'];
 				}
 			}
 		}

@@ -198,32 +198,76 @@ abstract class AdminListHelper extends AdminBaseHelper
 			}
 		}
 		if ($IDs = $this->list->GroupAction() AND $this->hasWriteRights()) {
+
+		    //Элементы выбраны галочкой "Для всех". Нужно собрать все элементы и разделы,
+            //попадающие под текущий фильтр, и передать их ID на удаление
+
 			if ($_REQUEST['action_target'] == 'selected') {
-				$this->setContext(AdminListHelper::OP_GROUP_ACTION);
-				$IDs = array();
+                $this->setContext(AdminListHelper::OP_GROUP_ACTION);
 
-				//Текущий фильтр должен быть модифицирован виждтами
-				//для соответствия результатов фильтрации тому, что видит пользователь в интерфейсе.
-				$raw = array(
-					'SELECT' => $this->pk(),
-					'FILTER' => $this->arFilter,
-					'SORT' => array()
-				);
+                //Если находимся в подразделе, то его нужно учесть при фильтрации
+                if (isset($_GET['SECTION_ID'])) {
+                    $sectionField = static::getSectionField();
+                    $this->arFilter[$sectionField] = $_GET['SECTION_ID'];
+                }
 
-				foreach ($this->fields as $code => $settings) {
-					$widget = $this->createWidgetForField($code);
-					$widget->changeGetListOptions($this->arFilter, $raw['SELECT'], $raw['SORT'], $raw);
-				}
+                $IDs = array();
 
-				$res = $className::getList(array(
-					'filter' => $this->arFilter,
-					'select' => array($this->pk()),
-				));
+                //Текущий фильтр должен быть модифицирован виждтами
+                //для соответствия результатов фильтрации тому, что видит пользователь в интерфейсе.
+                $raw = array(
+                    'SELECT' => $this->pk(),
+                    'FILTER' => $this->arFilter,
+                    'SORT' => array()
+                );
 
-				while ($el = $res->Fetch()) {
-					$IDs[] = $el[$this->pk()];
-				}
-			}
+                foreach ($this->fields as $code => $settings) {
+                    $widget = $this->createWidgetForField($code);
+                    $widget->changeGetListOptions($this->arFilter, $raw['SELECT'], $raw['SORT'], $raw);
+                }
+
+                $res = $className::getList(array(
+                    'filter' => $this->arFilter,
+                    'select' => array($this->pk()),
+                ));
+
+                while ($el = $res->Fetch()) {
+                    $IDs[] = $el[$this->pk()];
+                }
+
+                //Собираем ID разделов, если они используются
+                $sectionEditHelperClass = $this->getHelperClass(AdminSectionEditHelper::className());
+                if ($sectionEditHelperClass) {
+                    $sectionFilter = $this->arFilter;
+                    $sectionsInterfaceSettings = static::getInterfaceSettings($sectionEditHelperClass::getViewName());
+
+                    if ($sectionEditHelperClass && !isset($_REQUEST['model-section'])) {
+                        $sectionClassName = $sectionEditHelperClass::getModel();
+                    } else {
+                        $sectionClassName = $_REQUEST['model-section'];
+                    }
+
+                    foreach ($sectionFilter as $elementFieldName => $elementFilterValue) {
+                        $elementFieldNameEscaped = $this->escapeFilterFieldName($elementFieldName);
+                        if (!isset($sectionsInterfaceSettings['FIELDS'][$elementFieldNameEscaped])) {
+                            unset($sectionFilter[$elementFieldName]);
+                        }
+                    }
+                    if (isset($_GET['SECTION_ID'])) {
+                        $sectionField = $sectionEditHelperClass::getSectionField();
+                        $sectionFilter[$sectionField] = $_GET['SECTION_ID'];
+                    }
+
+                    $res = $sectionClassName::getList(array(
+                        'filter' => $sectionFilter,
+                        'select' => array($this->pk()),
+                    ));
+
+                    while ($el = $res->Fetch()) {
+                        $IDs[] = 's' . $el[$this->pk()];
+                    }
+                }
+            }
 
 			$filteredIDs = array();
 
