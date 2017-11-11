@@ -1154,7 +1154,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 		$elementLimit = $limitData[1] - count($returnData);
 		$elementModel = static::$model;
 		$elementFilter = $this->arFilter;
-		$elementFilter[$elementEditHelperClass::getSectionField()] = $sectionId;
+		if(get_called_class() != static::getHelperClass(AdminSectionListHelper::className())) {
+            $elementFilter[$elementEditHelperClass::getSectionField()] = $sectionId;
+        }
 		// добавляем к общему количеству элементов количество элементов
 		$this->totalRowsCount += $elementModel::getCount($this->getElementsFilter($elementFilter));
 
