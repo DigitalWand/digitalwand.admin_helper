@@ -447,10 +447,7 @@ abstract class AdminEditHelper extends AdminBaseHelper
 			$id = $this->getPk();
 
 			if ($id) {
-				/** @var DataManager $className */
-				$className = static::getModel();
-				// Если имеется primary key, то модель уже существующая, пытаемся найти ее в БД
-				$existing = $className::getById($id)->fetch();
+				$existing = $this->loadElement();
 			}
 
 			if ($existing) {
