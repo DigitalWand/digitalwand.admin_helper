@@ -399,7 +399,10 @@ class FileWidget extends HelperWidget
             return '';
         }
 
-        $relativeTempFolder = str_replace(Application::getDocumentRoot(), '', CTempFile::GetAbsoluteRoot());
+        static $relativeTempFolder = false;
+        if(!$relativeTempFolder){
+            $relativeTempFolder = str_replace(Application::getDocumentRoot(), '', CTempFile::GetAbsoluteRoot());
+        }
         if (strpos($tmpName, $relativeTempFolder) === false) {
             $tmpName = $relativeTempFolder . $tmpName;
         }
