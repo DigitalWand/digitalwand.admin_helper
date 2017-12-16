@@ -4,6 +4,8 @@ namespace DigitalWand\AdminHelper\Widget;
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\UI\FileInput;
+use Bitrix\Main\Application;
+use CTempFile;
 
 /**
  * Для множественного поля в таблице должен быть столбец FILE_ID.
@@ -198,7 +200,7 @@ class FileWidget extends HelperWidget
                     if (is_array($value) && ($value['name'] || $value['tmp_name'])) {
                         $_FILES[$this->code]['name'][$key] = $value['name'];
                         $_FILES[$this->code]['type'][$key] = $value['type'];
-                        $_FILES[$this->code]['tmp_name'][$key] = $value['tmp_name'];
+                        $_FILES[$this->code]['tmp_name'][$key] = $this->correctTmpName($value['tmp_name']);
                         $_FILES[$this->code]['error'][$key] = $value['error'];
                         $_FILES[$this->code]['size'][$key] = $value['size'];
                         unset($this->data[$this->code][$key]);
@@ -270,7 +272,8 @@ class FileWidget extends HelperWidget
                 ) {
                     $_FILES['FIELDS']['name'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['name'];
                     $_FILES['FIELDS']['type'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['type'];
-                    $_FILES['FIELDS']['tmp_name'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['tmp_name'];
+                    $_FILES['FIELDS']['tmp_name'][$this->code . '_FILE']
+                        = $this->correctTmpName($this->data[$this->code . '_FILE']['tmp_name']);
                     $_FILES['FIELDS']['error'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['error'];
                     $_FILES['FIELDS']['size'][$this->code . '_FILE'] = $this->data[$this->code . '_FILE']['size'];
                 }
@@ -381,5 +384,26 @@ class FileWidget extends HelperWidget
         $this->setSetting('EDIT', false);
 
         return $this->getMultipleEditHtml();
+    }
+
+    /**
+     * Корректирует путь до временного файла
+     * т.к. в новых версиях ядра путь до файла передается относительно временной папки загрузки, а не корня сайта.
+     *
+     * @param string $tmpName
+     * @return string
+     */
+    protected function correctTmpName($tmpName = '')
+    {
+        if(!$tmpName) {
+            return '';
+        }
+
+        $relativeTempFolder = str_replace(Application::getDocumentRoot(), '', CTempFile::GetAbsoluteRoot());
+        if (strpos($tmpName, $relativeTempFolder) === false) {
+            $tmpName = $relativeTempFolder . $tmpName;
+        }
+
+        return $tmpName;
     }
 }
