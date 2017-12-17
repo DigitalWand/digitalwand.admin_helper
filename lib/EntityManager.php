@@ -479,6 +479,10 @@ class EntityManager
 
 		$refClass = $reference->getRefEntity()->getDataClass();
 
+        if(isset($referenceData['VALUE']) AND $fieldWidget->getMultipleField('VALUE') != 'VALUE'){
+            $referenceData[$fieldWidget->getMultipleField('VALUE')] = $referenceData['VALUE'];
+            unset($referenceData['VALUE']);
+        }
 		$createResult = $refClass::add($referenceData);
 
 		if (!$createResult->isSuccess()) {
@@ -518,7 +522,13 @@ class EntityManager
 			$referenceData)
 		) {
 			$refClass = $reference->getRefEntity()->getDataClass();
-			$updateResult = $refClass::update($referenceData[$fieldWidget->getMultipleField('ID')], $referenceData);
+
+			$primary = $referenceData[$fieldWidget->getMultipleField('ID')];
+			if(isset($referenceData['VALUE']) AND $fieldWidget->getMultipleField('VALUE') != 'VALUE'){
+                $referenceData[$fieldWidget->getMultipleField('VALUE')] = $referenceData['VALUE'];
+                unset($referenceData['VALUE']);
+            }
+			$updateResult = $refClass::update($primary, $referenceData);
 
 			if (!$updateResult->isSuccess()) {
 				$this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_SAVE_ERROR',
@@ -719,6 +729,7 @@ class EntityManager
 	 */
 	protected function isDifferentData(array $data1 = null, array $data2 = null)
 	{
+	    if(is_null($data1)) return true;
 		foreach ($data1 as $key => $value) {
 			if (isset($data2[$key]) && $data2[$key] != $value) {
 				return true;

@@ -82,7 +82,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 	/**
 	 * @var string
 	 * Код функции, вызываемой при клике на строке списка
-	 * @see AdminListHelper::genPipupActionJS()
+	 * @see AdminListHelper::genPopupActionJS()
 	 */
 	protected $popupClickFunctionCode;
 	/**

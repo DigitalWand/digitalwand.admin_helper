@@ -25,6 +25,17 @@ Loc::loadMessages(__FILE__);
  */
 class OrmElementWidget extends NumberWidget
 {
+    public function processEditAction()
+    {
+        if (!$this->getSettings('MULTIPLE')) {
+            parent::processEditAction();
+        } else {
+            if (!$this->checkRequired()) {
+                $this->addError('DIGITALWAND_AH_REQUIRED_FIELD_ERROR');
+            }
+        }
+    }
+
     protected static $defaults = array(
         'FILTER' => '=',
         'INPUT_SIZE' => 5,
@@ -169,6 +180,7 @@ class OrmElementWidget extends NumberWidget
             ),
             $this->getSettings('ADDITIONAL_URL_PARAMS')
         ));
+        $popupUrl = str_replace(urlencode('{{field_id}}'), '{{field_id}}', $popupUrl);
 
         ob_start();
         ?>
@@ -193,7 +205,7 @@ class OrmElementWidget extends NumberWidget
             {
                 foreach($entityListData as $referenceData)
                 {
-                    $elementId = $referenceData['ID'];
+            $elementId = $referenceData[$linkedHelper::pk()];
                     $elementName = $referenceData[$this->getSettings('TITLE_FIELD_NAME')] ?
                             $referenceData[$this->getSettings('TITLE_FIELD_NAME')] :
                             Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
@@ -336,11 +348,14 @@ class OrmElementWidget extends NumberWidget
 
             $rsMultEntity = $entityName::getList(array(
                 'select' => array('REFERENCE_' => $this->getCode() . '.*'),
-                'filter' => array('=' . $this->helper->pk() => $this->data[$this->helper->pk()])
+                'filter' => array('=' . $this->getCode() . '.' . $this->getMultipleField('ENTITY_ID') => $this->data[$this->helper->pk()])
             ));
 
             while ($multEntity = $rsMultEntity->fetch()) {
-                $valueList[$multEntity['REFERENCE_VALUE']] = $multEntity['REFERENCE_VALUE'];
+                $valueKey = $this->getMultipleField('VALUE');
+                if (isset($multEntity['REFERENCE_' . $valueKey])) {
+                    $valueList[$multEntity['REFERENCE_' . $valueKey]] = $multEntity['REFERENCE_' . $valueKey];
+                }
             }
         } else {
             $value = $this->getValue();
