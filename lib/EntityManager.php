@@ -163,9 +163,14 @@ class EntityManager
 	 */
 	protected $modelPk = null;
 	/**
-	 * @var array Данные для связей.
+	 * @var array Данные для связей (новые).
 	 */
 	protected $referencesData = array();
+	/**
+	 * Вспомогательный массив метода $this->ReferenceDataSet()
+	 * @var array Данные для связей (то чт уже было в базе).
+	 */
+	protected $referenceDataSave = array();
 	/**
 	 * @var AdminBaseHelper Хелпер.
 	 */
@@ -629,6 +634,10 @@ class EntityManager
 		$modelClass = $this->modelClass;
 		$dataSet = array();
 		$fieldWidget = $this->getFieldWidget($reference->getName());
+		
+		// Возможно запрос для данного поля уже делалася, получение значения из массива
+		if ($this->referenceDataSave[ $reference->getName() ])
+			return $this->referenceDataSave[ $reference->getName() ];
 
 		$rsData = $modelClass::getList(array(
 			'select' => array('REF_' => $reference->getName() . '.*'),
@@ -652,6 +661,10 @@ class EntityManager
 			$dataSet[$data['REF_' . $fieldWidget->getMultipleField('ID')]] = $row;
 		}
 
+		// Сохранить результат, для избежания повторного запроса к базе
+		$this->referenceDataSave[ $reference->getName() ] = $dataSet;
+
+		// Вернуть результат запроса
 		return $dataSet;
 	}
 
@@ -667,6 +680,10 @@ class EntityManager
 	{
 		// Парсим условия связи двух моделей
 		$referenceConditions = $this->getReferenceConditions($reference);
+
+		// Получение ID связанного элемента
+		if ($ID = $this->getLinkDataId($referenceData, $this->getReferenceDataSet($reference)))
+			$referenceData['ID'] = $ID;
 
 		foreach ($referenceConditions as $refField => $refValue) {
 			// Так как в условиях связи между моделями в основном отношения типа this.field => ref.field или
@@ -700,6 +717,25 @@ class EntityManager
 		}
 
 		return $referenceDataSet;
+	}
+	
+	/**
+	 * Возвращает ID связанного элемента. Для поиска используются ранее полученные данные,
+	 * Что позволяет избежать дополнительных запросов для поиска ID элементов.
+	 * В звязанной таблице имя поля идентификатора всегда 'ID', а имя поля значения всегда 'VALUE'
+	 *
+	 * @param array $referenceDataSet устанавливаемое значение
+	 * @param array $referenceStaleDataSet установленные ранее значения
+	 */
+	protected function getLinkDataId(array $referenceDataSet, array $referenceStaleDataSet)
+	{
+		foreach ($referenceStaleDataSet as $item) {
+			if ($item['VALUE'] == $referenceDataSet['VALUE']) {
+				return $item['ID'];
+			}
+		}
+
+		return null;
 	}
 
 	/**
