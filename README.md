@@ -6,7 +6,7 @@ API для сборки кастомных админок в Битриксе
 Есть хорошая вводная статья в блоге: [Генератор админок «Битрикса»](http://samokhvalov.info/blog/all/bitrix-admin-helper/).
 
 Простой рабочий пример реализован отдельным модулем 
-[demo.adminhelper](https://github.com/niksamokhvalov/demo.adminhelper)
+[demo.adminhelper](https://github.com/DigitalWand/demo.adminhelper)
 
 
 ## Концепция
