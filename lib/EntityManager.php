@@ -28,7 +28,7 @@ use DigitalWand\AdminHelper\Widget\HelperWidget;
  * 'yandex.ru')); array('VALUE' => 'yandex.ru'),
  *            // Если в массив добавить ID, то запись обновится: RelatedLinksTable::update(3, array('ID' => 3, 'VALUE'
  * => 'google.com')); array('ID' => 3, 'VALUE' => 'google.com'),
- *            // ВНИМАНИЕ: данный класс реководствуется принципом: что передано для связи, то сохранится или обновится,
+ *            // ВНИМАНИЕ: данный класс руководствуется принципом: что передано для связи, то сохранится или обновится,
  * что не передано, будет удалено
  *            // То есть, если в поле связи RELATED_LINKS передать пустой массив, то все значения связи будут удалены
  *        )
@@ -42,7 +42,7 @@ use DigitalWand\AdminHelper\Widget\HelperWidget;
  * $articleManager->delete();
  * ```
  *
- * Как работает сохранение данных ? Дополнительный пример
+ * Как работает сохранение данных? Дополнительный пример
  * Допустим, что есть модели NewsTable (новости) и NewsLinksTable (ссылки на дополнительную информацию о новости)
  *
  * У модели NewsTable есть связь с моделью NewsLinksTable через поле NEWS_LINKS:
@@ -95,10 +95,24 @@ use DigitalWand\AdminHelper\Widget\HelperWidget;
  * 3. После подстановки данных они будут переданы модели связи подобно коду ниже:
  *
  * ```
- * NewsLinksTable::add(array('ENTITY' => 'news', 'FIELD' => 'NEWS_LINKS', 'ENTITY_ID' => 'id сущности, например
- * новости', 'LINK' => 'test.ru')); NewsLinksTable::add(array('ENTITY' => 'news', 'FIELD' => 'NEWS_LINKS', 'ENTITY_ID'
- * => 'id сущности', 'LINK' => 'test2.ru')); NewsLinksTable::update('id ссылки', array('ENTITY' => 'news', 'FIELD' =>
- * 'NEWS_LINKS', 'ENTITY_ID' => 'id сущности', 'LINK' => 'test3.ru'));
+ * NewsLinksTable::add(array(
+ *          'ENTITY' => 'news',
+ *          'FIELD' => 'NEWS_LINKS',
+ *          'ENTITY_ID' => 'id сущности, например новости',
+ *          'LINK' => 'test.ru'
+ * ));
+ * NewsLinksTable::add(array(
+ *      'ENTITY' => 'news',
+ *      'FIELD' => 'NEWS_LINKS',
+ *      'ENTITY_ID' => 'id сущности',
+ *      'LINK' => 'test2.ru'
+ * ));
+ * NewsLinksTable::update('id ссылки', array(
+ *      'ENTITY' => 'news',
+ *      'FIELD' => 'NEWS_LINKS',
+ *      'ENTITY_ID' => 'id сущности',
+ *      'LINK' => 'test3.ru'
+ * ));
  * ```
  *
  * Обратите внимание, что в метод EntityManager::save() были изначально передано только поле LINK, поля ENTITY,
@@ -410,11 +424,19 @@ class EntityManager
 			if($result->isSuccess()){ // Удаление записей, которые не были созданы или обновлены
 				foreach ($referenceStaleDataSet as $referenceData) {
 					if (
-						!in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds) &&
-						array_key_exists($referenceData[$fieldWidget->getMultipleField('VALUE')], $variantsField)
+                        !in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds)
+                        OR
+                        ($variantsField
+                            AND !in_array($referenceData[$fieldWidget->getMultipleField('ID')], $processedDataIds)
+                            AND array_key_exists($referenceData[$fieldWidget->getMultipleField('VALUE')], $variantsField))
 					) {
-						$result = $this->deleteReferenceData($reference,
-							$referenceData[$fieldWidget->getMultipleField('ID')]);
+                        if ($fieldWidget->getSettings('DELETE_REFERENCED_DATA')) {
+                            $result = $this->deleteReferenceData($reference,
+                                $referenceData[$fieldWidget->getMultipleField('ID')]);
+                        } else {
+                            $result = $this->deleteReference($reference,
+                                $referenceData[$fieldWidget->getMultipleField('ID')]);
+                        }
 						if(!$result->isSuccess()) {
 							break; // ошибка, прерываем удаление данных
 						}
@@ -458,15 +480,16 @@ class EntityManager
 		return $result;
     }
 
-	/**
-	 * Создание связанной записи.
-	 *
-	 * @param Entity\ReferenceField $reference
-	 * @param array $referenceData
-	 *
-	 * @return \Bitrix\Main\Entity\AddResult
-	 * @throws ArgumentException
-	 */
+    /**
+     * Создание связанной записи.
+     *
+     * @param Entity\ReferenceField $reference
+     * @param array $referenceData
+     *
+     * @return \Bitrix\Main\Entity\AddResult
+     * @throws ArgumentException
+     * @throws \Exception
+     */
 	protected function createReferenceData(Entity\ReferenceField $reference, array $referenceData)
 	{
 		$referenceName = $reference->getName();
@@ -493,16 +516,17 @@ class EntityManager
 		return $createResult;
 	}
 
-	/**
-	 * Обновление связанной записи
-	 *
-	 * @param Entity\ReferenceField $reference
-	 * @param array $referenceData
-	 * @param array $referenceStaleDataSet
-	 *
-	 * @return Entity\UpdateResult|null
-	 * @throws ArgumentException
-	 */
+    /**
+     * Обновление связанной записи
+     *
+     * @param Entity\ReferenceField $reference
+     * @param array $referenceData
+     * @param array $referenceStaleDataSet
+     *
+     * @return Entity\UpdateResult|null
+     * @throws ArgumentException
+     * @throws \Exception
+     */
 	protected function updateReferenceData(
 		Entity\ReferenceField $reference,
 		array $referenceData,
@@ -541,22 +565,22 @@ class EntityManager
         }
     }
 
-	/**
-	 * Удаление данных связи.
-	 *
-	 * @param Entity\ReferenceField $reference
-	 * @param $referenceId
-	 *
-	 * @return \Bitrix\Main\Entity\Result
-	 * @throws ArgumentException
-	 */
+    /**
+     * Удаление данных связи.
+     *
+     * @param Entity\ReferenceField $reference
+     * @param $referenceId
+     *
+     * @return \Bitrix\Main\Entity\Result
+     * @throws \Exception
+     */
 	protected function deleteReferenceData(Entity\ReferenceField $reference, $referenceId)
 	{
-		$fieldParams = $this->getFieldParams($reference->getName());
 		$refClass = $reference->getRefEntity()->getDataClass();
 		$deleteResult = $refClass::delete($referenceId);
 
 		if (!$deleteResult->isSuccess()) {
+            $fieldParams = $this->getFieldParams($reference->getName());
 			$this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_DELETE_ERROR',
 				array('#FIELD#' => $fieldParams['TITLE'])), 'DELETE_' . $reference->getName());
 		}
@@ -564,13 +588,39 @@ class EntityManager
 		return $deleteResult;
 	}
 
-	/**
-	 * Получение данных связи.
-	 *
-	 * @param $reference
-	 *
-	 * @return array
-	 */
+    /**
+     * Удаление данных связи.
+     *
+     * @param Entity\ReferenceField $reference
+     * @param $referenceId
+     *
+     * @return \Bitrix\Main\Entity\Result
+     * @throws \Exception
+     */
+    protected function deleteReference(Entity\ReferenceField $reference, $referenceId)
+    {
+        $refClass = $reference->getRefEntity()->getDataClass();
+        $referenceName = $reference->getName();
+        $fieldWidget = $this->getFieldWidget($referenceName);
+        $updateResult = $refClass::update($referenceId, [$fieldWidget->getMultipleField('ENTITY_ID') => null]);
+
+        if (!$updateResult->isSuccess()) {
+            $fieldParams = $this->getFieldParams($reference->getName());
+            $this->addNote(Loc::getMessage('DIGITALWAND_ADMIN_HELPER_RELATION_DELETE_ERROR',
+                array('#FIELD#' => $fieldParams['TITLE'])), 'DELETE_' . $reference->getName());
+        }
+
+        return $updateResult;
+    }
+
+    /**
+     * Получение данных связи.
+     *
+     * @param Entity\ReferenceField $reference
+     *
+     * @return array
+     * @throws ArgumentException
+     */
 	protected function getReferenceDataSet(Entity\ReferenceField $reference)
 	{
 		/**
@@ -594,6 +644,10 @@ class EntityManager
 			foreach ($data as $key => $value) {
 				$row[str_replace('REF_', '', $key)] = $value;
 			}
+
+            if (!isset($row['VALUE'])) {
+                $row['VALUE'] = $row[$fieldWidget->getMultipleField('VALUE')];
+            }
 
 			$dataSet[$data['REF_' . $fieldWidget->getMultipleField('ID')]] = $row;
 		}

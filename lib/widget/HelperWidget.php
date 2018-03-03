@@ -116,7 +116,7 @@ use Bitrix\Main\Entity\DataManager;
  * </li>
  *
  * <li>
- * Что бы виджет работал во множественном режиме, нужно при описании интерфейса поля указать параметр MULTIPLE => true
+ * Чтобы виджет работал во множественном режиме, нужно при описании интерфейса поля указать параметр MULTIPLE => true
  * ```
  * 'RELATED_LINKS' => array(
  *        'WIDGET' => new StringWidget(),
@@ -740,7 +740,7 @@ abstract class HelperWidget
         $fieldsFlip = array_flip($fields);
 
         if (isset($fieldsFlip[$fieldName])) {
-            return $fieldsFlip[$fieldName];
+            return $fieldName;
         }
 
         return $fieldName;

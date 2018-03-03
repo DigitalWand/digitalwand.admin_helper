@@ -20,6 +20,7 @@ Loc::loadMessages(__FILE__);
  * - `WINDOW_WIDTH` — (int) значение width для всплывающего окна выбора элемента.
  * - `WINDOW_HEIGHT` — (int) значение height для всплывающего окна выбора элемента.
  * - `TITLE_FIELD_NAME` — (string) название поля, из которого выводить имя элемента.
+ * - `DELETE_REFERENCED_DATA` — (bool) удалять ли связаный объект при удалении связи? По-умолчанию false.
  *
  * @author Nik Samokhvalov <nik@samokhvalov.info>
  */
@@ -43,7 +44,8 @@ class OrmElementWidget extends NumberWidget
         'WINDOW_HEIGHT' => 500,
         'TITLE_FIELD_NAME' => 'TITLE',
         'TEMPLATE' => 'select',
-        'ADDITIONAL_URL_PARAMS' => array()
+        'ADDITIONAL_URL_PARAMS' => array(),
+        'DELETE_REFERENCED_DATA' => false
     );
 
     /**
@@ -190,7 +192,7 @@ class OrmElementWidget extends NumberWidget
         <script>
             var multiple = new MultipleWidgetHelper(
                 '#<?= $uniqueId ?>-field-container',
-                '<input name="<?=$key?>[{{field_id}}][VALUE]"' +
+                '<input name="<?=$key?>[{{field_id}}][ID]"' +
                 'id="<?=$name?>[{{field_id}}]"' +
                 'value="{{value}}"' +
                 'size="<?=$inputSize?>"' +
@@ -354,7 +356,7 @@ class OrmElementWidget extends NumberWidget
             while ($multEntity = $rsMultEntity->fetch()) {
                 $valueKey = $this->getMultipleField('VALUE');
                 if (isset($multEntity['REFERENCE_' . $valueKey])) {
-                    $valueList[$multEntity['REFERENCE_' . $valueKey]] = $multEntity['REFERENCE_' . $valueKey];
+                    $valueList[$multEntity['REFERENCE_' . $linkedHelper::pk()]] = $multEntity['REFERENCE_' . $valueKey];
                 }
             }
         } else {
@@ -367,18 +369,30 @@ class OrmElementWidget extends NumberWidget
 
         if ($valueList) {
 
+            if ($this->getSettings('MULTIPLE')) {
+                $filter = array();
+                foreach ($valueList as $id => $val){
+                    $filter['ID'][] = $id;
+                }
+            } else {
+                $filter = array($linkedHelper::pk() => $valueList);
+            }
+
             $rsEntity = $linkedModel::getList(array(
-                'filter' => array($linkedHelper::pk() => $valueList)
+                'filter' => $filter
             ));
 
             while ($entity = $rsEntity->fetch()) {
-                if (in_array($entity[$linkedHelper::pk()], $valueList)) {
-                    unset($valueList[$entity[$linkedHelper::pk()]]);
-                }
 
                 if ($this->getSettings('MULTIPLE')) {
+                    if (in_array($entity[$linkedHelper::pk()], array_keys($valueList))) {
+                        unset($valueList[$entity[$linkedHelper::pk()]]);
+                    }
                     $refInfo[] = $entity;
                 } else {
+                    if (in_array($entity[$linkedHelper::pk()], $valueList)) {
+                        unset($valueList[$entity[$linkedHelper::pk()]]);
+                    }
                     $refInfo = $entity;
                     break;
                 }
