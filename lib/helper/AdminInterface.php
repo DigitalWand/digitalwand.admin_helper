@@ -173,7 +173,15 @@ abstract class AdminInterface
 
 			foreach ($tab['FIELDS'] as $fieldCode => $field) {
 				if (empty($field['TITLE']) && $model) {
-					$field['TITLE'] = $model::getEntity()->getField($fieldCode)->getTitle();
+				    //Битрикс не использует параметр title при создании экземпляра ReferenceField.
+                    if (is_a($model::getEntity()->getField($fieldCode), 'Bitrix\Main\Entity\ReferenceField')) {
+                        $map = $model::getMap();
+                        if(isset($map[$fieldCode]['title'])){
+                            $field['TITLE'] = $map[$fieldCode]['title'];
+                        }
+                    } else {
+                        $field['TITLE'] = $model::getEntity()->getField($fieldCode)->getTitle();
+                    }
 				}
 
 				$field['TAB'] = $tabCode;
