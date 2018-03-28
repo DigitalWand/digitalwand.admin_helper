@@ -1,0 +1,35 @@
+{
+  "name": "digitalwand.admin_helper",
+  "description": "API for custom admin interface in Bitrix by DigitalWand and Notamedia agency",
+  "main": "gulpfile.js",
+  "scripts": {
+    "gulp": "./node_modules/.bin/gulp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DigitalWand/digitalwand.admin_helper"
+  },
+  "keywords": [
+    "ajax"
+  ],
+  "authors": [
+    {
+      "name": "Alexey Volkov",
+      "email": "asgalex@gmail.com"
+    },
+    {
+      "name": "Nik Samokhvalov",
+      "homepage": "http://samokhvalov.info",
+      "email": "nik@samokhvalov.info"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DigitalWand/digitalwand.admin_helper/issues"
+  },
+  "homepage": "https://github.com/DigitalWand/digitalwand.admin_helper",
+  "dependencies": {
+    "gulp": "^4.0.0",
+    "gulp-build-bitrix-modul": "^1.6.7"
+  }
+}
