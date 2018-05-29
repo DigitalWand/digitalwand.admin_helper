@@ -40,6 +40,12 @@ abstract class AdminListHelper extends AdminBaseHelper
 	const OP_CHECK_FILTER = 'AdminListHelper::checkFilter';
 	const OP_EDIT_ACTION = 'AdminListHelper::editAction';
 
+	
+	/**
+     	* @var bool
+     	* Показывать ли кнопки добавления раздела и элемента в списке  
+     	*/
+	protected $showAdd = true;
 	/**
 	 * @var bool
 	 * Выводить кнопку экспорта в Excel
@@ -503,7 +509,7 @@ abstract class AdminListHelper extends AdminBaseHelper
 		/**
 		 * Добавляем кнопку создать элемент и создать раздел
 		 */
-		if (!$this->isPopup() && $this->hasWriteRights()) {
+		if (!$this->isPopup() && $this->hasWriteRights() && $this->showAdd) {
 			$editHelperClass = static::getHelperClass(AdminEditHelper::className());
 			if ($editHelperClass) {
 				$contextMenu[] = $this->getButton('LIST_CREATE_NEW', array(
