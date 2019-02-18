@@ -54,7 +54,7 @@ class IblockElementWidget extends NumberWidget
         if (!empty($elementId)) {
             $rsElement = ElementTable::getById($elementId);
 
-            if (!$element = $rsElement->fetchAll()) {
+            if (!$element = $rsElement->fetch()) {
                 $element['NAME'] = Loc::getMessage('IBLOCK_ELEMENT_NOT_FOUND');
             }
         } else {
