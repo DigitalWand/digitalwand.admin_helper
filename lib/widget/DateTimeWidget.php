@@ -4,10 +4,18 @@ namespace DigitalWand\AdminHelper\Widget;
 
 class DateTimeWidget extends HelperWidget
 {
+	/**
+     * {@inheritdoc}
+     */
+    public function __construct(array $settings = array())
+    {
+        parent::__construct($settings);
+    }
 	static protected $defaults = array(
+		'TIME'   => true,
 		'FILTER' => 'BETWEEN',
 	);
-	
+
 	/**
 	 * Генерирует HTML для редактирования поля
 	 * @see AdminEditHelper::showField();
@@ -15,7 +23,9 @@ class DateTimeWidget extends HelperWidget
 	 */
 	protected function getEditHtml()
 	{
-		return \CAdminCalendar::CalendarDate($this->getEditInputName(), ConvertTimeStamp(strtotime($this->getValue()), "FULL"), 10, true);
+		$type  = ( $this->getSettings('TIME') ) ? "FULL" : "SHORT";
+		$value = ( $this->getValue() != '' ) ? ConvertTimeStamp(strtotime($this->getValue())) : '';
+		return \CAdminCalendar::CalendarDate($this->getEditInputName(), $value , $type, 10, $this->getSettings('TIME'));
 	}
 
 	/**

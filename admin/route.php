@@ -1,10 +1,11 @@
 <?php
-
 use Bitrix\Main\Loader;
 use DigitalWand\AdminHelper\Helper\AdminBaseHelper;
 use DigitalWand\AdminHelper\Helper\AdminListHelper;
 use DigitalWand\AdminHelper\Helper\AdminEditHelper;
 use DigitalWand\AdminHelper\Helper\AdminInterface;
+
+global $USER;
 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include/prolog_admin_before.php');
 
@@ -27,7 +28,6 @@ $entity = getRequestParams('entity');
 if (!$module OR !$view OR !Loader::IncludeModule($module)) {
 	include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
-
 // Собираем имя класса админского интерфейса
 $moduleNameParts = explode('.', $module);
 $entityNameParts = explode('_', $entity);
@@ -58,14 +58,26 @@ for ($i = 0; $i < $count; $i++) {
 	}
 	array_pop($viewParts);
 }
-
 /**
  * @var AdminInterface $interfaceNameClass
  */
 
 if ($interfaceNameClass && class_exists($interfaceNameClass)) {
 	$interfaceNameClass::register();
+}else{
+	include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
 }
+
+/* Доступ к сущностям */
+if (
+	(!$interfaceNameClass::getAccess())
+		&&
+	(!$USER->isAdmin())
+	){
+	include $_SERVER['DOCUMENT_ROOT'] . BX_ROOT . '/admin/404.php';
+}
+
+
 
 list($helper, $interface) = AdminBaseHelper::getGlobalInterfaceSettings($module, $view);
 

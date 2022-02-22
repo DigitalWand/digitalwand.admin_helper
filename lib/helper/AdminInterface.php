@@ -215,4 +215,11 @@ abstract class AdminInterface
 			}
 		}
 	}
+
+	/**
+	 * Настройка доступа к Сущности
+	 */
+	public static function getAccess():bool{
+		return False;
+	}
 }
