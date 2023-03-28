@@ -876,7 +876,7 @@ abstract class AdminBaseHelper
      *
 	 * @return string|bool
 	 */
-	public function getHelperClass($class)
+	public static function getHelperClass($class)
 	{
 		$interfaceSettings = self::$interfaceSettings[static::getModule()];
 
