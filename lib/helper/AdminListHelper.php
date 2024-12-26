@@ -1681,9 +1681,9 @@ abstract class AdminListHelper extends AdminBaseHelper
 	protected function getCommonPrimaryFilterById($className, $sectionClassName = null, $id)
 	{
 		if ($this->getHelperClass($sectionClassName) && strpos($id, 's') === 0) {
-			$primary = $sectionClassName::getEntity()->getPrimary();
+			$primary = $sectionClassName::getEntity()->getPrimaryArray();
 		} else {
-			$primary = $className::getEntity()->getPrimary();
+			$primary = $className::getEntity()->getPrimaryArray();
 		}
 
 		if (count($primary) === 1) {
