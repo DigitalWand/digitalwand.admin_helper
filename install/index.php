@@ -20,10 +20,11 @@ class digitalwand_admin_helper extends CModule
 
     function digitalwand_admin_helper()
     {
-        include __DIR__ . '/version.php';
+        $arModuleVersion = array();
+        include(__DIR__ ."/version.php");
+        $this->MODULE_VERSION = $arModuleVersion["VERSION"];
+        $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
 
-        $this->MODULE_VERSION = ADMIN_HELPER_VERSION;
-        $this->MODULE_VERSION_DATE = ADMIN_HELPER_VERSION_DATE;
         $this->MODULE_NAME = Loc::getMessage('ADMIN_HELPER_INSTALL_NAME');
         $this->MODULE_DESCRIPTION = Loc::getMessage('ADMIN_HELPER_INSTALL_DESCRIPTION');
     }
